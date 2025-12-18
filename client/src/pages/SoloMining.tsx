@@ -128,7 +128,7 @@ export function SoloMining() {
           <div className="flex items-start gap-4">
             <div className="flex-1">
               <Badge 
-                className="mb-3 bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/30"
+                className="mb-3 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 text-blue-400 border-blue-500/30"
                 data-testid="badge-lottery-mining"
               >
                 <Target className="w-3 h-3 mr-1" />
@@ -136,7 +136,7 @@ export function SoloMining() {
               </Badge>
               
               <h1 
-                className="text-2xl font-bold mb-2 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 bg-clip-text text-transparent"
+                className="text-2xl font-bold mb-2 bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent"
                 data-testid="heading-hero"
               >
                 Win a Full Bitcoin Block
@@ -216,7 +216,7 @@ export function SoloMining() {
               className="mb-6"
             >
               <Badge 
-                className="w-full justify-center py-2 bg-gradient-to-r from-primary/20 via-amber-500/20 to-primary/20 text-amber-400 border-primary/30"
+                className="w-full justify-center py-2 bg-gradient-to-r from-blue-500/20 via-cyan-500/20 to-blue-500/20 text-blue-400 border-blue-500/30"
                 data-testid="badge-recommended"
               >
                 <Award className="w-4 h-4 mr-2" />
@@ -319,7 +319,7 @@ export function SoloMining() {
             </div>
 
             <Button 
-              className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 border-amber-400/50"
+              className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-600 border-blue-400/50 text-white"
               data-testid="button-start-mining"
             >
               <Zap className="w-5 h-5 mr-2" />

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Bell, ArrowDownToLine, ArrowUpFromLine, FileText, TrendingUp, Cpu, Clock, DollarSign, Settings } from "lucide-react";
+import { Bell, ArrowDownToLine, ArrowUpFromLine, Settings, DollarSign } from "lucide-react";
 import { GlassCard, LiquidGlassCard } from "@/components/GlassCard";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,14 @@ import type { WalletBalance, Transaction } from "@/lib/types";
 
 import mixedMain from "@assets/Mixed_main_1766014388605.png";
 import gpuMining from "@assets/Gpu_Mining_1766014388614.png";
+import btcWallet from "@assets/Bitcoin_Wallet_1766014388613.png";
+import btcCalc from "@assets/Bitcoin_calculation_1766014388615.png";
+import serverMining from "@assets/Server_Mining_1766014388610.png";
+import btcShop from "@assets/Bitcoin_shop_1766014388611.png";
+import btcLogo from "@assets/bitcoin-sign-3d-icon-png-download-4466132_1766014388601.png";
+import ltcLogo from "@assets/litecoin-3d-icon-png-download-4466121_1766014388608.png";
+import usdtLogo from "@assets/stock_images/usdt_tether_cryptocu_4498e890.jpg";
+import usdcLogo from "@assets/stock_images/usdc_usd_coin_crypto_278bc2c1.jpg";
 
 interface DashboardProps {
   balances: WalletBalance[];
@@ -49,7 +57,7 @@ export function Dashboard({
       >
         <div>
           <p className="text-sm text-muted-foreground">Welcome back</p>
-          <h1 className="text-2xl font-bold text-foreground">CryptoMine</h1>
+          <h1 className="text-2xl font-bold text-foreground">MinersClub</h1>
         </div>
         <div className="flex items-center gap-2">
           <motion.button
@@ -111,7 +119,7 @@ export function Dashboard({
             <Button
               data-testid="button-deposit"
               onClick={onDeposit}
-              className="flex-1 liquid-glass border-0 bg-primary/20 text-primary-foreground gap-2"
+              className="flex-1 liquid-glass border-0 bg-primary/20 text-foreground gap-2"
               variant="ghost"
             >
               <ArrowDownToLine className="w-4 h-4" />
@@ -120,7 +128,7 @@ export function Dashboard({
             <Button
               data-testid="button-withdraw"
               onClick={onWithdraw}
-              className="flex-1 liquid-glass border-0 bg-white/5 gap-2"
+              className="flex-1 liquid-glass border-0 bg-white/5 text-foreground gap-2"
               variant="ghost"
             >
               <ArrowUpFromLine className="w-4 h-4" />
@@ -139,11 +147,9 @@ export function Dashboard({
         <div className="grid grid-cols-2 gap-4">
           <GlassCard delay={0.25} className="p-4 min-h-[100px]">
             <div className="flex items-center gap-3 h-full">
-              <div className="w-10 h-10 shrink-0 rounded-xl bg-primary/20 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-primary" />
-              </div>
+              <img src={btcWallet} alt="Contracts" className="w-12 h-12 shrink-0 object-contain" />
               <div className="min-w-0 flex-1">
-                <p className="text-xs text-muted-foreground truncate">Active Contracts</p>
+                <p className="text-xs text-muted-foreground truncate">Contracts</p>
                 <p className="text-lg font-bold text-foreground truncate" data-testid="text-active-contracts">{activeContracts}</p>
               </div>
             </div>
@@ -151,21 +157,17 @@ export function Dashboard({
 
           <GlassCard delay={0.3} className="p-4 min-h-[100px]">
             <div className="flex items-center gap-3 h-full">
-              <div className="w-10 h-10 shrink-0 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-emerald-400" />
-              </div>
+              <img src={btcCalc} alt="Earned" className="w-12 h-12 shrink-0 object-contain" />
               <div className="min-w-0 flex-1">
-                <p className="text-xs text-muted-foreground truncate">Total Earned</p>
-                <p className="text-lg font-bold text-foreground truncate" data-testid="text-total-earned">{totalEarned} BTC</p>
+                <p className="text-xs text-muted-foreground truncate">Earned</p>
+                <p className="text-lg font-bold text-foreground truncate" data-testid="text-total-earned">{totalEarned} ₿</p>
               </div>
             </div>
           </GlassCard>
 
           <GlassCard delay={0.35} className="p-4 min-h-[100px]">
             <div className="flex items-center gap-3 h-full">
-              <div className="w-10 h-10 shrink-0 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                <Cpu className="w-5 h-5 text-blue-400" />
-              </div>
+              <img src={serverMining} alt="Hash Power" className="w-12 h-12 shrink-0 object-contain" />
               <div className="min-w-0 flex-1">
                 <p className="text-xs text-muted-foreground truncate">Hash Power</p>
                 <p className="text-lg font-bold text-foreground truncate" data-testid="text-hash-power">{miningPower}</p>
@@ -175,9 +177,7 @@ export function Dashboard({
 
           <GlassCard delay={0.4} className="p-4 min-h-[100px]">
             <div className="flex items-center gap-3 h-full">
-              <div className="w-10 h-10 shrink-0 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-purple-400" />
-              </div>
+              <img src={btcShop} alt="Days Active" className="w-12 h-12 shrink-0 object-contain" />
               <div className="min-w-0 flex-1">
                 <p className="text-xs text-muted-foreground truncate">Days Active</p>
                 <p className="text-lg font-bold text-foreground truncate" data-testid="text-days-active">{daysActive}</p>
@@ -206,17 +206,15 @@ export function Dashboard({
                   data-testid={`asset-row-${balance.id}`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      balance.symbol === 'BTC' ? 'bg-amber-500/20' : 
-                      balance.symbol === 'LTC' ? 'bg-blue-500/20' : 
-                      balance.symbol === 'USDT' ? 'bg-emerald-500/20' : 'bg-sky-500/20'
-                    }`}>
-                      <span className={`font-bold ${
-                        balance.symbol === 'BTC' ? 'text-amber-400' : 
-                        balance.symbol === 'LTC' ? 'text-blue-400' : 
-                        balance.symbol === 'USDT' ? 'text-emerald-400' : 'text-sky-400'
-                      }`}>{balance.symbol.charAt(0)}</span>
-                    </div>
+                    <img 
+                      src={
+                        balance.symbol === 'BTC' ? btcLogo : 
+                        balance.symbol === 'LTC' ? ltcLogo : 
+                        balance.symbol === 'USDT' ? usdtLogo : usdcLogo
+                      } 
+                      alt={balance.symbol}
+                      className="w-10 h-10 shrink-0 object-contain rounded-full"
+                    />
                     <div>
                       <p className="font-medium text-foreground">{balance.name}</p>
                       <p className="text-sm text-muted-foreground">{(balance.balance ?? 0).toFixed(6)} {balance.symbol}</p>
