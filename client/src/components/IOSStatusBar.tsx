@@ -1,10 +1,24 @@
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import statusBarImage from "@assets/dynamic_island_1766091053259.png";
 
 export function IOSStatusBar() {
+  const [hasScrolled, setHasScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setHasScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <motion.div 
-      className="fixed top-0 left-0 right-0 z-[100] h-12 flex items-center justify-center bg-background/95 backdrop-blur-md"
+      className={`fixed top-0 left-0 right-0 z-[100] h-12 flex items-center justify-center transition-all duration-300 ${
+        hasScrolled ? "bg-background/70 backdrop-blur-md" : "bg-transparent"
+      }`}
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
