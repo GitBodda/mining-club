@@ -58,7 +58,7 @@ export function Dashboard({
         transition={{ duration: 0.4 }}
       >
         <div>
-          <p className="text-sm text-muted-foreground">Welcome back</p>
+          <p className="text-sm text-muted-foreground">Welcome Back</p>
           <h1 className="text-2xl font-bold text-foreground font-display">Mining Club</h1>
         </div>
         <div className="flex items-center gap-2">
@@ -124,7 +124,7 @@ export function Dashboard({
             <span className={`text-sm font-medium ${isPositiveChange ? "text-emerald-400" : "text-red-400"}`}>
               {isPositiveChange ? "+" : ""}{safeChange24h.toFixed(2)}%
             </span>
-            <span className="text-sm text-muted-foreground">24h change</span>
+            <span className="text-sm text-muted-foreground">24H Change</span>
           </div>
 
           <div className="flex gap-3">
@@ -166,7 +166,7 @@ export function Dashboard({
           <div className="relative z-10 p-4 flex items-center gap-4">
             <Users className="w-8 h-8 text-primary shrink-0" />
             <p className="text-sm font-medium text-foreground">
-              Invite a friend, both receive <span className="text-primary font-bold">$20 in hashpower</span>
+              Invite A Friend, Both Receive <span className="text-primary font-bold">$20 In Hashpower</span>
             </p>
           </div>
         </motion.div>
@@ -181,7 +181,7 @@ export function Dashboard({
           <div className="relative z-10 p-4 flex items-center gap-4">
             <Star className="w-8 h-8 text-amber-400 shrink-0" />
             <p className="text-sm font-medium text-foreground">
-              Get <span className="text-amber-400 font-bold">$20</span> in hashpower when you rate our app
+              Get <span className="text-amber-400 font-bold">$20</span> In Hashpower When You Rate Our App
             </p>
           </div>
         </motion.div>
@@ -227,43 +227,6 @@ export function Dashboard({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35 }}
-        className="grid grid-cols-2 gap-3"
-      >
-        <GlassCard delay={0.4} className="p-4 hover-elevate cursor-pointer" glow="btc">
-          <div className="flex flex-col items-center text-center gap-3">
-            <motion.img 
-              src={btcShop}
-              alt="Total Earned"
-              className="w-14 h-14 object-contain"
-              whileHover={{ scale: 1.05 }}
-            />
-            <div>
-              <p className="text-xl font-bold text-emerald-400 font-display" data-testid="text-total-earned">{totalEarned} BTC</p>
-              <p className="text-xs text-muted-foreground">Total Earned</p>
-            </div>
-          </div>
-        </GlassCard>
-
-        <GlassCard delay={0.45} className="p-4 hover-elevate cursor-pointer">
-          <div className="flex flex-col items-center text-center gap-3">
-            <motion.img 
-              src={mixedMain}
-              alt="Days Mining"
-              className="w-14 h-14 object-contain"
-              whileHover={{ scale: 1.05 }}
-            />
-            <div>
-              <p className="text-2xl font-bold text-foreground font-display" data-testid="text-days-active">{daysActive}</p>
-              <p className="text-xs text-muted-foreground">Days Mining</p>
-            </div>
-          </div>
-        </GlassCard>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.45 }}
       >
         <h2 className="text-lg font-semibold text-foreground mb-4">Your Assets</h2>
@@ -287,7 +250,7 @@ export function Dashboard({
                         balance.symbol === 'USDT' ? usdtLogo : usdcLogo
                       } 
                       alt={balance.symbol}
-                      className="w-10 h-10 shrink-0 object-contain"
+                      className={`shrink-0 object-contain ${balance.symbol === 'USDT' ? 'w-12 h-12' : 'w-10 h-10'}`}
                     />
                     <div>
                       <p className="font-medium text-foreground">{balance.name}</p>
@@ -304,7 +267,7 @@ export function Dashboard({
               ))
             ) : (
               <div className="text-center py-4">
-                <p className="text-muted-foreground">No assets yet</p>
+                <p className="text-muted-foreground">No Assets Yet</p>
               </div>
             )}
           </div>
@@ -329,7 +292,7 @@ export function Dashboard({
               />
               <div className="flex-1">
                 <p className="font-semibold text-foreground font-display">Buy Hashpower</p>
-                <p className="text-sm text-muted-foreground">Upgrade your mining capacity</p>
+                <p className="text-sm text-muted-foreground">Upgrade Your Mining Capacity</p>
               </div>
               <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                 <DollarSign className="w-4 h-4 text-primary" />
@@ -348,7 +311,7 @@ export function Dashboard({
               />
               <div className="flex-1">
                 <p className="font-semibold text-foreground font-display">Solo Mining Jackpot</p>
-                <p className="text-sm text-muted-foreground">Win full 3 BTC block rewards</p>
+                <p className="text-sm text-muted-foreground">Win Full 3 BTC Block Rewards</p>
               </div>
               <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
                 <span className="text-amber-400 font-bold text-sm">3</span>
