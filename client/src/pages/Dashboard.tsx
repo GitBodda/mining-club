@@ -157,47 +157,47 @@ export function Dashboard({
         className="flex flex-col gap-3"
       >
         <motion.div
-          className="relative overflow-hidden rounded-2xl cursor-pointer hover-elevate"
+          className="relative overflow-hidden rounded-2xl cursor-pointer hover-elevate h-32"
           whileTap={{ scale: 0.98 }}
           data-testid="card-invite-friend"
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-700/60 via-slate-800/80 to-slate-900" />
-          <div 
-            className="absolute inset-0 opacity-30"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,100 Q100,50 200,100 T400,100 L400,0 L0,0 Z' fill='%23475569'/%3E%3C/svg%3E")`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'top'
-            }}
-          />
-          <div className="relative z-10 p-6 pt-12 text-center">
-            <p className="text-base font-medium text-foreground leading-relaxed">
-              Invite A Friend,<br />
-              Both Receive<br />
-              <span className="text-primary font-bold">$20 In BTC</span>
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-black" />
+          <svg className="absolute inset-0 w-full h-full opacity-40" viewBox="0 0 400 150" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <linearGradient id="mountainGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#64748b" stopOpacity="0.6"/>
+                <stop offset="100%" stopColor="#334155" stopOpacity="0.3"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,150 L0,80 Q50,40 100,70 T200,50 T300,80 T400,60 L400,150 Z" fill="url(#mountainGrad1)"/>
+            <path d="M0,150 L0,100 Q80,70 150,90 T280,75 T400,95 L400,150 Z" fill="#475569" fillOpacity="0.4"/>
+          </svg>
+          <div className="absolute inset-0 flex items-end justify-center pb-5">
+            <p className="text-lg font-medium text-foreground text-center leading-snug">
+              Invite A Friend, Both Receive <span className="text-primary font-bold">$20 In BTC</span>
             </p>
           </div>
         </motion.div>
 
         <motion.div
-          className="relative overflow-hidden rounded-2xl cursor-pointer hover-elevate"
+          className="relative overflow-hidden rounded-2xl cursor-pointer hover-elevate h-32"
           whileTap={{ scale: 0.98 }}
           data-testid="card-rate-app"
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-700/60 via-slate-800/80 to-slate-900" />
-          <div 
-            className="absolute inset-0 opacity-30"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,80 Q100,120 200,80 T400,80 L400,0 L0,0 Z' fill='%23475569'/%3E%3C/svg%3E")`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'top'
-            }}
-          />
-          <div className="relative z-10 p-6 pt-12 text-center">
-            <p className="text-base font-medium text-foreground leading-relaxed">
-              Rate Our App,<br />
-              Receive<br />
-              <span className="text-amber-400 font-bold">$20 In Hashpower</span>
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-black" />
+          <svg className="absolute inset-0 w-full h-full opacity-40" viewBox="0 0 400 150" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <linearGradient id="mountainGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#78716c" stopOpacity="0.5"/>
+                <stop offset="100%" stopColor="#44403c" stopOpacity="0.3"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,150 L0,70 Q60,30 120,60 T240,45 T360,70 T400,55 L400,150 Z" fill="url(#mountainGrad2)"/>
+            <path d="M0,150 L0,95 Q100,65 180,85 T320,70 T400,90 L400,150 Z" fill="#57534e" fillOpacity="0.35"/>
+          </svg>
+          <div className="absolute inset-0 flex items-end justify-center pb-5">
+            <p className="text-lg font-medium text-foreground text-center leading-snug">
+              Rate Our App, Get <span className="text-amber-400 font-bold">$20 In Hashpower</span>
             </p>
           </div>
         </motion.div>
