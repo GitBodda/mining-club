@@ -4,7 +4,7 @@ import statusBarImage from "@assets/dynamic_island_1766091053259.png";
 export function IOSStatusBar() {
   return (
     <motion.div 
-      className="fixed top-0 left-0 right-0 z-[100] h-12 flex items-center justify-center"
+      className="fixed top-0 left-0 right-0 z-[100] h-12 flex items-center justify-center bg-background/95 backdrop-blur-md"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
