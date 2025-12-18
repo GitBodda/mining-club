@@ -11,6 +11,8 @@ import serverMining from "@assets/Server_Mining_1766014388610.png";
 import btcShop from "@assets/Bitcoin_shop_1766014388611.png";
 import btcLogo from "@assets/bitcoin-sign-3d-icon-png-download-4466132_1766014388601.png";
 import ltcLogo from "@assets/litecoin-3d-icon-png-download-4466121_1766014388608.png";
+import usdtLogo from "@assets/tether-usdt-coin-3d-icon-png-download-3478983@0_1766038564971.webp";
+import usdcLogo from "@assets/usd-coin-3d-icon-png-download-4102016_1766038596188.webp";
 
 interface DashboardProps {
   balances: WalletBalance[];
@@ -156,9 +158,12 @@ export function Dashboard({
       >
         <GlassCard delay={0.25} className="p-4 hover-elevate cursor-pointer" glow="primary">
           <div className="flex flex-col items-center text-center gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center">
-              <Zap className="w-7 h-7 text-blue-400" />
-            </div>
+            <motion.img 
+              src={gpuMining}
+              alt="Hashrate"
+              className="w-14 h-14 object-contain"
+              whileHover={{ scale: 1.05 }}
+            />
             <div>
               <p className="text-2xl font-bold text-foreground font-display" data-testid="text-hash-power">{miningPower}</p>
               <p className="text-xs text-muted-foreground">Hashrate</p>
@@ -168,12 +173,15 @@ export function Dashboard({
         
         <GlassCard delay={0.3} className="p-4 hover-elevate cursor-pointer" glow="btc">
           <div className="flex flex-col items-center text-center gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
-              <TrendingUp className="w-7 h-7 text-amber-400" />
-            </div>
+            <motion.img 
+              src={btcShop}
+              alt="Special Offers"
+              className="w-14 h-14 object-contain"
+              whileHover={{ scale: 1.05 }}
+            />
             <div>
-              <p className="text-2xl font-bold text-emerald-400 font-display" data-testid="text-total-earned">{totalEarned}</p>
-              <p className="text-xs text-muted-foreground">Earned (BTC)</p>
+              <p className="text-lg font-bold text-amber-400 font-display" data-testid="text-special-offers">20% OFF</p>
+              <p className="text-xs text-muted-foreground">Limited Deals</p>
             </div>
           </div>
         </GlassCard>
@@ -195,9 +203,12 @@ export function Dashboard({
 
         <GlassCard delay={0.4} className="p-4 hover-elevate cursor-pointer">
           <div className="flex flex-col items-center text-center gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
-              <Gift className="w-7 h-7 text-purple-400" />
-            </div>
+            <motion.img 
+              src={mixedMain}
+              alt="Days Mining"
+              className="w-14 h-14 object-contain"
+              whileHover={{ scale: 1.05 }}
+            />
             <div>
               <p className="text-2xl font-bold text-foreground font-display" data-testid="text-days-active">{daysActive}</p>
               <p className="text-xs text-muted-foreground">Days Mining</p>
@@ -225,17 +236,15 @@ export function Dashboard({
                   data-testid={`asset-row-${balance.id}`}
                 >
                   <div className="flex items-center gap-3">
-                    {balance.symbol === 'BTC' || balance.symbol === 'LTC' ? (
-                      <img 
-                        src={balance.symbol === 'BTC' ? btcLogo : ltcLogo} 
-                        alt={balance.symbol}
-                        className="w-10 h-10 shrink-0 object-contain rounded-full"
-                      />
-                    ) : (
-                      <div className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center font-bold text-white ${balance.symbol === 'USDT' ? 'bg-emerald-500' : 'bg-blue-500'}`}>
-                        $
-                      </div>
-                    )}
+                    <img 
+                      src={
+                        balance.symbol === 'BTC' ? btcLogo : 
+                        balance.symbol === 'LTC' ? ltcLogo :
+                        balance.symbol === 'USDT' ? usdtLogo : usdcLogo
+                      } 
+                      alt={balance.symbol}
+                      className="w-10 h-10 shrink-0 object-contain"
+                    />
                     <div>
                       <p className="font-medium text-foreground">{balance.name}</p>
                       <p className="text-sm text-muted-foreground">{(balance.balance ?? 0).toFixed(6)} {balance.symbol}</p>

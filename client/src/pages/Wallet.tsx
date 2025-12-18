@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowUpRight, ArrowDownLeft, RefreshCw, Copy, Check, AlertCircle } from "lucide-react";
-import { SiBitcoin, SiLitecoin, SiTether } from "react-icons/si";
 import { GlassCard } from "@/components/GlassCard";
 import { CryptoCard } from "@/components/CryptoCard";
 import { TransactionItem } from "@/components/TransactionItem";
@@ -26,6 +25,10 @@ import {
 import { cn } from "@/lib/utils";
 import type { WalletBalance, Transaction } from "@/lib/types";
 import walletImage from "@assets/Bitcoin_Wallet_1766014388613.png";
+import btcLogo from "@assets/bitcoin-sign-3d-icon-png-download-4466132_1766014388601.png";
+import ltcLogo from "@assets/litecoin-3d-icon-png-download-4466121_1766014388608.png";
+import usdtLogo from "@assets/tether-usdt-coin-3d-icon-png-download-3478983@0_1766038564971.webp";
+import usdcLogo from "@assets/usd-coin-3d-icon-png-download-4102016_1766038596188.webp";
 
 type CryptoType = "BTC" | "LTC" | "USDT" | "USDC";
 
@@ -136,38 +139,36 @@ export function Wallet({ balances = defaultBalances, transactions, totalBalance,
     return network?.fee || 0;
   };
 
-  const openDepositModal = () => {
-    setSelectedCrypto("BTC");
-    setSelectedNetwork(cryptoNetworks.BTC[0].id);
+  const logoMap: Record<CryptoType, string> = {
+    BTC: btcLogo,
+    LTC: ltcLogo,
+    USDT: usdtLogo,
+    USDC: usdcLogo,
+  };
+
+  const openDepositModal = (crypto?: string) => {
+    const cryptoType = (crypto as CryptoType) || "BTC";
+    setSelectedCrypto(cryptoType);
+    setSelectedNetwork(cryptoNetworks[cryptoType][0].id);
     setDepositOpen(true);
   };
 
-  const openWithdrawModal = () => {
-    setSelectedCrypto("BTC");
-    setSelectedNetwork(cryptoNetworks.BTC[0].id);
+  const openWithdrawModal = (crypto?: string) => {
+    const cryptoType = (crypto as CryptoType) || "BTC";
+    setSelectedCrypto(cryptoType);
+    setSelectedNetwork(cryptoNetworks[cryptoType][0].id);
     setWithdrawAmount("");
     setWithdrawAddress("");
     setWithdrawOpen(true);
   };
 
-  const CryptoIcon = ({ crypto, className }: { crypto: CryptoType; className?: string }) => {
-    switch (crypto) {
-      case "BTC":
-        return <SiBitcoin className={cn("text-amber-400", className)} />;
-      case "LTC":
-        return <SiLitecoin className={cn("text-blue-300", className)} />;
-      case "USDT":
-        return <SiTether className={cn("text-emerald-400", className)} />;
-      case "USDC":
-        return (
-          <div className={cn("rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs", className)}>
-            $
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
+  const CryptoIcon = ({ crypto, className }: { crypto: CryptoType; className?: string }) => (
+    <img 
+      src={logoMap[crypto]} 
+      alt={crypto} 
+      className={cn("w-5 h-5 object-contain", className)} 
+    />
+  );
 
   return (
     <motion.div
@@ -248,7 +249,13 @@ export function Wallet({ balances = defaultBalances, transactions, totalBalance,
         <h2 className="text-lg font-semibold text-foreground mb-4">Assets</h2>
         <div className="flex flex-col gap-3">
           {balances.map((crypto, index) => (
-            <CryptoCard key={crypto.id} crypto={crypto} index={index} />
+            <CryptoCard 
+              key={crypto.id} 
+              crypto={crypto} 
+              index={index}
+              onDeposit={openDepositModal}
+              onWithdraw={openWithdrawModal}
+            />
           ))}
         </div>
       </div>
