@@ -15,18 +15,33 @@ export function IOSStatusBar() {
   }, []);
 
   return (
-    <motion.div 
-      className={`fixed top-0 left-0 right-0 z-[100] h-12 flex items-center justify-center transition-all duration-300 ${
-        hasScrolled ? "bg-background/70 backdrop-blur-md" : "bg-transparent"
-      }`}
+    <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
+      className="fixed top-0 left-0 right-0 z-[100] pointer-events-none"
     >
-      <img 
-        src={statusBarImage}
-        alt="Status Bar"
-        className="w-full h-full object-cover"
+      <div 
+        className={`h-12 flex items-center justify-center transition-all duration-300 ${
+          hasScrolled ? "bg-background/70 backdrop-blur-md" : "bg-transparent"
+        }`}
+      >
+        <img 
+          src={statusBarImage}
+          alt="Status Bar"
+          className="w-full h-full object-cover"
+        />
+      </div>
+      
+      <div
+        className={`h-16 transition-all duration-300 pointer-events-auto ${
+          hasScrolled ? "bg-transparent" : "bg-transparent"
+        }`}
+        style={{
+          background: hasScrolled 
+            ? "linear-gradient(to bottom, hsl(var(--background) / 0.7) 0%, hsl(var(--background) / 0.3) 50%, hsl(var(--background) / 0.05) 100%)"
+            : "linear-gradient(to bottom, hsl(var(--background) / 0.05) 0%, hsl(var(--background) / 0.02) 100%)"
+        }}
       />
     </motion.div>
   );
