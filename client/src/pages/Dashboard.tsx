@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Bell, ArrowDownToLine, ArrowUpFromLine, FileText, TrendingUp, Cpu, Clock, DollarSign } from "lucide-react";
+import { Bell, ArrowDownToLine, ArrowUpFromLine, FileText, TrendingUp, Cpu, Clock, DollarSign, Settings } from "lucide-react";
 import { GlassCard, LiquidGlassCard } from "@/components/GlassCard";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ interface DashboardProps {
   transactions?: Transaction[];
   onDeposit?: () => void;
   onWithdraw?: () => void;
+  onOpenSettings?: () => void;
 }
 
 export function Dashboard({ 
@@ -23,7 +24,8 @@ export function Dashboard({
   change24h = 0,
   transactions = [],
   onDeposit, 
-  onWithdraw 
+  onWithdraw,
+  onOpenSettings
 }: DashboardProps) {
   const safeChange24h = change24h ?? 0;
   const isPositiveChange = safeChange24h >= 0;
@@ -49,13 +51,24 @@ export function Dashboard({
           <p className="text-sm text-muted-foreground">Welcome back</p>
           <h1 className="text-2xl font-bold text-foreground">CryptoMine</h1>
         </div>
-        <button
-          data-testid="button-notifications"
-          className="relative w-10 h-10 rounded-xl liquid-glass flex items-center justify-center hover-elevate"
-        >
-          <Bell className="w-5 h-5 text-muted-foreground" />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full animate-pulse" />
-        </button>
+        <div className="flex items-center gap-2">
+          <motion.button
+            data-testid="button-settings"
+            onClick={onOpenSettings}
+            className="relative w-10 h-10 rounded-xl liquid-glass flex items-center justify-center hover-elevate"
+            whileTap={{ scale: 0.95 }}
+          >
+            <Settings className="w-5 h-5 text-muted-foreground" />
+          </motion.button>
+          <motion.button
+            data-testid="button-notifications"
+            className="relative w-10 h-10 rounded-xl liquid-glass flex items-center justify-center hover-elevate"
+            whileTap={{ scale: 0.95 }}
+          >
+            <Bell className="w-5 h-5 text-muted-foreground" />
+            <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full animate-pulse" />
+          </motion.button>
+        </div>
       </motion.header>
 
       <LiquidGlassCard glow="btc" delay={0.1} variant="strong" className="relative">
@@ -124,50 +137,50 @@ export function Dashboard({
       >
         <h2 className="text-lg font-semibold text-foreground mb-4">Quick Stats</h2>
         <div className="grid grid-cols-2 gap-4">
-          <GlassCard delay={0.25} className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+          <GlassCard delay={0.25} className="p-4 min-h-[100px]">
+            <div className="flex items-center gap-3 h-full">
+              <div className="w-10 h-10 shrink-0 rounded-xl bg-primary/20 flex items-center justify-center">
                 <FileText className="w-5 h-5 text-primary" />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Active Contracts</p>
-                <p className="text-xl font-bold text-foreground" data-testid="text-active-contracts">{activeContracts}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-muted-foreground truncate">Active Contracts</p>
+                <p className="text-lg font-bold text-foreground truncate" data-testid="text-active-contracts">{activeContracts}</p>
               </div>
             </div>
           </GlassCard>
 
-          <GlassCard delay={0.3} className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+          <GlassCard delay={0.3} className="p-4 min-h-[100px]">
+            <div className="flex items-center gap-3 h-full">
+              <div className="w-10 h-10 shrink-0 rounded-xl bg-emerald-500/20 flex items-center justify-center">
                 <TrendingUp className="w-5 h-5 text-emerald-400" />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Earned</p>
-                <p className="text-xl font-bold text-foreground" data-testid="text-total-earned">{totalEarned} BTC</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-muted-foreground truncate">Total Earned</p>
+                <p className="text-lg font-bold text-foreground truncate" data-testid="text-total-earned">{totalEarned} BTC</p>
               </div>
             </div>
           </GlassCard>
 
-          <GlassCard delay={0.35} className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+          <GlassCard delay={0.35} className="p-4 min-h-[100px]">
+            <div className="flex items-center gap-3 h-full">
+              <div className="w-10 h-10 shrink-0 rounded-xl bg-blue-500/20 flex items-center justify-center">
                 <Cpu className="w-5 h-5 text-blue-400" />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Hash Power</p>
-                <p className="text-xl font-bold text-foreground" data-testid="text-hash-power">{miningPower}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-muted-foreground truncate">Hash Power</p>
+                <p className="text-lg font-bold text-foreground truncate" data-testid="text-hash-power">{miningPower}</p>
               </div>
             </div>
           </GlassCard>
 
-          <GlassCard delay={0.4} className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+          <GlassCard delay={0.4} className="p-4 min-h-[100px]">
+            <div className="flex items-center gap-3 h-full">
+              <div className="w-10 h-10 shrink-0 rounded-xl bg-purple-500/20 flex items-center justify-center">
                 <Clock className="w-5 h-5 text-purple-400" />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Days Active</p>
-                <p className="text-xl font-bold text-foreground" data-testid="text-days-active">{daysActive}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-muted-foreground truncate">Days Active</p>
+                <p className="text-lg font-bold text-foreground truncate" data-testid="text-days-active">{daysActive}</p>
               </div>
             </div>
           </GlassCard>

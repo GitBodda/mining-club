@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
-import { Home, Wallet, TrendingUp, Pickaxe, Settings } from "lucide-react";
+import { Home, Wallet, TrendingUp, Pickaxe, Gem } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type TabType = "home" | "wallet" | "invest" | "mining" | "settings";
+type TabType = "home" | "wallet" | "invest" | "mining" | "solo";
 
 interface BottomNavProps {
   activeTab: TabType;
@@ -14,7 +14,7 @@ const tabs = [
   { id: "wallet" as const, icon: Wallet, label: "Wallet" },
   { id: "invest" as const, icon: TrendingUp, label: "Invest" },
   { id: "mining" as const, icon: Pickaxe, label: "Mining" },
-  { id: "settings" as const, icon: Settings, label: "Settings" },
+  { id: "solo" as const, icon: Gem, label: "Solo" },
 ];
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {

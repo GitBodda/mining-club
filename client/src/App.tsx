@@ -3,12 +3,14 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { X } from "lucide-react";
 
 import { BottomNav, type TabType } from "@/components/BottomNav";
 import { Dashboard } from "@/pages/Dashboard";
 import { Wallet } from "@/pages/Wallet";
 import { Invest } from "@/pages/Invest";
+import { SoloMining } from "@/pages/SoloMining";
 import { Mining } from "@/pages/Mining";
 import { Settings } from "@/pages/Settings";
 import { DashboardSkeleton, WalletSkeleton } from "@/components/LoadingSkeleton";
@@ -16,6 +18,7 @@ import { useMiningData } from "@/hooks/useMiningData";
 
 function MobileApp() {
   const [activeTab, setActiveTab] = useState<TabType>("home");
+  const [showSettings, setShowSettings] = useState(false);
   const {
     miningStats,
     balances,
@@ -52,6 +55,7 @@ function MobileApp() {
                 totalBalance={totalBalance}
                 change24h={change24h}
                 transactions={transactions}
+                onOpenSettings={() => setShowSettings(true)}
               />
             )
           )}
@@ -71,6 +75,9 @@ function MobileApp() {
           {activeTab === "invest" && (
             <Invest key="invest" />
           )}
+          {activeTab === "solo" && (
+            <SoloMining key="solo" />
+          )}
           {activeTab === "mining" && (
             <Mining
               key="mining"
@@ -78,17 +85,45 @@ function MobileApp() {
               onNavigateToInvest={() => setActiveTab("invest")}
             />
           )}
-          {activeTab === "settings" && (
-            <Settings
-              key="settings"
-              settings={settings}
-              onSettingsChange={updateSettings}
-            />
-          )}
         </AnimatePresence>
       </main>
 
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div
+            className="fixed inset-0 z-50 flex flex-col bg-background"
+            initial={{ opacity: 0, y: "100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "100%" }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute -top-[40%] -left-[20%] w-[80%] h-[80%] bg-primary/10 rounded-full blur-[120px]" />
+              <div className="absolute -bottom-[30%] -right-[20%] w-[60%] h-[60%] bg-purple-500/5 rounded-full blur-[100px]" />
+            </div>
+            <div className="relative z-10 flex items-center justify-between px-4 pt-12 pb-4">
+              <h1 className="text-xl font-bold text-foreground">Settings</h1>
+              <motion.button
+                data-testid="button-close-settings"
+                onClick={() => setShowSettings(false)}
+                className="w-10 h-10 rounded-xl liquid-glass flex items-center justify-center hover-elevate"
+                whileTap={{ scale: 0.95 }}
+              >
+                <X className="w-5 h-5 text-muted-foreground" />
+              </motion.button>
+            </div>
+            <div className="relative z-10 flex-1 overflow-auto px-4 pb-8">
+              <Settings
+                settings={settings}
+                onSettingsChange={updateSettings}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
