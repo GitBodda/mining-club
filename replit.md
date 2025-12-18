@@ -79,8 +79,55 @@ The app follows iOS 26 Liquid Glass design patterns with:
 ### Supported Cryptocurrencies
 - BTC (Bitcoin) - gold accent, 3D logo
 - LTC (Litecoin) - silver/blue accent, 3D logo
-- USDT (Tether) - emerald circle with $ symbol
-- USDC (USD Coin) - blue circle with $ symbol
+- USDT (Tether) - emerald accent, 3D logo
+- USDC (USD Coin) - blue accent, 3D logo
+
+## How to Change Cryptocurrency Icons
+
+All cryptocurrency icons are stored in the `attached_assets/` folder and imported in the component files. To change an icon:
+
+### Step 1: Add your new image
+Upload your new icon image to the `attached_assets/` folder.
+
+### Step 2: Update the imports
+The icons are imported in these files:
+- **Dashboard.tsx** (`client/src/pages/Dashboard.tsx`) - Line ~7-18
+- **Wallet.tsx** (`client/src/pages/Wallet.tsx`) - Line ~28-35
+- **CryptoCard.tsx** (`client/src/components/CryptoCard.tsx`) - Line ~3-10
+
+Example import change:
+```typescript
+// Old import
+import usdtLogo from "@assets/tether-usdt-coin-3d-icon-png-download-3478983@0_1766038564971.webp";
+
+// New import (replace with your new file)
+import usdtLogo from "@assets/your-new-usdt-icon.png";
+```
+
+### Step 3: Verify the logo map (if applicable)
+In CryptoCard.tsx and Wallet.tsx, there's a `logoMap` object that maps symbol to image:
+```typescript
+const logoMap: Record<string, string> = {
+  BTC: btcLogo,
+  LTC: ltcLogo,
+  USDT: usdtLogo,
+  USDC: usdcLogo,
+};
+```
+
+### Current Icon Files
+- **BTC**: `@assets/bitcoin-sign-3d-icon-png-download-4466132_1766014388601.png`
+- **LTC**: `@assets/litecoin-3d-icon-png-download-4466121_1766014388608.png`
+- **USDT**: `@assets/tether-usdt-coin-3d-icon-png-download-3478983@0_1766038564971.webp`
+- **USDC**: `@assets/usd-coin-3d-icon-png-download-4102016_1766038596188.webp`
+- **USDC Flat**: `@assets/usd-coin-usdc-logo_1766038726866.png`
+
+### Other 3D Graphics Used
+- **Mixed Main**: `@assets/Mixed_main_1766014388605.png` (portfolio hero)
+- **GPU Mining**: `@assets/Gpu_Mining_1766014388614.png`
+- **Server Mining**: `@assets/Server_Mining_1766014388610.png`
+- **Bitcoin Shop**: `@assets/Bitcoin_shop_1766014388611.png`
+- **Bitcoin Wallet**: `@assets/Bitcoin_Wallet_1766014388613.png`
 
 ## External Dependencies
 
