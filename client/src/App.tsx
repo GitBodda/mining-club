@@ -70,11 +70,17 @@ function MobileApp() {
     setAppView("auth");
   };
 
+  const handleSkipToMain = () => {
+    localStorage.setItem("hasSeenOnboarding", "true");
+    localStorage.setItem("isLoggedIn", "true");
+    setAppView("main");
+  };
+
   if (appView === "onboarding") {
     return (
       <>
         <IOSStatusBar />
-        <Onboarding onComplete={handleOnboardingComplete} onSignIn={handleSignIn} />
+        <Onboarding onComplete={handleOnboardingComplete} onSignIn={handleSignIn} onSkip={handleSkipToMain} />
         <IOSHomeIndicator />
       </>
     );

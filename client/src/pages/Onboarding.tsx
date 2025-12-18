@@ -11,6 +11,7 @@ import serverMining from "@assets/Server_Mining_1766014388610.png";
 interface OnboardingProps {
   onComplete: () => void;
   onSignIn: () => void;
+  onSkip?: () => void;
 }
 
 const onboardingPages = [
@@ -43,7 +44,7 @@ const onboardingPages = [
   }
 ];
 
-export function Onboarding({ onComplete, onSignIn }: OnboardingProps) {
+export function Onboarding({ onComplete, onSignIn, onSkip }: OnboardingProps) {
   const [currentPage, setCurrentPage] = useState(0);
 
   const handleNext = () => {
@@ -74,7 +75,7 @@ export function Onboarding({ onComplete, onSignIn }: OnboardingProps) {
           <Button 
             variant="ghost" 
             size="sm"
-            onClick={onSignIn}
+            onClick={onSkip || onSignIn}
             className="text-muted-foreground"
             data-testid="button-skip"
           >
