@@ -41,9 +41,13 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
           <Button 
             variant="ghost" 
             size="icon"
-            onClick={onBack}
-            className="text-muted-foreground"
+            onClick={(e) => {
+              e.preventDefault();
+              onBack();
+            }}
+            className="text-muted-foreground pointer-events-auto"
             data-testid="button-back-auth"
+            type="button"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
