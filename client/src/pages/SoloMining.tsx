@@ -128,7 +128,7 @@ export function SoloMining() {
           <div className="flex items-start gap-4">
             <div className="flex-1">
               <Badge 
-                className="mb-3 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 text-blue-400 border-blue-500/30"
+                className="mb-3 bg-gradient-to-r from-cyan-500/30 to-blue-500/30 text-cyan-300 border-cyan-400/50 font-semibold"
                 data-testid="badge-lottery-mining"
               >
                 <Target className="w-3 h-3 mr-1" />
@@ -216,7 +216,7 @@ export function SoloMining() {
               className="mb-6"
             >
               <Badge 
-                className="w-full justify-center py-2 bg-gradient-to-r from-blue-500/20 via-cyan-500/20 to-blue-500/20 text-blue-400 border-blue-500/30"
+                className="w-full justify-center py-2 bg-gradient-to-r from-emerald-500/30 via-teal-500/30 to-emerald-500/30 text-emerald-300 border-emerald-400/50 font-semibold"
                 data-testid="badge-recommended"
               >
                 <Award className="w-4 h-4 mr-2" />

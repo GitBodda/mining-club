@@ -6,7 +6,7 @@ interface GlassCardProps {
   className?: string;
   animate?: boolean;
   delay?: number;
-  glow?: "btc" | "ltc" | "none";
+  glow?: "btc" | "ltc" | "primary" | "none";
   variant?: "default" | "strong" | "subtle";
 }
 
@@ -18,7 +18,7 @@ export function GlassCard({
   glow = "none",
   variant = "default"
 }: GlassCardProps) {
-  const glowClass = glow === "btc" ? "glass-glow-btc" : glow === "ltc" ? "glass-glow-ltc" : "";
+  const glowClass = glow === "btc" ? "glass-glow-btc" : glow === "ltc" ? "glass-glow-ltc" : glow === "primary" ? "glass-glow-primary" : "";
   const variantClass = variant === "strong" ? "liquid-glass-strong" : variant === "subtle" ? "liquid-glass-subtle" : "";
   
   const content = (

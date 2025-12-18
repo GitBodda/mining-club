@@ -43,9 +43,10 @@
   --chart-3: 142 76% 42%;
   --chart-4: 43 96% 56%;
   --chart-5: 24 95% 53%;
-  --font-sans: 'Space Grotesk', sans-serif;
+  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
   --font-serif: Georgia, serif;
-  --font-mono: Menlo, monospace;
+  --font-mono: 'JetBrains Mono', monospace;
   --radius: .5rem;
   --shadow-2xs: 0px 2px 0px 0px hsl(240 5% 10% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(240 5% 10% / 0.00);
@@ -365,6 +366,14 @@
       var(--glass-inner-glow),
       0 0 40px rgba(52, 93, 157, 0.2),
       0 0 80px rgba(52, 93, 157, 0.1);
+  }
+
+  .glass-glow-primary {
+    box-shadow: 
+      var(--glass-shadow),
+      var(--glass-inner-glow),
+      0 0 40px rgba(59, 130, 246, 0.2),
+      0 0 80px rgba(59, 130, 246, 0.1);
   }
 
   .premium-gradient-bg {

@@ -1,16 +1,17 @@
-# MinersClub - Mobile Crypto Mining App
+# Miners Clab - Premium Hashpower Sales App
 
 ## Overview
 
-MinersClub is a mobile-first cryptocurrency hashpower sales app built as a web application with iOS 26 Liquid Glass design language. The app provides a premium, native-feeling experience for users to purchase Bitcoin and Litecoin mining contracts, manage multi-crypto wallets (BTC, LTC, USDT, USDC), and participate in Solo Mining for lottery-style block rewards. This is hashpower sales, NOT mobile mining—users purchase contracts that mine passively.
+Miners Clab is a mobile-first cryptocurrency hashpower sales app built as a web application with iOS 26 Liquid Glass design language. The app provides a premium, native-feeling experience for users to purchase Bitcoin and Litecoin mining contracts, manage multi-crypto wallets (BTC, LTC, USDT, USDC), and participate in Solo Mining for lottery-style block rewards. This is hashpower sales, NOT mobile mining—users purchase contracts that mine passively.
 
 ## User Preferences
 
 - Preferred communication style: Simple, everyday language
 - Design language: iOS 26 Liquid Glass with translucent glass effects, 24-32px blur, inner highlights, rounded corners
 - Primary accent color: Blue (not yellow/amber)
-- Font: Space Grotesk from Google Fonts
+- Fonts: Inter (UI text) + Space Grotesk (headings/display) from Google Fonts
 - Focus on eye-catching 3D graphics and animations to convert users
+- iOS 26 features: Status bar with battery/network, home indicator bar
 
 ## System Architecture
 
@@ -22,10 +23,10 @@ MinersClub is a mobile-first cryptocurrency hashpower sales app built as a web a
 - **State Management**: TanStack Query (React Query) for server state
 - **Animations**: Framer Motion for fluid, physics-based animations
 - **Charts**: Recharts for data visualization
-- **Font**: Space Grotesk (Google Fonts)
+- **Fonts**: Inter (body), Space Grotesk (display)
 
 The frontend follows a component-based architecture with:
-- Page components in `client/src/pages/` (Dashboard, Wallet, Invest, Mining, SoloMining, Settings)
+- Page components in `client/src/pages/` (Dashboard, Wallet, Invest, Mining, SoloMining, Settings, Onboarding, AuthPage)
 - Reusable UI components in `client/src/components/`
 - Custom hooks in `client/src/hooks/` for data fetching and mobile detection
 - Shared type definitions in `client/src/lib/types.ts`
@@ -33,6 +34,9 @@ The frontend follows a component-based architecture with:
 ### App Structure
 - **Bottom Navigation**: 5 tabs (Home, Wallet, Invest, Mining, Solo)
 - **Header**: Settings icon next to Notifications (Settings accessible via overlay)
+- **iOS 26 Components**: IOSStatusBar (battery, network, time) and IOSHomeIndicator
+- **Onboarding**: 3 premium onboarding pages for first-time users
+- **Authentication**: Sign-in/Register pages with Google and Apple SSO
 - **Solo Mining**: Lottery-style mining where users buy massive hashpower (50 PH/s for 6 months recommended) to win full 3 BTC block rewards
 
 ### Backend Architecture
@@ -52,6 +56,8 @@ The frontend follows a component-based architecture with:
 - `GET /api/chart` - Get chart data for hash rate visualization
 - `GET /api/settings` - Get user settings
 - `PATCH /api/settings` - Update user settings
+- `GET /api/login` - Replit Auth login flow (Google, Apple, Email)
+- `GET /api/logout` - Logout flow
 
 ### Database Schema
 Located in `shared/schema.ts`:
@@ -66,7 +72,9 @@ The app follows iOS 26 Liquid Glass design patterns with:
 - 3D graphics and coin logos for visual appeal
 - Touch-optimized tap targets (minimum 44pt)
 - Safe area padding for notch devices
-- Space Grotesk font family
+- Inter font (UI) + Space Grotesk font (display/headings)
+- iOS status bar simulation with battery, signal, wifi icons
+- iOS home indicator bar
 
 ### Supported Cryptocurrencies
 - BTC (Bitcoin) - gold accent
@@ -85,11 +93,12 @@ The app follows iOS 26 Liquid Glass design patterns with:
 - **framer-motion**: Animation library for iOS-like transitions
 - **recharts**: Charting library for hash rate visualization
 - **lucide-react**: General UI icons
+- **react-icons**: Company logos (Google, Apple)
 
 ### Backend Libraries
 - **express**: Web server framework
 - **drizzle-orm**: Type-safe database ORM
-- **connect-pg-simple**: PostgreSQL session store (available but not currently used)
+- **connect-pg-simple**: PostgreSQL session store
 - **zod**: Runtime type validation
 
 ### Build & Development
@@ -100,3 +109,4 @@ The app follows iOS 26 Liquid Glass design patterns with:
 
 ### Environment Variables Required
 - `DATABASE_URL`: PostgreSQL connection string (required for database operations)
+- `SESSION_SECRET`: Session encryption secret (required for auth)

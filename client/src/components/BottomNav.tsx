@@ -85,10 +85,10 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
               </div>
               <motion.span 
                 className={cn(
-                  "text-[10px] mt-1.5 font-semibold tracking-wide transition-colors duration-200",
-                  isActive ? "text-primary" : "text-muted-foreground"
+                  "text-[10px] mt-1.5 font-bold tracking-wide transition-colors duration-200",
+                  isActive ? "text-primary drop-shadow-[0_0_8px_hsl(var(--primary)/0.5)]" : "text-foreground/70"
                 )}
-                animate={isActive ? { opacity: 1 } : { opacity: 0.7 }}
+                animate={isActive ? { opacity: 1 } : { opacity: 0.85 }}
               >
                 {tab.label}
               </motion.span>

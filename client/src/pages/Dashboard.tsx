@@ -57,7 +57,7 @@ export function Dashboard({
       >
         <div>
           <p className="text-sm text-muted-foreground">Welcome back</p>
-          <h1 className="text-2xl font-bold text-foreground">MinersClub</h1>
+          <h1 className="text-2xl font-bold text-foreground font-display">Miners Clab</h1>
         </div>
         <div className="flex items-center gap-2">
           <motion.button
@@ -143,48 +143,41 @@ export function Dashboard({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <h2 className="text-lg font-semibold text-foreground mb-4">Quick Stats</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <GlassCard delay={0.25} className="p-4 min-h-[100px]">
-            <div className="flex items-center gap-3 h-full">
-              <img src={btcWallet} alt="Contracts" className="w-12 h-12 shrink-0 object-contain" />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs text-muted-foreground truncate">Contracts</p>
-                <p className="text-lg font-bold text-foreground truncate" data-testid="text-active-contracts">{activeContracts}</p>
+        <h2 className="text-lg font-semibold text-foreground mb-4 font-display">Mining Performance</h2>
+        <GlassCard delay={0.25} className="p-5 relative overflow-hidden" glow="primary">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-cyan-500/5 pointer-events-none" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-4 mb-5">
+              <motion.img 
+                src={gpuMining} 
+                alt="Mining" 
+                className="w-20 h-20 object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <div className="flex-1">
+                <p className="text-sm text-muted-foreground mb-1">Total Hashrate</p>
+                <p className="text-3xl font-bold text-foreground font-display" data-testid="text-hash-power">{miningPower}</p>
+                <p className="text-xs text-emerald-400 mt-1">Active & Mining</p>
               </div>
             </div>
-          </GlassCard>
-
-          <GlassCard delay={0.3} className="p-4 min-h-[100px]">
-            <div className="flex items-center gap-3 h-full">
-              <img src={btcCalc} alt="Earned" className="w-12 h-12 shrink-0 object-contain" />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs text-muted-foreground truncate">Earned</p>
-                <p className="text-lg font-bold text-foreground truncate" data-testid="text-total-earned">{totalEarned} ₿</p>
+            
+            <div className="grid grid-cols-3 gap-3">
+              <div className="liquid-glass rounded-xl p-3 text-center">
+                <p className="text-2xl font-bold text-foreground font-display" data-testid="text-active-contracts">{activeContracts}</p>
+                <p className="text-xs text-muted-foreground">Contracts</p>
+              </div>
+              <div className="liquid-glass rounded-xl p-3 text-center">
+                <p className="text-2xl font-bold text-emerald-400 font-display" data-testid="text-total-earned">{totalEarned}</p>
+                <p className="text-xs text-muted-foreground">Earned (BTC)</p>
+              </div>
+              <div className="liquid-glass rounded-xl p-3 text-center">
+                <p className="text-2xl font-bold text-foreground font-display" data-testid="text-days-active">{daysActive}</p>
+                <p className="text-xs text-muted-foreground">Days</p>
               </div>
             </div>
-          </GlassCard>
-
-          <GlassCard delay={0.35} className="p-4 min-h-[100px]">
-            <div className="flex items-center gap-3 h-full">
-              <img src={serverMining} alt="Hash Power" className="w-12 h-12 shrink-0 object-contain" />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs text-muted-foreground truncate">Hash Power</p>
-                <p className="text-lg font-bold text-foreground truncate" data-testid="text-hash-power">{miningPower}</p>
-              </div>
-            </div>
-          </GlassCard>
-
-          <GlassCard delay={0.4} className="p-4 min-h-[100px]">
-            <div className="flex items-center gap-3 h-full">
-              <img src={btcShop} alt="Days Active" className="w-12 h-12 shrink-0 object-contain" />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs text-muted-foreground truncate">Days Active</p>
-                <p className="text-lg font-bold text-foreground truncate" data-testid="text-days-active">{daysActive}</p>
-              </div>
-            </div>
-          </GlassCard>
-        </div>
+          </div>
+        </GlassCard>
       </motion.div>
 
       <motion.div
@@ -242,29 +235,43 @@ export function Dashboard({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.55 }}
       >
-        <h2 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h2>
-        <div className="flex gap-3">
-          <GlassCard delay={0.6} className="flex-1 p-4 hover-elevate cursor-pointer">
-            <div className="flex flex-col items-center text-center gap-2">
+        <h2 className="text-lg font-semibold text-foreground mb-4 font-display">Premium Features</h2>
+        <div className="space-y-3">
+          <GlassCard delay={0.6} className="p-4 hover-elevate cursor-pointer" glow="primary">
+            <div className="flex items-center gap-4">
               <motion.img 
-                src={gpuMining}
+                src={serverMining}
                 alt="Buy Hashpower"
-                className="w-16 h-16 object-contain"
+                className="w-14 h-14 object-contain"
                 whileHover={{ scale: 1.05 }}
                 transition={{ type: "spring", stiffness: 300 }}
               />
-              <p className="font-medium text-foreground">Buy Hashpower</p>
-              <p className="text-xs text-muted-foreground">Increase your mining</p>
+              <div className="flex-1">
+                <p className="font-semibold text-foreground font-display">Buy Hashpower</p>
+                <p className="text-sm text-muted-foreground">Upgrade your mining capacity</p>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                <DollarSign className="w-4 h-4 text-primary" />
+              </div>
             </div>
           </GlassCard>
 
-          <GlassCard delay={0.65} className="flex-1 p-4 hover-elevate cursor-pointer">
-            <div className="flex flex-col items-center text-center gap-2">
-              <div className="w-16 h-16 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                <DollarSign className="w-8 h-8 text-emerald-400" />
+          <GlassCard delay={0.65} className="p-4 hover-elevate cursor-pointer" glow="btc">
+            <div className="flex items-center gap-4">
+              <motion.img 
+                src={btcShop}
+                alt="Solo Mining"
+                className="w-14 h-14 object-contain"
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              />
+              <div className="flex-1">
+                <p className="font-semibold text-foreground font-display">Solo Mining Jackpot</p>
+                <p className="text-sm text-muted-foreground">Win full 3 BTC block rewards</p>
               </div>
-              <p className="font-medium text-foreground">View Earnings</p>
-              <p className="text-xs text-muted-foreground">Track your profits</p>
+              <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
+                <span className="text-amber-400 font-bold text-sm">3</span>
+              </div>
             </div>
           </GlassCard>
         </div>
