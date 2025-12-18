@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Bell, ArrowDownToLine, ArrowUpFromLine, Settings, DollarSign, User, Zap, TrendingUp, Gift } from "lucide-react";
+import { Bell, ArrowDownToLine, ArrowUpFromLine, Settings, DollarSign, User, Users, Star } from "lucide-react";
 import { GlassCard, LiquidGlassCard } from "@/components/GlassCard";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { Button } from "@/components/ui/button";
@@ -156,7 +156,48 @@ export function Dashboard({
         transition={{ delay: 0.2 }}
         className="grid grid-cols-2 gap-3"
       >
-        <GlassCard delay={0.25} className="p-4 hover-elevate cursor-pointer" glow="primary">
+        <motion.div
+          className="relative overflow-hidden rounded-2xl cursor-pointer hover-elevate"
+          whileTap={{ scale: 0.98 }}
+          data-testid="card-invite-friend"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-black" />
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iMC4wMyIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIwIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9InVybCgjZykiLz48L3N2Zz4=')] opacity-50" />
+          <div className="relative z-10 p-4 h-32 flex flex-col justify-end">
+            <Users className="w-6 h-6 text-primary mb-2" />
+            <p className="text-sm font-medium text-foreground leading-tight">
+              Invite a friend,<br />
+              both receive<br />
+              <span className="text-primary font-bold">$20 in hashpower</span>
+            </p>
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="relative overflow-hidden rounded-2xl cursor-pointer hover-elevate"
+          whileTap={{ scale: 0.98 }}
+          data-testid="card-rate-app"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-black" />
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iMC4wMyIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIwIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9InVybCgjZykiLz48L3N2Zz4=')] opacity-50" />
+          <div className="relative z-10 p-4 h-32 flex flex-col justify-end">
+            <Star className="w-6 h-6 text-amber-400 mb-2" />
+            <p className="text-sm font-medium text-foreground leading-tight">
+              Get <span className="text-amber-400 font-bold">$20</span> in<br />
+              hashpower when<br />
+              you rate our app
+            </p>
+          </div>
+        </motion.div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="grid grid-cols-2 gap-3"
+      >
+        <GlassCard delay={0.35} className="p-4 hover-elevate cursor-pointer" glow="primary">
           <div className="flex flex-col items-center text-center gap-3">
             <motion.img 
               src={gpuMining}
@@ -170,23 +211,8 @@ export function Dashboard({
             </div>
           </div>
         </GlassCard>
-        
-        <GlassCard delay={0.3} className="p-4 hover-elevate cursor-pointer" glow="btc">
-          <div className="flex flex-col items-center text-center gap-3">
-            <motion.img 
-              src={btcShop}
-              alt="Special Offers"
-              className="w-14 h-14 object-contain"
-              whileHover={{ scale: 1.05 }}
-            />
-            <div>
-              <p className="text-lg font-bold text-amber-400 font-display" data-testid="text-special-offers">20% OFF</p>
-              <p className="text-xs text-muted-foreground">Limited Deals</p>
-            </div>
-          </div>
-        </GlassCard>
 
-        <GlassCard delay={0.35} className="p-4 hover-elevate cursor-pointer">
+        <GlassCard delay={0.4} className="p-4 hover-elevate cursor-pointer">
           <div className="flex flex-col items-center text-center gap-3">
             <motion.img 
               src={serverMining}
@@ -200,8 +226,30 @@ export function Dashboard({
             </div>
           </div>
         </GlassCard>
+      </motion.div>
 
-        <GlassCard delay={0.4} className="p-4 hover-elevate cursor-pointer">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+        className="grid grid-cols-2 gap-3"
+      >
+        <GlassCard delay={0.4} className="p-4 hover-elevate cursor-pointer" glow="btc">
+          <div className="flex flex-col items-center text-center gap-3">
+            <motion.img 
+              src={btcShop}
+              alt="Total Earned"
+              className="w-14 h-14 object-contain"
+              whileHover={{ scale: 1.05 }}
+            />
+            <div>
+              <p className="text-xl font-bold text-emerald-400 font-display" data-testid="text-total-earned">{totalEarned} BTC</p>
+              <p className="text-xs text-muted-foreground">Total Earned</p>
+            </div>
+          </div>
+        </GlassCard>
+
+        <GlassCard delay={0.45} className="p-4 hover-elevate cursor-pointer">
           <div className="flex flex-col items-center text-center gap-3">
             <motion.img 
               src={mixedMain}
