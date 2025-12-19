@@ -72,9 +72,7 @@ export function Onboarding({ onComplete, onSignIn, onSkip }: OnboardingProps) {
             <Wallet className="w-6 h-6 text-primary" />
             <span className="font-display text-lg font-bold text-foreground">Mining Club</span>
           </div>
-          <Button 
-            variant="ghost" 
-            size="sm"
+          <button
             onClick={() => {
               if (onSkip) {
                 onSkip();
@@ -82,11 +80,12 @@ export function Onboarding({ onComplete, onSignIn, onSkip }: OnboardingProps) {
                 onSignIn();
               }
             }}
-            className="text-muted-foreground"
+            className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer relative z-50"
             data-testid="button-skip"
+            type="button"
           >
             Skip
-          </Button>
+          </button>
         </div>
 
         <AnimatePresence mode="wait">
