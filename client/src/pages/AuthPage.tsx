@@ -38,14 +38,19 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
 
       <div className="relative z-10 flex-1 flex flex-col max-w-md mx-auto w-full px-6 pt-16 pb-8">
         <div className="flex items-center justify-between mb-8">
-          <button
-            onClick={onBack}
-            className="p-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer relative z-50 flex items-center justify-center"
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={(e) => {
+              e.preventDefault();
+              onBack();
+            }}
+            className="text-muted-foreground pointer-events-auto"
             data-testid="button-back-auth"
             type="button"
           >
             <ArrowLeft className="w-5 h-5" />
-          </button>
+          </Button>
           <div className="flex items-center gap-2">
             <Wallet className="w-6 h-6 text-primary" />
             <span className="font-display text-lg font-bold text-foreground">Mining Club</span>
