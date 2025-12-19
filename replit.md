@@ -9,7 +9,7 @@ Mining Club is a mobile-first cryptocurrency hashpower sales app built as a web 
 - Preferred communication style: Simple, everyday language
 - Design language: iOS 26 Liquid Glass with translucent glass effects, 24-32px blur, inner highlights, rounded corners
 - Primary accent color: Blue (not yellow/amber)
-- Fonts: Inter (UI text) + Space Grotesk (headings/display) from Google Fonts
+- Fonts: Outfit (unified stylish font for both UI and headings) from Google Fonts
 - Focus on eye-catching 3D graphics and animations to convert users
 - iOS 26 features: Status bar with battery/network, home indicator bar
 
@@ -23,7 +23,7 @@ Mining Club is a mobile-first cryptocurrency hashpower sales app built as a web 
 - **State Management**: TanStack Query (React Query) for server state
 - **Animations**: Framer Motion for fluid, physics-based animations
 - **Charts**: Recharts for data visualization
-- **Fonts**: Inter (body), Space Grotesk (display)
+- **Fonts**: Outfit (unified stylish font for body and display)
 
 The frontend follows a component-based architecture with:
 - Page components in `client/src/pages/` (Dashboard, Wallet, Invest, Mining, SoloMining, Settings, Onboarding, AuthPage)
@@ -72,7 +72,7 @@ The app follows iOS 26 Liquid Glass design patterns with:
 - 3D graphics and coin logos for visual appeal
 - Touch-optimized tap targets (minimum 44pt)
 - Safe area padding for notch devices
-- Inter font (UI) + Space Grotesk font (display/headings)
+- Outfit font (unified for both UI and headings)
 - iOS status bar simulation with battery, signal, wifi icons
 - iOS home indicator bar with proper spacing from navigation
 

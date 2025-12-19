@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, Gem, Shield, Zap, Wallet } from "lucide-react";
+import { ChevronRight, Gem, Shield, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/GlassCard";
 
@@ -68,10 +68,7 @@ export function Onboarding({ onComplete, onSignIn, onSkip }: OnboardingProps) {
 
       <div className="relative z-10 flex-1 flex flex-col max-w-md mx-auto w-full px-6 pt-16 pb-8">
         <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-2">
-            <Wallet className="w-6 h-6 text-primary" />
-            <span className="font-display text-lg font-bold text-foreground">Mining Club</span>
-          </div>
+          <span className="font-display text-lg font-bold text-foreground">Mining Club</span>
           <button
             onClick={() => onSkip ? onSkip() : onSignIn()}
             className="px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/10 transition-colors"
