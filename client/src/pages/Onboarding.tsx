@@ -75,17 +75,15 @@ export function Onboarding({ onComplete, onSignIn, onSkip }: OnboardingProps) {
           <Button 
             variant="ghost" 
             size="sm"
-            onClick={(e) => {
-              e.preventDefault();
+            onClick={() => {
               if (onSkip) {
                 onSkip();
               } else {
                 onSignIn();
               }
             }}
-            className="text-muted-foreground pointer-events-auto"
+            className="text-muted-foreground"
             data-testid="button-skip"
-            type="button"
           >
             Skip
           </Button>
