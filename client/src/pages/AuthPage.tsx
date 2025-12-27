@@ -9,7 +9,8 @@ import {
   signInWithGoogle, 
   signInWithApple, 
   signInWithEmail, 
-  registerWithEmail 
+  registerWithEmail,
+  resetPassword
 } from "@/lib/firebase";
 
 import mixedMain from "@assets/Mixed_main_1766014388605.png";
@@ -24,8 +25,38 @@ interface AuthPageProps {
 export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPageProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  const handleResetPassword = async () => {
+    if (!email) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await resetPassword(email);
+      toast({
+        title: "Reset Email Sent",
+        description: "Check your inbox for password reset instructions.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Reset Failed",
+        description: error.code === "auth/user-not-found" 
+          ? "No account found with this email." 
+          : "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSocialAuth = async (provider: "google" | "apple") => {
     setIsLoading(true);
@@ -64,6 +95,15 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
       return;
     }
 
+    if (mode === "register" && !name.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter your full name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (password.length < 6) {
       toast({
         title: "Weak Password",
@@ -78,7 +118,7 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
       if (mode === "signin") {
         await signInWithEmail(email, password);
       } else {
-        await registerWithEmail(email, password);
+        await registerWithEmail(email, password, name.trim());
       }
       toast({
         title: mode === "signin" ? "Welcome Back!" : "Account Created!",
@@ -205,6 +245,17 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
 
             <form onSubmit={handleEmailAuth} className="space-y-4">
               <div className="space-y-3">
+                {mode === "register" && (
+                  <Input
+                    type="text"
+                    placeholder="Full Name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="h-14 text-base bg-white/5 border-white/10"
+                    data-testid="input-name"
+                    disabled={isLoading}
+                  />
+                )}
                 <Input
                   type="email"
                   placeholder="Email Address"
@@ -224,6 +275,18 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
                   disabled={isLoading}
                 />
               </div>
+
+              {mode === "signin" && (
+                <button
+                  type="button"
+                  onClick={handleResetPassword}
+                  className="text-sm text-primary hover:underline"
+                  data-testid="button-forgot-password"
+                  disabled={isLoading}
+                >
+                  Forgot Password?
+                </button>
+              )}
 
               <Button
                 type="submit"

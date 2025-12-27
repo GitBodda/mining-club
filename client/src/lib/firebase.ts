@@ -11,6 +11,8 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  sendPasswordResetEmail,
+  updateProfile,
   User
 } from "firebase/auth";
 
@@ -61,13 +63,26 @@ export async function signInWithEmail(email: string, password: string) {
   }
 }
 
-// Register with email/password
-export async function registerWithEmail(email: string, password: string) {
+// Register with email/password and optional display name
+export async function registerWithEmail(email: string, password: string, displayName?: string) {
   try {
     const result = await createUserWithEmailAndPassword(auth, email, password);
+    if (displayName && result.user) {
+      await updateProfile(result.user, { displayName });
+    }
     return result.user;
   } catch (error) {
     console.error("Email registration error:", error);
+    throw error;
+  }
+}
+
+// Send password reset email
+export async function resetPassword(email: string) {
+  try {
+    await sendPasswordResetEmail(auth, email);
+  } catch (error) {
+    console.error("Password reset error:", error);
     throw error;
   }
 }
@@ -114,3 +129,6 @@ export async function getIdToken(): Promise<string | null> {
   }
   return null;
 }
+
+// Re-export User type
+export type { User };

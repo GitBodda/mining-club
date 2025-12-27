@@ -2,19 +2,23 @@ import { motion } from "framer-motion";
 import { 
   User, Shield, Bell, Key, Fingerprint, Clock, 
   DollarSign, Globe, ChevronRight, Award, Info,
-  FileText, Mail, Zap, Activity
+  FileText, Mail, Zap, Activity, LogOut
 } from "lucide-react";
 import { GlassCard } from "@/components/GlassCard";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { UserSettings } from "@/lib/types";
+import type { User as FirebaseUser } from "firebase/auth";
 
 interface SettingsProps {
   settings: UserSettings;
   onSettingsChange: (settings: Partial<UserSettings>) => void;
+  user?: FirebaseUser | null;
+  onLogout?: () => void;
 }
 
 interface SettingItemProps {
@@ -71,7 +75,14 @@ function SettingItem({ icon: Icon, label, description, onClick, action, danger, 
   return <div data-testid={testId || `setting-${label.toLowerCase().replace(/\s+/g, '-')}`}>{content}</div>;
 }
 
-export function Settings({ settings, onSettingsChange }: SettingsProps) {
+export function Settings({ settings, onSettingsChange, user, onLogout }: SettingsProps) {
+  const displayName = user?.displayName || user?.email?.split('@')[0] || "Guest User";
+  const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || "GU";
+  const email = user?.email || "Not signed in";
+  const memberSince = user?.metadata?.creationTime 
+    ? new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+    : "Dec 2024";
+
   return (
     <motion.div
       className="flex flex-col gap-6 pb-6"
@@ -92,18 +103,25 @@ export function Settings({ settings, onSettingsChange }: SettingsProps) {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-purple-500/5" />
         
         <div className="relative z-10 flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center">
-            <span className="text-2xl font-bold text-white">JD</span>
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center overflow-hidden">
+            {user?.photoURL ? (
+              <img src={user.photoURL} alt={displayName} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-2xl font-bold text-white">{initials}</span>
+            )}
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-lg font-semibold text-foreground" data-testid="text-user-name">John Doe</h2>
-              <Badge variant="secondary" className="bg-primary/20 text-primary border-0">
-                <Award className="w-3 h-3 mr-1" />
-                Pro
-              </Badge>
+              <h2 className="text-lg font-semibold text-foreground" data-testid="text-user-name">{displayName}</h2>
+              {user && (
+                <Badge variant="secondary" className="bg-primary/20 text-primary border-0">
+                  <Award className="w-3 h-3 mr-1" />
+                  Pro
+                </Badge>
+              )}
             </div>
-            <p className="text-sm text-muted-foreground mt-0.5" data-testid="text-mining-since">Mining since Dec 2024</p>
+            <p className="text-sm text-muted-foreground mt-0.5" data-testid="text-user-email">{email}</p>
+            <p className="text-xs text-muted-foreground mt-0.5" data-testid="text-mining-since">Mining since {memberSince}</p>
           </div>
         </div>
 
@@ -342,8 +360,22 @@ export function Settings({ settings, onSettingsChange }: SettingsProps) {
         </GlassCard>
       </div>
 
+      {user && onLogout && (
+        <div className="mt-4">
+          <Button
+            variant="outline"
+            className="w-full h-12 border-red-500/30 text-red-400 hover:bg-red-500/10"
+            onClick={onLogout}
+            data-testid="button-logout"
+          >
+            <LogOut className="w-5 h-5 mr-2" />
+            Sign Out
+          </Button>
+        </div>
+      )}
+
       <p className="text-center text-xs text-muted-foreground mt-2" data-testid="text-copyright">
-        CryptoMine v1.0.0
+        Mining Club v1.0.0
       </p>
     </motion.div>
   );

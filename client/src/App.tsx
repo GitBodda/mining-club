@@ -18,6 +18,8 @@ import { Onboarding } from "@/pages/Onboarding";
 import { AuthPage } from "@/pages/AuthPage";
 import { DashboardSkeleton, WalletSkeleton } from "@/components/LoadingSkeleton";
 import { useMiningData } from "@/hooks/useMiningData";
+import { onAuthChange, logOut } from "@/lib/firebase";
+import type { User } from "firebase/auth";
 
 type AppView = "onboarding" | "auth" | "main";
 type AuthMode = "signin" | "register";
@@ -27,6 +29,7 @@ function MobileApp() {
   const [showSettings, setShowSettings] = useState(false);
   const [appView, setAppView] = useState<AppView>("onboarding");
   const [authMode, setAuthMode] = useState<AuthMode>("signin");
+  const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   
   const {
     miningStats,
@@ -63,6 +66,21 @@ function MobileApp() {
       setAppView("auth");
     }
   }, []);
+
+  // Track Firebase auth state
+  useEffect(() => {
+    const unsubscribe = onAuthChange((user) => {
+      setFirebaseUser(user);
+      if (user) {
+        localStorage.setItem("isLoggedIn", "true");
+      } else if (appView === "main") {
+        // User signed out remotely - clear state and go to auth
+        localStorage.removeItem("isLoggedIn");
+        setAppView("auth");
+      }
+    });
+    return () => unsubscribe();
+  }, [appView]);
 
   const handleOnboardingComplete = () => {
     localStorage.setItem("hasSeenOnboarding", "true");
@@ -133,7 +151,7 @@ function MobileApp() {
                 change24h={change24h}
                 transactions={transactions}
                 onOpenSettings={() => setShowSettings(true)}
-                onOpenProfile={() => setAppView("auth")}
+                onOpenProfile={() => firebaseUser ? setShowSettings(true) : setAppView("auth")}
                 isLoggedIn={localStorage.getItem("isLoggedIn") === "true"}
               />
             )
@@ -215,6 +233,13 @@ function MobileApp() {
               <Settings
                 settings={settings}
                 onSettingsChange={updateSettings}
+                user={firebaseUser}
+                onLogout={async () => {
+                  await logOut();
+                  localStorage.removeItem("isLoggedIn");
+                  setShowSettings(false);
+                  setAppView("auth");
+                }}
               />
             </div>
             <IOSHomeIndicator />
