@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import type { UserSettings } from "@/lib/types";
 import type { User as FirebaseUser } from "firebase/auth";
 
@@ -87,6 +88,7 @@ function isEmailPasswordUser(user: FirebaseUser | null | undefined): boolean {
 
 export function Settings({ settings, onSettingsChange, user, onLogout }: SettingsProps) {
   const { toast } = useToast();
+  const { setCurrency } = useCurrency();
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [showPinDialog, setShowPinDialog] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -361,7 +363,10 @@ export function Settings({ settings, onSettingsChange, user, onLogout }: Setting
               </div>
               <Select 
                 value={settings.currency} 
-                onValueChange={(value: 'USD' | 'EUR' | 'GBP' | 'AED') => onSettingsChange({ currency: value })}
+                onValueChange={(value: 'USD' | 'EUR' | 'GBP' | 'AED') => {
+                  onSettingsChange({ currency: value });
+                  setCurrency(value);
+                }}
               >
                 <SelectTrigger className="w-24" data-testid="select-currency">
                   <SelectValue />

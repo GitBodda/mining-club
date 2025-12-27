@@ -8,6 +8,7 @@ import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import {
   Dialog,
   DialogContent,
@@ -104,6 +105,7 @@ interface WalletProps {
 }
 
 export function Wallet({ balances = defaultBalances, transactions, totalBalance, change24h = 1.45 }: WalletProps) {
+  const { convert, getSymbol, format } = useCurrency();
   const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoType>("BTC");
@@ -113,6 +115,7 @@ export function Wallet({ balances = defaultBalances, transactions, totalBalance,
   const [copied, setCopied] = useState(false);
 
   const calculatedTotalBalance = totalBalance ?? balances.reduce((sum, b) => sum + b.usdValue, 0);
+  const convertedBalance = convert(calculatedTotalBalance);
   const isPositive = change24h >= 0;
 
   const handleCryptoChange = (crypto: CryptoType) => {
@@ -202,9 +205,9 @@ export function Wallet({ balances = defaultBalances, transactions, totalBalance,
           <p className="text-sm text-muted-foreground mb-2">Total Balance</p>
           <div className="flex items-baseline gap-2 mb-2">
             <AnimatedCounter
-              value={calculatedTotalBalance}
+              value={convertedBalance}
               decimals={2}
-              prefix="$"
+              prefix={getSymbol()}
               className="text-4xl font-bold text-foreground"
               data-testid="text-total-balance"
             />

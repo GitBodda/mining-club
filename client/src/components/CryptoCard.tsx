@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, ArrowLeftRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import type { WalletBalance } from "@/lib/types";
 
 import btcLogo from "@assets/bitcoin-sign-3d-icon-png-download-4466132_1766014388601.png";
@@ -42,6 +43,7 @@ const colorMap: Record<string, { gradient: string; border: string }> = {
 };
 
 export function CryptoCard({ crypto, index, onExchange }: CryptoCardProps) {
+  const { format } = useCurrency();
   const colors = colorMap[crypto.symbol] || colorMap.BTC;
   const logo = logoMap[crypto.symbol] || btcLogo;
   const isPositive = crypto.change24h >= 0;
@@ -81,7 +83,7 @@ export function CryptoCard({ crypto, index, onExchange }: CryptoCardProps) {
 
         <div className="text-right">
           <p className="font-semibold text-foreground" data-testid={`text-usd-value-${crypto.symbol.toLowerCase()}`}>
-            ${crypto.usdValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            {format(crypto.usdValue)}
           </p>
           <div
             className={cn(

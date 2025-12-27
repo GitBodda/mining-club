@@ -3,6 +3,7 @@ import { Bell, ArrowDownToLine, ArrowUpFromLine, Settings, DollarSign, User, Use
 import { GlassCard, LiquidGlassCard } from "@/components/GlassCard";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { Button } from "@/components/ui/button";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import type { WalletBalance, Transaction } from "@/lib/types";
 
 import mixedMain from "@assets/Mixed_main_1766014388605.png";
@@ -37,12 +38,14 @@ export function Dashboard({
   onOpenProfile,
   isLoggedIn = false
 }: DashboardProps) {
+  const { convert, getSymbol } = useCurrency();
   const safeChange24h = change24h ?? 0;
   const isPositiveChange = safeChange24h >= 0;
   const activeContracts = 3;
   const totalEarned = 0.00847;
   const miningPower = "125 TH/s";
   const daysActive = 45;
+  const convertedBalance = convert(totalBalance);
 
   return (
     <motion.div
@@ -109,9 +112,9 @@ export function Dashboard({
 
           <div className="mb-1">
             <div className="flex items-baseline gap-1">
-              <span className="text-lg text-muted-foreground">$</span>
+              <span className="text-lg text-muted-foreground">{getSymbol()}</span>
               <AnimatedCounter
-                value={totalBalance}
+                value={convertedBalance}
                 decimals={2}
                 className="text-4xl font-bold text-foreground tracking-tight"
               />

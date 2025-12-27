@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowDownLeft, ArrowUpRight, Pickaxe } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import type { Transaction } from "@/lib/types";
 
 interface TransactionItemProps {
@@ -9,6 +10,7 @@ interface TransactionItemProps {
 }
 
 export function TransactionItem({ transaction, index }: TransactionItemProps) {
+  const { format } = useCurrency();
   const icons = {
     earned: Pickaxe,
     withdrawn: ArrowUpRight,
@@ -76,7 +78,7 @@ export function TransactionItem({ transaction, index }: TransactionItemProps) {
           {transaction.amount.toFixed(6)} {transaction.symbol}
         </p>
         <p className="text-sm text-muted-foreground">
-          ${transaction.usdValue.toFixed(2)}
+          {format(transaction.usdValue)}
         </p>
       </div>
     </motion.div>
