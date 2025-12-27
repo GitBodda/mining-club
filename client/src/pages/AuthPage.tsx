@@ -1,10 +1,16 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, ArrowLeft } from "lucide-react";
+import { Mail, ArrowLeft, Loader2 } from "lucide-react";
 import { SiGoogle, SiApple } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { GlassCard } from "@/components/GlassCard";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  signInWithGoogle, 
+  signInWithApple, 
+  signInWithEmail, 
+  registerWithEmail 
+} from "@/lib/firebase";
 
 import mixedMain from "@assets/Mixed_main_1766014388605.png";
 
@@ -18,14 +24,89 @@ interface AuthPageProps {
 export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPageProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-  const handleSocialAuth = (provider: string) => {
-    window.location.href = "/api/login";
+  const handleSocialAuth = async (provider: "google" | "apple") => {
+    setIsLoading(true);
+    try {
+      if (provider === "google") {
+        await signInWithGoogle();
+      } else {
+        await signInWithApple();
+      }
+      toast({
+        title: "Welcome!",
+        description: "You have successfully signed in.",
+      });
+      onComplete();
+    } catch (error: any) {
+      console.error("Auth error:", error);
+      toast({
+        title: "Authentication Failed",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleEmailAuth = (e: React.FormEvent) => {
+  const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    window.location.href = "/api/login";
+    
+    if (!email || !password) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter both email and password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: "Weak Password",
+        description: "Password must be at least 6 characters.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      if (mode === "signin") {
+        await signInWithEmail(email, password);
+      } else {
+        await registerWithEmail(email, password);
+      }
+      toast({
+        title: mode === "signin" ? "Welcome Back!" : "Account Created!",
+        description: mode === "signin" 
+          ? "You have successfully signed in." 
+          : "Your account has been created successfully.",
+      });
+      onComplete();
+    } catch (error: any) {
+      console.error("Auth error:", error);
+      let message = "Please try again.";
+      if (error.code === "auth/email-already-in-use") {
+        message = "This email is already registered. Try signing in instead.";
+      } else if (error.code === "auth/invalid-email") {
+        message = "Please enter a valid email address.";
+      } else if (error.code === "auth/wrong-password" || error.code === "auth/user-not-found") {
+        message = "Invalid email or password.";
+      } else if (error.code === "auth/invalid-credential") {
+        message = "Invalid email or password.";
+      }
+      toast({
+        title: "Authentication Failed",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -44,6 +125,7 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
             data-testid="button-back-auth"
             type="button"
             aria-label="Go back"
+            disabled={isLoading}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -87,9 +169,14 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
               variant="outline"
               className="w-full h-14 text-base font-medium bg-white dark:bg-white/10 border-white/20 gap-3"
               data-testid="button-google-auth"
+              disabled={isLoading}
             >
-              <SiGoogle className="w-5 h-5 text-[#4285F4]" />
-              <span className="text-foreground">Continue with Google</span>
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <SiGoogle className="w-5 h-5 text-[#4285F4]" />
+              )}
+              <span className="text-foreground">Continue With Google</span>
             </Button>
 
             <Button
@@ -97,9 +184,14 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
               variant="outline"
               className="w-full h-14 text-base font-medium bg-black dark:bg-white border-white/20 gap-3"
               data-testid="button-apple-auth"
+              disabled={isLoading}
             >
-              <SiApple className="w-5 h-5 text-white dark:text-black" />
-              <span className="text-white dark:text-black font-semibold">Continue with Apple</span>
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin text-white dark:text-black" />
+              ) : (
+                <SiApple className="w-5 h-5 text-white dark:text-black" />
+              )}
+              <span className="text-white dark:text-black font-semibold">Continue With Apple</span>
             </Button>
 
             <div className="relative my-6">
@@ -107,7 +199,7 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
                 <div className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">or</span>
+                <span className="bg-background px-2 text-muted-foreground">Or</span>
               </div>
             </div>
 
@@ -115,11 +207,12 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
               <div className="space-y-3">
                 <Input
                   type="email"
-                  placeholder="Email address"
+                  placeholder="Email Address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="h-14 text-base bg-white/5 border-white/10"
                   data-testid="input-email"
+                  disabled={isLoading}
                 />
                 <Input
                   type="password"
@@ -128,6 +221,7 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
                   onChange={(e) => setPassword(e.target.value)}
                   className="h-14 text-base bg-white/5 border-white/10"
                   data-testid="input-password"
+                  disabled={isLoading}
                 />
               </div>
 
@@ -135,8 +229,13 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
                 type="submit"
                 className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-600 text-white"
                 data-testid="button-email-auth"
+                disabled={isLoading}
               >
-                <Mail className="w-5 h-5 mr-2" />
+                {isLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                ) : (
+                  <Mail className="w-5 h-5 mr-2" />
+                )}
                 {mode === "signin" ? "Sign In" : "Create Account"}
               </Button>
             </form>
@@ -144,22 +243,24 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
             <p className="text-center text-sm text-muted-foreground pt-4">
               {mode === "signin" ? (
                 <>
-                  Don't have an account?{" "}
+                  Don't Have An Account?{" "}
                   <button 
                     onClick={() => onModeChange("register")}
                     className="text-primary font-semibold hover:underline"
                     data-testid="button-switch-to-register"
+                    disabled={isLoading}
                   >
                     Sign Up
                   </button>
                 </>
               ) : (
                 <>
-                  Already have an account?{" "}
+                  Already Have An Account?{" "}
                   <button 
                     onClick={() => onModeChange("signin")}
                     className="text-primary font-semibold hover:underline"
                     data-testid="button-switch-to-signin"
+                    disabled={isLoading}
                   >
                     Sign In
                   </button>
@@ -169,7 +270,7 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
           </div>
 
           <p className="text-center text-xs text-muted-foreground/60 mt-auto pt-8">
-            By continuing, you agree to our Terms of Service and Privacy Policy
+            By Continuing, You Agree To Our Terms Of Service And Privacy Policy
           </p>
         </motion.div>
       </div>

@@ -2,7 +2,7 @@ import { type User, type InsertUser } from "@shared/schema";
 import type { 
   MiningStats, 
   WalletBalance, 
-  Transaction, 
+  LegacyTransaction, 
   MiningPool, 
   ChartDataPoint, 
   UserSettings 
@@ -16,7 +16,7 @@ export interface IStorage {
   getMiningStats(): Promise<MiningStats>;
   updateMiningStats(stats: Partial<MiningStats>): Promise<MiningStats>;
   getWalletBalances(): Promise<WalletBalance[]>;
-  getTransactions(): Promise<Transaction[]>;
+  getTransactions(): Promise<LegacyTransaction[]>;
   getMiningPools(): Promise<MiningPool[]>;
   selectPool(id: string): Promise<MiningPool[]>;
   getChartData(): Promise<ChartDataPoint[]>;
@@ -44,7 +44,7 @@ export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private miningStats: MiningStats;
   private balances: WalletBalance[];
-  private transactions: Transaction[];
+  private transactions: LegacyTransaction[];
   private pools: MiningPool[];
   private chartData: ChartDataPoint[];
   private settings: UserSettings;
@@ -192,13 +192,23 @@ export class MemStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(
-      (user) => user.username === username,
+      (user) => user.email === username,
     );
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id, 
+      createdAt: new Date(),
+      firebaseUid: insertUser.firebaseUid || null,
+      displayName: insertUser.displayName || null,
+      photoUrl: insertUser.photoUrl || null,
+      role: insertUser.role || "user",
+      isActive: insertUser.isActive !== undefined ? insertUser.isActive : true,
+      lastLoginAt: insertUser.lastLoginAt || null,
+    };
     this.users.set(id, user);
     return user;
   }
@@ -258,7 +268,7 @@ export class MemStorage implements IStorage {
     return [...this.balances];
   }
 
-  async getTransactions(): Promise<Transaction[]> {
+  async getTransactions(): Promise<LegacyTransaction[]> {
     return [...this.transactions];
   }
 
