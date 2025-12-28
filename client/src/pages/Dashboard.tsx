@@ -8,6 +8,7 @@ import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { Button } from "@/components/ui/button";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 import { useToast } from "@/hooks/use-toast";
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -64,6 +65,7 @@ export function Dashboard({
 }: DashboardProps) {
   const { convert, getSymbol, currency, setCurrency } = useCurrency();
   const { theme, toggleTheme } = useTheme();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { toast } = useToast();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRewardCelebration, setShowRewardCelebration] = useState(false);
@@ -75,8 +77,6 @@ export function Dashboard({
   const miningPower = "0 TH/s";
   const daysActive = 0;
   const convertedBalance = convert(totalBalance);
-  
-  const notifications: { id: string; title: string; message: string; time: string }[] = [];
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -188,8 +188,10 @@ export function Dashboard({
               onClick={() => setShowNotifications(!showNotifications)}
             >
               <Bell className="w-5 h-5 text-muted-foreground" />
-              {notifications.length > 0 && (
-                <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full animate-pulse" />
+              {unreadCount > 0 && (
+                <span className="absolute top-2 right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center text-[10px] font-medium text-primary-foreground">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
               )}
             </motion.button>
             <AnimatePresence>
@@ -204,22 +206,45 @@ export function Dashboard({
                 >
                   <div className="flex items-center justify-between p-4 border-b border-white/10">
                     <h3 className="font-semibold text-foreground">Notifications</h3>
-                    <button
-                      onClick={() => setShowNotifications(false)}
-                      className="w-6 h-6 rounded-lg flex items-center justify-center hover:bg-white/10"
-                      data-testid="button-close-notifications"
-                    >
-                      <X className="w-4 h-4 text-muted-foreground" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={markAllAsRead}
+                          className="text-xs text-primary hover:underline"
+                          data-testid="button-mark-all-read"
+                        >
+                          Mark all read
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setShowNotifications(false)}
+                        className="w-6 h-6 rounded-lg flex items-center justify-center hover:bg-white/10"
+                        data-testid="button-close-notifications"
+                      >
+                        <X className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    </div>
                   </div>
                   {notifications.length > 0 ? (
                     <div className="max-h-64 overflow-y-auto">
                       {notifications.map((notif) => (
-                        <div key={notif.id} className="p-4 border-b border-white/5 hover:bg-white/5">
-                          <p className="font-medium text-foreground text-sm">{notif.title}</p>
-                          <p className="text-xs text-muted-foreground mt-1">{notif.message}</p>
-                          <p className="text-xs text-muted-foreground/60 mt-2">{notif.time}</p>
-                        </div>
+                        <button
+                          key={notif.id}
+                          onClick={() => markAsRead(notif.id)}
+                          className={`w-full text-left p-4 border-b border-white/5 hover:bg-white/5 transition-colors ${!notif.read ? 'bg-primary/5' : ''}`}
+                          data-testid={`notification-item-${notif.id}`}
+                        >
+                          <div className="flex items-start gap-3">
+                            {!notif.read && (
+                              <span className="w-2 h-2 mt-1.5 rounded-full bg-primary shrink-0" />
+                            )}
+                            <div className={!notif.read ? '' : 'pl-5'}>
+                              <p className="font-medium text-foreground text-sm">{notif.title}</p>
+                              <p className="text-xs text-muted-foreground mt-1">{notif.message}</p>
+                              <p className="text-xs text-muted-foreground/60 mt-2">{notif.time}</p>
+                            </div>
+                          </div>
+                        </button>
                       ))}
                     </div>
                   ) : (
@@ -527,10 +552,10 @@ export function Dashboard({
         </div>
         <div className="grid grid-cols-2 gap-3">
           {[
-            { symbol: "BTC", name: "Bitcoin", price: 97245.32, change: 2.45, logo: btcLogo },
-            { symbol: "ETH", name: "Ethereum", price: 3421.87, change: -1.23, logo: btcLogo },
-            { symbol: "SOL", name: "Solana", price: 187.45, change: 8.76, logo: btcLogo },
-            { symbol: "LTC", name: "Litecoin", price: 102.34, change: 3.12, logo: ltcLogo },
+            { symbol: "BTC", name: "Bitcoin", price: 97245.32, change: 2.45, logo: btcLogo, color: "bg-amber-500" },
+            { symbol: "LTC", name: "Litecoin", price: 102.34, change: 3.12, logo: ltcLogo, color: "bg-slate-400" },
+            { symbol: "USDT", name: "Tether", price: 1.00, change: 0.01, logo: usdtLogo, color: "bg-emerald-500" },
+            { symbol: "USDC", name: "USD Coin", price: 1.00, change: -0.02, logo: usdcLogo, color: "bg-blue-500" },
           ].map((crypto, index) => (
             <GlassCard 
               key={crypto.symbol}
@@ -542,7 +567,7 @@ export function Dashboard({
                 <img 
                   src={crypto.logo} 
                   alt={crypto.symbol} 
-                  className="w-8 h-8 object-contain"
+                  className={`object-contain ${crypto.symbol === 'USDT' ? 'w-10 h-10' : 'w-8 h-8'}`}
                 />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-foreground text-sm truncate">{crypto.symbol}</p>
@@ -551,7 +576,7 @@ export function Dashboard({
               </div>
               <div className="flex items-center justify-between gap-2">
                 <p className="font-medium text-foreground text-sm">
-                  {getSymbol()}{convert(crypto.price).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  {getSymbol()}{convert(crypto.price).toLocaleString(undefined, { maximumFractionDigits: crypto.price < 10 ? 2 : 0 })}
                 </p>
                 <div className={`flex items-center gap-1 ${crypto.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {crypto.change >= 0 ? (
@@ -583,7 +608,7 @@ export function Dashboard({
             +12.5% This Week
           </span>
         </div>
-        <GlassCard delay={0.55} className="p-4">
+        <GlassCard delay={0.55} className="p-4" data-testid="chart-portfolio-performance">
           <ResponsiveContainer width="100%" height={160}>
             <AreaChart 
               data={[
