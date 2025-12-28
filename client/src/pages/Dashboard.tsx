@@ -133,10 +133,11 @@ export function Dashboard({
             <AnimatePresence>
               {showNotifications && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  initial={{ opacity: 0, y: -100, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  className="fixed right-4 top-28 w-[calc(100vw-2rem)] max-w-72 liquid-glass bg-background/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl z-50 overflow-hidden"
+                  exit={{ opacity: 0, y: -100, scale: 0.98 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                  className="fixed right-4 left-4 top-16 liquid-glass bg-background/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl z-50 overflow-hidden"
                   data-testid="panel-notifications"
                 >
                   <div className="flex items-center justify-between p-4 border-b border-white/10">

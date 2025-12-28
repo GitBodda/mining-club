@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { Link } from "wouter";
 import type { WalletBalance, Transaction } from "@/lib/types";
 import walletImage from "@assets/Bitcoin_Wallet_1766014388613.png";
 import btcLogo from "@assets/bitcoin-sign-3d-icon-png-download-4466132_1766014388601.png";
@@ -370,34 +371,37 @@ export function Wallet({
             <span className="text-muted-foreground">today</span>
           </div>
 
-          <div className="flex gap-3 mt-6">
-            <Button
-              data-testid="button-wallet-deposit"
-              variant="secondary"
-              className="flex-1 liquid-glass border-0 bg-emerald-500/20"
-              onClick={() => openDepositModal()}
-            >
-              <ArrowDownToLine className="w-5 h-5 mr-2" />
-              Deposit
-            </Button>
-            <Button
-              data-testid="button-wallet-withdraw"
-              variant="secondary"
-              className="flex-1 liquid-glass border-0 bg-amber-500/20"
-              onClick={() => openWithdrawModal()}
-            >
-              <ArrowUpFromLine className="w-5 h-5 mr-2" />
-              Withdraw
-            </Button>
-            <Button
-              data-testid="button-wallet-exchange"
-              variant="secondary"
-              className="flex-1 liquid-glass border-0 bg-primary/20"
-              onClick={() => setExchangeOpen(true)}
-            >
-              <ArrowLeftRight className="w-5 h-5 mr-2" />
-              Exchange
-            </Button>
+          <div className="flex flex-col gap-3 mt-6">
+            <div className="flex gap-3">
+              <Button
+                data-testid="button-wallet-deposit"
+                variant="secondary"
+                className="flex-1 liquid-glass border-0 bg-emerald-500/20"
+                onClick={() => openDepositModal()}
+              >
+                <ArrowDownToLine className="w-5 h-5 mr-2" />
+                Deposit
+              </Button>
+              <Button
+                data-testid="button-wallet-withdraw"
+                variant="secondary"
+                className="flex-1 liquid-glass border-0 bg-amber-500/20"
+                onClick={() => openWithdrawModal()}
+              >
+                <ArrowUpFromLine className="w-5 h-5 mr-2" />
+                Withdraw
+              </Button>
+            </div>
+            <Link href="/exchange">
+              <Button
+                data-testid="button-wallet-exchange"
+                variant="secondary"
+                className="w-full liquid-glass border-0 bg-primary/20"
+              >
+                <ArrowLeftRight className="w-5 h-5 mr-2" />
+                Exchange
+              </Button>
+            </Link>
           </div>
         </div>
       </GlassCard>
