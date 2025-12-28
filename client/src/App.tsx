@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
+import { Switch, Route, Link } from "wouter";
 
 import { BottomNav, type TabType } from "@/components/BottomNav";
 import { IOSStatusBar, IOSHomeIndicator } from "@/components/IOSStatusBar";
@@ -18,6 +19,7 @@ import { Settings } from "@/pages/Settings";
 import { Onboarding } from "@/pages/Onboarding";
 import { AuthPage } from "@/pages/AuthPage";
 import { DashboardSkeleton, WalletSkeleton } from "@/components/LoadingSkeleton";
+import { PrivacyPolicy } from "@/pages/PrivacyPolicy";
 import { useMiningData } from "@/hooks/useMiningData";
 import { onAuthChange, logOut } from "@/lib/firebase";
 import type { User } from "firebase/auth";
@@ -198,6 +200,11 @@ function MobileApp() {
               ©
             </span>
           </div>
+          <Link href="/privacy" data-testid="link-privacy-policy">
+            <span className="text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+              Privacy Policy
+            </span>
+          </Link>
         </motion.footer>
       </main>
 
@@ -257,7 +264,11 @@ function App() {
       <CurrencyProvider>
         <TooltipProvider>
           <Toaster />
-          <MobileApp />
+          <Switch>
+            <Route path="/privacy" component={PrivacyPolicy} />
+            <Route path="/" component={MobileApp} />
+            <Route component={MobileApp} />
+          </Switch>
         </TooltipProvider>
       </CurrencyProvider>
     </QueryClientProvider>
