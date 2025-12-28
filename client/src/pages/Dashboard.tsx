@@ -144,7 +144,7 @@ export function Dashboard({
                   initial={{ opacity: 0, y: -10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  className="absolute right-0 top-12 w-72 liquid-glass bg-background/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl z-50 overflow-hidden"
+                  className="fixed right-4 top-28 w-[calc(100vw-2rem)] max-w-72 liquid-glass bg-background/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl z-50 overflow-hidden"
                   data-testid="panel-notifications"
                 >
                   <div className="flex items-center justify-between p-4 border-b border-white/10">
