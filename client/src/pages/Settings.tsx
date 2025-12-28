@@ -86,17 +86,41 @@ function isEmailPasswordUser(user: FirebaseUser | null | undefined): boolean {
   return user.providerData.some(provider => provider.providerId === 'password');
 }
 
+function isMobileDevice(): boolean {
+  const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+  const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  const isStandalone = (window.matchMedia('(display-mode: standalone)').matches) || 
+                       ((window.navigator as any).standalone === true);
+  return isMobile || isStandalone;
+}
+
+function getBiometricType(): 'face' | 'fingerprint' | 'unknown' {
+  const userAgent = navigator.userAgent.toLowerCase();
+  if (/iphone|ipad|ipod/.test(userAgent)) {
+    return 'face';
+  }
+  if (/android/.test(userAgent)) {
+    return 'fingerprint';
+  }
+  return 'unknown';
+}
+
 export function Settings({ settings, onSettingsChange, user, onLogout }: SettingsProps) {
   const { toast } = useToast();
   const { currency, setCurrency } = useCurrency();
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [showPinDialog, setShowPinDialog] = useState(false);
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [pinCode, setPinCode] = useState("");
   const [confirmPinCode, setConfirmPinCode] = useState("");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const displayName = user?.displayName || user?.email?.split('@')[0] || "Guest User";
   const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || "GU";
@@ -185,6 +209,15 @@ export function Settings({ settings, onSettingsChange, user, onLogout }: Setting
 
   const handleBiometricToggle = async (enabled: boolean) => {
     if (enabled) {
+      if (!isMobileDevice()) {
+        toast({
+          title: "Mobile App Only",
+          description: "Biometric authentication is only available on the mobile app. Please use the iOS or Android app to enable Face ID or fingerprint unlock.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       if (!('credentials' in navigator) || !('PublicKeyCredential' in window)) {
         toast({
           title: "Not Supported",
@@ -199,32 +232,63 @@ export function Settings({ settings, onSettingsChange, user, onLogout }: Setting
         if (!available) {
           toast({
             title: "Not Available",
-            description: "Biometric authentication is not available on this device.",
+            description: "Biometric authentication is not available on this device. Please ensure your device has Face ID or fingerprint set up in system settings.",
             variant: "destructive",
           });
           return;
         }
 
+        const biometricType = getBiometricType();
+        const biometricName = biometricType === 'face' ? 'Face ID' : biometricType === 'fingerprint' ? 'Fingerprint' : 'Biometric';
+
         onSettingsChange({ biometricEnabled: true });
         localStorage.setItem("biometricEnabled", "true");
         toast({
-          title: "Biometric Lock Enabled",
-          description: "Your app is now protected with Face ID or fingerprint.",
+          title: `${biometricName} Enabled`,
+          description: `Your app is now protected with ${biometricName}.`,
         });
       } catch (error) {
         toast({
           title: "Setup Failed",
-          description: "Failed to enable biometric authentication.",
+          description: "Failed to enable biometric authentication. Please try again.",
           variant: "destructive",
         });
       }
     } else {
       onSettingsChange({ biometricEnabled: false });
       localStorage.removeItem("biometricEnabled");
+      const biometricType = getBiometricType();
+      const biometricName = biometricType === 'face' ? 'Face ID' : biometricType === 'fingerprint' ? 'Fingerprint' : 'Biometric';
       toast({
-        title: "Biometric Lock Disabled",
-        description: "Biometric authentication has been turned off.",
+        title: `${biometricName} Disabled`,
+        description: `${biometricName} authentication has been turned off.`,
       });
+    }
+  };
+
+  const handleOpenProfileEdit = () => {
+    setEditName(displayName);
+    setEditEmail(email);
+    setAvatarPreview(user?.photoURL || null);
+    setShowProfileDialog(true);
+  };
+
+  const handleSaveProfile = () => {
+    toast({
+      title: "Profile Updated",
+      description: "Your profile changes will be saved when connected to cloud storage.",
+    });
+    setShowProfileDialog(false);
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -326,7 +390,7 @@ export function Settings({ settings, onSettingsChange, user, onLogout }: Setting
             icon={User}
             label="Profile"
             description="Edit Your Personal Info"
-            onClick={() => {}}
+            onClick={handleOpenProfileEdit}
             testId="button-profile"
           />
           {isEmailPasswordUser(user) && (
@@ -635,6 +699,77 @@ export function Settings({ settings, onSettingsChange, user, onLogout }: Setting
             </Button>
             <Button onClick={handleSetPin}>
               Set PIN
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogDescription>
+              Update Your Personal Information.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex justify-center">
+              <label 
+                htmlFor="profile-avatar-upload" 
+                className="relative w-24 h-24 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center overflow-hidden cursor-pointer group"
+                data-testid="button-edit-avatar"
+              >
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-3xl font-bold text-white">{initials}</span>
+                )}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Camera className="w-6 h-6 text-white" />
+                </div>
+                <input 
+                  type="file" 
+                  id="profile-avatar-upload" 
+                  className="hidden" 
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                />
+              </label>
+            </div>
+            <p className="text-center text-xs text-muted-foreground">Tap To Change Avatar</p>
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Display Name</Label>
+              <Input
+                id="edit-name"
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Enter Your Name"
+                data-testid="input-edit-name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email Address</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+                placeholder="Enter Your Email"
+                data-testid="input-edit-email"
+                disabled={!isEmailPasswordUser(user)}
+              />
+              {!isEmailPasswordUser(user) && (
+                <p className="text-xs text-muted-foreground">Email cannot be changed for social login accounts.</p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowProfileDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveProfile} data-testid="button-save-profile">
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>

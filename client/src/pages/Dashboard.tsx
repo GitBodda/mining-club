@@ -87,14 +87,6 @@ export function Dashboard({
         </div>
         <div className="flex items-center gap-2">
           <button
-            data-testid="button-profile"
-            onClick={onOpenProfile}
-            className="relative w-10 h-10 rounded-xl liquid-glass flex items-center justify-center hover-elevate transition-transform active:scale-95"
-            type="button"
-          >
-            <User className="w-5 h-5 text-primary" />
-          </button>
-          <button
             data-testid="button-settings"
             onClick={onOpenSettings}
             className="relative w-10 h-10 rounded-xl liquid-glass flex items-center justify-center hover-elevate transition-transform active:scale-95"
