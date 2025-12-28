@@ -3,7 +3,7 @@ import { useState } from "react";
 import { 
   User, Shield, Bell, Key, Fingerprint, Clock, 
   DollarSign, Globe, ChevronRight, Award, Info,
-  FileText, Mail, LogOut, Lock, Loader2
+  FileText, Mail, LogOut, Lock, Loader2, Camera
 } from "lucide-react";
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { GlassCard } from "@/components/GlassCard";
@@ -259,13 +259,35 @@ export function Settings({ settings, onSettingsChange, user, onLogout }: Setting
 
       <GlassCard delay={0.1} className="relative overflow-hidden">
         <div className="relative z-10 flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center overflow-hidden">
+          <label 
+            htmlFor="avatar-upload" 
+            className="relative w-16 h-16 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center overflow-hidden cursor-pointer group"
+            data-testid="button-change-avatar"
+          >
             {user?.photoURL ? (
               <img src={user.photoURL} alt={displayName} className="w-full h-full object-cover" />
             ) : (
               <span className="text-2xl font-bold text-white">{initials}</span>
             )}
-          </div>
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <Camera className="w-5 h-5 text-white" />
+            </div>
+            <input 
+              type="file" 
+              id="avatar-upload" 
+              className="hidden" 
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  toast({
+                    title: "Avatar Upload",
+                    description: "Avatar change will be available with cloud storage integration.",
+                  });
+                }
+              }}
+            />
+          </label>
           <div className="flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-lg font-semibold text-foreground" data-testid="text-user-name">{displayName}</h2>
@@ -283,15 +305,15 @@ export function Settings({ settings, onSettingsChange, user, onLogout }: Setting
 
         <div className="relative z-10 flex gap-6 mt-6 pt-4 border-t border-white/[0.06] flex-wrap">
           <div className="text-center">
-            <p className="text-xl font-bold text-foreground" data-testid="text-days-active">142</p>
+            <p className="text-xl font-bold text-foreground" data-testid="text-days-active">0</p>
             <p className="text-xs text-muted-foreground">Days Active</p>
           </div>
           <div className="text-center">
-            <p className="text-xl font-bold text-foreground" data-testid="text-btc-mined">0.85</p>
+            <p className="text-xl font-bold text-foreground" data-testid="text-btc-mined">0.00</p>
             <p className="text-xs text-muted-foreground">BTC Mined</p>
           </div>
           <div className="text-center">
-            <p className="text-xl font-bold text-foreground" data-testid="text-global-rank">#247</p>
+            <p className="text-xl font-bold text-foreground" data-testid="text-global-rank">--</p>
             <p className="text-xs text-muted-foreground">Global Rank</p>
           </div>
         </div>

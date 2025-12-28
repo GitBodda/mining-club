@@ -155,6 +155,8 @@ function MobileApp() {
                 transactions={transactions}
                 onOpenSettings={() => setShowSettings(true)}
                 onOpenProfile={() => firebaseUser ? setShowSettings(true) : setAppView("auth")}
+                onNavigateToInvest={() => setActiveTab("invest")}
+                onNavigateToSolo={() => setActiveTab("solo")}
                 isLoggedIn={localStorage.getItem("isLoggedIn") === "true"}
               />
             )

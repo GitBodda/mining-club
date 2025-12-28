@@ -1,10 +1,17 @@
-import { motion } from "framer-motion";
-import { Bell, ArrowDownToLine, ArrowUpFromLine, Settings, DollarSign, User, Users, Star } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Bell, ArrowDownToLine, ArrowUpFromLine, Settings, DollarSign, User, Users, Star, X, Inbox } from "lucide-react";
 import { GlassCard, LiquidGlassCard } from "@/components/GlassCard";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { Button } from "@/components/ui/button";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import type { WalletBalance, Transaction } from "@/lib/types";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import mixedMain from "@assets/Mixed_main_1766014388605.png";
 import gpuMining from "@assets/Gpu_Mining_1766014388614.png";
@@ -29,6 +36,13 @@ interface DashboardProps {
   isLoggedIn?: boolean;
 }
 
+const currencies = [
+  { code: 'USD' as const, symbol: '$', name: 'US Dollar' },
+  { code: 'EUR' as const, symbol: '\u20AC', name: 'Euro' },
+  { code: 'GBP' as const, symbol: '\u00A3', name: 'British Pound' },
+  { code: 'AED' as const, symbol: '\u062F.\u0625', name: 'UAE Dirham' },
+];
+
 export function Dashboard({ 
   balances = [], 
   totalBalance = 0, 
@@ -42,14 +56,17 @@ export function Dashboard({
   onNavigateToSolo,
   isLoggedIn = false
 }: DashboardProps) {
-  const { convert, getSymbol } = useCurrency();
+  const { convert, getSymbol, currency, setCurrency } = useCurrency();
+  const [showNotifications, setShowNotifications] = useState(false);
   const safeChange24h = change24h ?? 0;
   const isPositiveChange = safeChange24h >= 0;
-  const activeContracts = 3;
-  const totalEarned = 0.00847;
-  const miningPower = "125 TH/s";
-  const daysActive = 45;
+  const activeContracts = 0;
+  const totalEarned = 0;
+  const miningPower = "0 TH/s";
+  const daysActive = 0;
   const convertedBalance = convert(totalBalance);
+  
+  const notifications: { id: string; title: string; message: string; time: string }[] = [];
 
   return (
     <motion.div
@@ -85,14 +102,84 @@ export function Dashboard({
           >
             <Settings className="w-5 h-5 text-muted-foreground" />
           </button>
-          <motion.button
-            data-testid="button-notifications"
-            className="relative w-10 h-10 rounded-xl liquid-glass flex items-center justify-center hover-elevate"
-            whileTap={{ scale: 0.95 }}
-          >
-            <Bell className="w-5 h-5 text-muted-foreground" />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full animate-pulse" />
-          </motion.button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                data-testid="button-currency-shortcut"
+                className="relative h-10 px-3 rounded-xl liquid-glass flex items-center justify-center gap-1 hover-elevate transition-transform active:scale-95"
+                type="button"
+              >
+                <span className="text-sm font-medium text-foreground">{currency}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="liquid-glass bg-background/95 backdrop-blur-xl border-white/10">
+              {currencies.map((curr) => (
+                <DropdownMenuItem
+                  key={curr.code}
+                  onClick={() => setCurrency(curr.code)}
+                  className={`cursor-pointer ${currency === curr.code ? 'bg-primary/20' : ''}`}
+                  data-testid={`option-currency-${curr.code.toLowerCase()}`}
+                >
+                  <span className="w-6">{curr.symbol}</span>
+                  <span>{curr.code}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <div className="relative">
+            <motion.button
+              data-testid="button-notifications"
+              className="relative w-10 h-10 rounded-xl liquid-glass flex items-center justify-center hover-elevate"
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowNotifications(!showNotifications)}
+            >
+              <Bell className="w-5 h-5 text-muted-foreground" />
+              {notifications.length > 0 && (
+                <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full animate-pulse" />
+              )}
+            </motion.button>
+            <AnimatePresence>
+              {showNotifications && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  className="absolute right-0 top-12 w-72 liquid-glass bg-background/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl z-50 overflow-hidden"
+                  data-testid="panel-notifications"
+                >
+                  <div className="flex items-center justify-between p-4 border-b border-white/10">
+                    <h3 className="font-semibold text-foreground">Notifications</h3>
+                    <button
+                      onClick={() => setShowNotifications(false)}
+                      className="w-6 h-6 rounded-lg flex items-center justify-center hover:bg-white/10"
+                      data-testid="button-close-notifications"
+                    >
+                      <X className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </div>
+                  {notifications.length > 0 ? (
+                    <div className="max-h-64 overflow-y-auto">
+                      {notifications.map((notif) => (
+                        <div key={notif.id} className="p-4 border-b border-white/5 hover:bg-white/5">
+                          <p className="font-medium text-foreground text-sm">{notif.title}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{notif.message}</p>
+                          <p className="text-xs text-muted-foreground/60 mt-2">{notif.time}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center">
+                      <Inbox className="w-10 h-10 mx-auto mb-3 text-muted-foreground/50" />
+                      <p className="text-sm font-medium text-foreground">No Notifications Yet</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Notifications will appear here when you have mining updates, payouts, or important alerts.
+                      </p>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </motion.header>
 

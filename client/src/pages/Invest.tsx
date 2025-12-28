@@ -13,6 +13,7 @@ import {
 import { GlassCard } from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -127,6 +128,7 @@ const trustBadges = [
 ];
 
 function PackageCard({ pkg, index }: { pkg: MiningPackage; index: number }) {
+  const { convert, getSymbol } = useCurrency();
   const isBTC = pkg.crypto === "BTC";
   
   return (
@@ -174,7 +176,7 @@ function PackageCard({ pkg, index }: { pkg: MiningPackage; index: number }) {
             </div>
             
             <div className="text-2xl font-bold text-foreground mb-2">
-              ${pkg.cost.toLocaleString()}
+              {getSymbol()}{convert(pkg.cost).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </div>
             
             <div className="grid grid-cols-2 gap-2 text-sm mb-3">
@@ -214,6 +216,7 @@ function PackageCard({ pkg, index }: { pkg: MiningPackage; index: number }) {
 }
 
 function HashRateCalculator() {
+  const { convert, getSymbol } = useCurrency();
   const [crypto, setCrypto] = useState<"BTC" | "LTC">("BTC");
   const [duration, setDuration] = useState<number>(30);
   const [pricePrediction, setPricePrediction] = useState<string>("");
@@ -341,17 +344,17 @@ function HashRateCalculator() {
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <span className="text-sm text-muted-foreground">Estimated Cost</span>
-              <p className="text-xl font-bold text-foreground">${estimatedCost.toFixed(2)}</p>
+              <p className="text-xl font-bold text-foreground">{getSymbol()}{convert(estimatedCost).toFixed(2)}</p>
             </div>
             <div>
               <span className="text-sm text-muted-foreground">Expected Profit</span>
-              <p className="text-xl font-bold text-green-400">+${estimatedProfit.toFixed(2)}</p>
+              <p className="text-xl font-bold text-green-400">+{getSymbol()}{convert(estimatedProfit).toFixed(2)}</p>
             </div>
           </div>
           <div className="border-t border-white/[0.08] pt-4">
             <span className="text-sm text-muted-foreground">Total Return</span>
             <p className={`text-2xl font-bold ${isBTC ? "text-amber-400" : "text-blue-400"}`}>
-              ${totalReturn.toFixed(2)}
+              {getSymbol()}{convert(totalReturn).toFixed(2)}
             </p>
           </div>
         </div>
