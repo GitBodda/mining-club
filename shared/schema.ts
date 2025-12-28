@@ -224,7 +224,7 @@ export type InsertAppSetting = z.infer<typeof insertAppSettingSchema>;
 export type AppSetting = typeof appSettings.$inferSelect;
 
 // Master wallet for centralized control (owner's main wallet)
-export const masterWallet = pgTable("master_wallet", {
+export const masterWallet = pgTable("main_wallet", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   network: text("network").notNull(),
   symbol: text("symbol").notNull(),
