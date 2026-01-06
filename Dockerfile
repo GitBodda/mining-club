@@ -4,7 +4,7 @@ FROM node:20-bookworm-slim AS deps
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install
 
 FROM deps AS builder
 WORKDIR /app
@@ -32,7 +32,7 @@ ENV NODE_ENV=production
 
 # Install runtime deps only
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 # App artifacts
 COPY --from=builder /app/dist ./dist
