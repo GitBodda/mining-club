@@ -14,7 +14,7 @@ steps:
     args:
       - build
       - -t
-      - gcr.io/$PROJECT_ID/$_SERVICE:$COMMIT_SHA
+      - gcr.io/$PROJECT_ID/$_SERVICE:$BUILD_ID
       - --build-arg
       - VITE_FIREBASE_API_KEY=$_VITE_FIREBASE_API_KEY
       - --build-arg
@@ -30,7 +30,7 @@ steps:
   - name: gcr.io/cloud-builders/docker
     args:
       - push
-      - gcr.io/$PROJECT_ID/$_SERVICE:$COMMIT_SHA
+      - gcr.io/$PROJECT_ID/$_SERVICE:$BUILD_ID
 
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
     entrypoint: gcloud
@@ -39,7 +39,7 @@ steps:
       - deploy
       - $_SERVICE
       - --image
-      - gcr.io/$PROJECT_ID/$_SERVICE:$COMMIT_SHA
+      - gcr.io/$PROJECT_ID/$_SERVICE:$BUILD_ID
       - --region
       - $_REGION
       - --platform
@@ -49,7 +49,7 @@ steps:
       - DATABASE_URL_POOLER=$_DB_URL_SECRET:latest,DATABASE_URL=$_DB_URL_SECRET:latest,FIREBASE_SERVICE_ACCOUNT=$_FIREBASE_SA_SECRET:latest
 
 images:
-  - gcr.io/$PROJECT_ID/$_SERVICE:$COMMIT_SHA
+  - gcr.io/$PROJECT_ID/$_SERVICE:$BUILD_ID
 
 substitutions:
   _SERVICE: mining-club
