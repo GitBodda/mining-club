@@ -55,7 +55,8 @@ substitutions:
   _SERVICE: mining-club
   _REGION: us-central1
 
-  # Secret Manager secret names (create these in your GCP project)
+  # Secret Manager secret NAMES (create these in your GCP project)
+  # IMPORTANT: Do NOT put actual secret values (DB URLs, private keys) into this file.
   _DB_URL_SECRET: neon_database_url
   _FIREBASE_SA_SECRET: firebase_service_account_json
 
