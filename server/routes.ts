@@ -1074,5 +1074,29 @@ export async function registerRoutes(
     }
   });
 
+  // Public API: Get active promotional offers
+  app.get("/api/offers", async (_req, res) => {
+    try {
+      const { promotionalOffers } = await import("@shared/schema");
+      const now = new Date();
+      
+      const offers = await db.select()
+        .from(promotionalOffers)
+        .where(eq(promotionalOffers.isActive, true))
+        .orderBy(promotionalOffers.order);
+      
+      // Filter by validity dates
+      const validOffers = offers.filter(o => {
+        if (o.validFrom && o.validFrom > now) return false;
+        if (o.validUntil && o.validUntil < now) return false;
+        return true;
+      });
+      
+      res.json(validOffers);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get offers" });
+    }
+  });
+
   return httpServer;
 }

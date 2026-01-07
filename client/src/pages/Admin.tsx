@@ -31,7 +31,8 @@ import {
   Clock,
   XCircle,
   PiggyBank,
-  HelpCircle
+  HelpCircle,
+  Gift
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,7 +72,7 @@ interface AdminProps {
   onBack: () => void;
 }
 
-type AdminTab = "dashboard" | "users" | "wallets" | "plans" | "earnplans" | "miners" | "withdrawals" | "notifications" | "tickets" | "content" | "discounts" | "apiconfig" | "settings";
+type AdminTab = "dashboard" | "users" | "wallets" | "plans" | "earnplans" | "miners" | "withdrawals" | "notifications" | "tickets" | "content" | "discounts" | "offers" | "apiconfig" | "settings";
 
 export function Admin({ onBack }: AdminProps) {
   const [activeTab, setActiveTab] = useState<AdminTab>("dashboard");
@@ -103,6 +104,7 @@ export function Admin({ onBack }: AdminProps) {
     { id: "tickets" as const, label: "Support Tickets", icon: MessageSquare },
     { id: "content" as const, label: "Content", icon: FileText },
     { id: "discounts" as const, label: "Discounts", icon: Percent },
+    { id: "offers" as const, label: "Promotional Offers", icon: Gift },
     { id: "apiconfig" as const, label: "API & Services", icon: Key },
     { id: "settings" as const, label: "Settings", icon: Settings },
   ];
@@ -159,6 +161,7 @@ export function Admin({ onBack }: AdminProps) {
           {activeTab === "tickets" && <TicketsTab />}
           {activeTab === "content" && <ContentTab />}
           {activeTab === "discounts" && <DiscountsTab />}
+          {activeTab === "offers" && <OffersTab />}
           {activeTab === "apiconfig" && <ApiConfigTab />}
           {activeTab === "settings" && <SettingsTab />}
         </main>
@@ -3185,6 +3188,459 @@ function ApiConfigTab() {
           {(!apiConfigs || apiConfigs.length === 0) && (
             <div className="p-4 text-center text-muted-foreground">
               No API configurations found. They will be created when you configure services.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ============================================================
+// OFFERS TAB
+// ============================================================
+
+interface PromotionalOffer {
+  id: number;
+  title: string;
+  subtitle: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  backgroundType: number;
+  ctaText: string | null;
+  ctaLink: string | null;
+  isActive: boolean;
+  order: number;
+  validFrom: string | null;
+  validUntil: string | null;
+  createdAt: string;
+}
+
+function OffersTab() {
+  const { toast } = useToast();
+  const [editingOffer, setEditingOffer] = useState<number | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [formData, setFormData] = useState<Partial<PromotionalOffer>>({
+    title: "",
+    subtitle: "",
+    description: "",
+    imageUrl: "",
+    backgroundType: 1,
+    ctaText: "",
+    ctaLink: "",
+    isActive: true,
+    order: 0,
+    validFrom: null,
+    validUntil: null,
+  });
+
+  const { data: offers, isLoading } = useQuery<PromotionalOffer[]>({
+    queryKey: ["/api/admin/offers"],
+    queryFn: () => adminFetch("/api/admin/offers"),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data: Partial<PromotionalOffer>) =>
+      adminFetch("/api/admin/offers", { method: "POST", body: data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/offers"] });
+      toast({ title: "Offer created successfully" });
+      setIsCreating(false);
+      setFormData({
+        title: "",
+        subtitle: "",
+        description: "",
+        imageUrl: "",
+        backgroundType: 1,
+        ctaText: "",
+        ctaLink: "",
+        isActive: true,
+        order: 0,
+        validFrom: null,
+        validUntil: null,
+      });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to create offer", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, ...data }: Partial<PromotionalOffer> & { id: number }) =>
+      adminFetch(`/api/admin/offers/${id}`, { method: "PATCH", body: data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/offers"] });
+      toast({ title: "Offer updated successfully" });
+      setEditingOffer(null);
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to update offer", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) =>
+      adminFetch(`/api/admin/offers/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/offers"] });
+      toast({ title: "Offer deleted successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to delete offer", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const handleCreate = () => {
+    createMutation.mutate(formData);
+  };
+
+  const handleUpdate = (id: number) => {
+    updateMutation.mutate({ id, ...formData });
+  };
+
+  const startEdit = (offer: PromotionalOffer) => {
+    setEditingOffer(offer.id);
+    setFormData(offer);
+  };
+
+  const cancelEdit = () => {
+    setEditingOffer(null);
+    setFormData({
+      title: "",
+      subtitle: "",
+      description: "",
+      imageUrl: "",
+      backgroundType: 1,
+      ctaText: "",
+      ctaLink: "",
+      isActive: true,
+      order: 0,
+      validFrom: null,
+      validUntil: null,
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Promotional Offers</h2>
+          <p className="text-muted-foreground text-sm">
+            Manage promotional banners and offers displayed on the dashboard
+          </p>
+        </div>
+        <Button onClick={() => setIsCreating(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          New Offer
+        </Button>
+      </div>
+
+      {/* Create Form */}
+      {isCreating && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Create New Offer</CardTitle>
+            <CardDescription>Add a promotional offer for users</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Title *</label>
+                <Input
+                  value={formData.title || ""}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="Welcome Bonus"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Subtitle</label>
+                <Input
+                  value={formData.subtitle || ""}
+                  onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+                  placeholder="Get 10% extra"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Description</label>
+              <Textarea
+                value={formData.description || ""}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Start mining today and receive 10% bonus on your first investment"
+                rows={2}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Background Type (1-10)</label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={formData.backgroundType || 1}
+                  onChange={(e) => setFormData({ ...formData, backgroundType: parseInt(e.target.value) })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  1: Electric Blue | 2: Sunset | 3: Ocean | 4: Forest | 5: Royal Purple | 6: Golden | 7: Gray | 8: Coral | 9: Mint | 10: Deep Space
+                </p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Image URL (optional)</label>
+                <Input
+                  value={formData.imageUrl || ""}
+                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">CTA Button Text</label>
+                <Input
+                  value={formData.ctaText || ""}
+                  onChange={(e) => setFormData({ ...formData, ctaText: e.target.value })}
+                  placeholder="Learn More"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">CTA Link</label>
+                <Input
+                  value={formData.ctaLink || ""}
+                  onChange={(e) => setFormData({ ...formData, ctaLink: e.target.value })}
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Order Priority</label>
+                <Input
+                  type="number"
+                  value={formData.order || 0}
+                  onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
+                  placeholder="0"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Valid From</label>
+                <Input
+                  type="datetime-local"
+                  value={formData.validFrom || ""}
+                  onChange={(e) => setFormData({ ...formData, validFrom: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Valid Until</label>
+                <Input
+                  type="datetime-local"
+                  value={formData.validUntil || ""}
+                  onChange={(e) => setFormData({ ...formData, validUntil: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={formData.isActive}
+                onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+              />
+              <label className="text-sm font-medium">Active</label>
+            </div>
+
+            <div className="flex gap-2">
+              <Button onClick={handleCreate} disabled={createMutation.isPending || !formData.title}>
+                {createMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
+                Create Offer
+              </Button>
+              <Button variant="outline" onClick={() => { setIsCreating(false); cancelEdit(); }}>
+                Cancel
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Offers List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>All Offers ({offers?.length || 0})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center p-8">
+              <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+          ) : offers && offers.length > 0 ? (
+            <div className="space-y-4">
+              {offers.map((offer) => (
+                <div key={offer.id} className="border border-border rounded-lg p-4">
+                  {editingOffer === offer.id ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Title *</label>
+                          <Input
+                            value={formData.title || ""}
+                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Subtitle</label>
+                          <Input
+                            value={formData.subtitle || ""}
+                            onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Description</label>
+                        <Textarea
+                          value={formData.description || ""}
+                          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                          rows={2}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Background Type (1-10)</label>
+                          <Input
+                            type="number"
+                            min="1"
+                            max="10"
+                            value={formData.backgroundType || 1}
+                            onChange={(e) => setFormData({ ...formData, backgroundType: parseInt(e.target.value) })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Image URL</label>
+                          <Input
+                            value={formData.imageUrl || ""}
+                            onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">CTA Text</label>
+                          <Input
+                            value={formData.ctaText || ""}
+                            onChange={(e) => setFormData({ ...formData, ctaText: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">CTA Link</label>
+                          <Input
+                            value={formData.ctaLink || ""}
+                            onChange={(e) => setFormData({ ...formData, ctaLink: e.target.value })}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Order</label>
+                          <Input
+                            type="number"
+                            value={formData.order || 0}
+                            onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Valid From</label>
+                          <Input
+                            type="datetime-local"
+                            value={formData.validFrom || ""}
+                            onChange={(e) => setFormData({ ...formData, validFrom: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Valid Until</label>
+                          <Input
+                            type="datetime-local"
+                            value={formData.validUntil || ""}
+                            onChange={(e) => setFormData({ ...formData, validUntil: e.target.value })}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={formData.isActive}
+                          onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+                        />
+                        <label className="text-sm font-medium">Active</label>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button onClick={() => handleUpdate(offer.id)} disabled={updateMutation.isPending}>
+                          {updateMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
+                          Save
+                        </Button>
+                        <Button variant="outline" onClick={cancelEdit}>
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold">{offer.title}</h3>
+                          <Badge variant={offer.isActive ? "default" : "secondary"}>
+                            {offer.isActive ? "Active" : "Inactive"}
+                          </Badge>
+                          <Badge variant="outline">BG: {offer.backgroundType}</Badge>
+                          <Badge variant="outline">Order: {offer.order}</Badge>
+                        </div>
+                        {offer.subtitle && (
+                          <p className="text-sm font-medium text-muted-foreground">{offer.subtitle}</p>
+                        )}
+                        {offer.description && (
+                          <p className="text-sm text-muted-foreground">{offer.description}</p>
+                        )}
+                        {offer.ctaText && (
+                          <p className="text-xs text-muted-foreground">
+                            CTA: {offer.ctaText} → {offer.ctaLink || "No link"}
+                          </p>
+                        )}
+                        {(offer.validFrom || offer.validUntil) && (
+                          <p className="text-xs text-muted-foreground">
+                            Valid: {offer.validFrom ? new Date(offer.validFrom).toLocaleDateString() : "Always"} - {offer.validUntil ? new Date(offer.validUntil).toLocaleDateString() : "Forever"}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => startEdit(offer)}>
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            if (confirm(`Delete offer "${offer.title}"?`)) {
+                              deleteMutation.mutate(offer.id);
+                            }
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center p-8 text-muted-foreground">
+              <Gift className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>No offers yet. Create your first promotional offer!</p>
             </div>
           )}
         </CardContent>

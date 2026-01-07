@@ -38,7 +38,7 @@ export function StatCard({
   return (
     <motion.div
       className={cn(
-        "relative rounded-2xl p-4",
+        "relative rounded-xl p-3 sm:p-4",
         "bg-gradient-to-br from-white/[0.06] to-white/[0.02]",
         "backdrop-blur-lg",
         "border border-white/[0.06]"
@@ -47,16 +47,16 @@ export function StatCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4 }}
     >
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex items-start justify-between mb-2 sm:mb-3">
         <div
           className={cn(
-            "w-10 h-10 rounded-xl",
+            "w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl",
             "flex items-center justify-center",
             "bg-gradient-to-br",
             colorClasses[color]
           )}
         >
-          <Icon className="w-5 h-5" />
+          <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
         {trend && trendValue && (
           <span

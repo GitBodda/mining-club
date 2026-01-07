@@ -55,6 +55,8 @@ function MobileApp() {
     change24h,
     isPending,
     isLoading,
+    isFetching,
+    refetchBalances,
     toggleMining,
     selectPool,
     updateSettings,
@@ -179,6 +181,8 @@ function MobileApp() {
                 isLoggedIn={localStorage.getItem("isLoggedIn") === "true"}
                 isAdmin={isAdmin}
                 onNavigateToAdmin={() => setActiveTab("admin")}
+                onRefreshBalances={refetchBalances}
+                isFetching={isFetching}
               />
             )
           )}

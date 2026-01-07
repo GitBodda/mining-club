@@ -1182,5 +1182,88 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
+  // ============ PROMOTIONAL OFFERS ============
+  
+  // Get all offers
+  app.get("/api/admin/offers", devAdmin, async (_req, res) => {
+    try {
+      const offers = await db.select().from(schema.promotionalOffers).orderBy(schema.promotionalOffers.order);
+      res.json(offers);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch offers" });
+    }
+  });
+
+  // Create offer
+  app.post("/api/admin/offers", devAdmin, async (req, res) => {
+    try {
+      const [offer] = await db.insert(schema.promotionalOffers).values(req.body).returning();
+      res.json(offer);
+    } catch (error) {
+      console.error("Error creating offer:", error);
+      res.status(500).json({ error: "Failed to create offer" });
+    }
+  });
+
+  // Update offer
+  app.patch("/api/admin/offers/:id", devAdmin, async (req, res) => {
+    try {
+      const [offer] = await db.update(schema.promotionalOffers)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(schema.promotionalOffers.id, req.params.id))
+        .returning();
+      res.json(offer);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update offer" });
+    }
+  });
+
+  // Delete offer
+  app.delete("/api/admin/offers/:id", devAdmin, async (req, res) => {
+    try {
+      await db.delete(schema.promotionalOffers).where(eq(schema.promotionalOffers.id, req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete offer" });
+    }
+  });
+
+  // ============ ADMIN SEED (add specific admin email) ============
+  
+  // Seed admin email - one-time setup endpoint
+  app.post("/api/admin/seed-admin", async (req, res) => {
+    try {
+      const targetEmail = "abdohassan777@gmail.com";
+      
+      // Insert or update admin email
+      await db.insert(schema.adminEmails).values({
+        email: targetEmail,
+        role: "admin",
+        isActive: true,
+      }).onConflictDoUpdate({
+        target: schema.adminEmails.email,
+        set: { role: "admin", isActive: true },
+      });
+
+      // Also update the user if exists
+      const users = await db.select().from(schema.users).where(eq(schema.users.email, targetEmail));
+      if (users.length > 0) {
+        await db.update(schema.users)
+          .set({ role: "admin" })
+          .where(eq(schema.users.email, targetEmail));
+        
+        // Update Firebase claims if user has firebaseUid
+        if (users[0].firebaseUid) {
+          await setCustomClaims(users[0].firebaseUid, { admin: true, role: "admin" });
+        }
+      }
+
+      res.json({ success: true, message: "Admin email seeded successfully" });
+    } catch (error) {
+      console.error("Error seeding admin:", error);
+      res.status(500).json({ error: "Failed to seed admin" });
+    }
+  });
+
   console.log("Admin routes registered");
 }

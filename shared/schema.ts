@@ -843,3 +843,30 @@ export const insertNotificationPreferencesSchema = createInsertSchema(notificati
 
 export type InsertNotificationPreferences = z.infer<typeof insertNotificationPreferencesSchema>;
 export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
+
+// Promotional offers/banners for slider
+export const promotionalOffers = pgTable("promotional_offers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  description: text("description"),
+  imageUrl: text("image_url"),
+  backgroundType: integer("background_type").notNull().default(1), // 1-10 predefined backgrounds
+  ctaText: text("cta_text"), // Call-to-action button text
+  ctaLink: text("cta_link"), // Link when clicked
+  isActive: boolean("is_active").notNull().default(true),
+  order: integer("order").notNull().default(0),
+  validFrom: timestamp("valid_from"),
+  validUntil: timestamp("valid_until"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at"),
+});
+
+export const insertPromotionalOfferSchema = createInsertSchema(promotionalOffers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertPromotionalOffer = z.infer<typeof insertPromotionalOfferSchema>;
+export type PromotionalOffer = typeof promotionalOffers.$inferSelect;

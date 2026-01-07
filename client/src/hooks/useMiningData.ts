@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, keepPreviousData } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { 
   MiningStats, 
@@ -27,42 +27,51 @@ export function useMiningData() {
   const miningStatsQuery = useQuery<MiningStats>({
     queryKey: ["/api/mining/stats"],
     refetchInterval: 3000,
+    placeholderData: keepPreviousData,
   });
 
   const walletQuery = useQuery<WalletResponse>({
     queryKey: ["/api/wallet/balances"],
-    refetchInterval: 30000, // Refresh every 30s for balance syncing
+    refetchInterval: 60000, // Refresh every minute
+    placeholderData: keepPreviousData, // Prevents flickering
   });
 
   const transactionsQuery = useQuery<Transaction[]>({
     queryKey: ["/api/wallet/transactions"],
+    placeholderData: keepPreviousData,
   });
 
   const poolsQuery = useQuery<MiningPool[]>({
     queryKey: ["/api/pools"],
+    placeholderData: keepPreviousData,
   });
 
   const chartQuery = useQuery<ChartDataPoint[]>({
     queryKey: ["/api/chart"],
+    placeholderData: keepPreviousData,
   });
 
   const portfolioHistoryQuery = useQuery<PortfolioHistoryPoint[]>({
     queryKey: ["/api/portfolio/history"],
     refetchInterval: 60000, // Refresh every minute
+    placeholderData: keepPreviousData,
   });
 
   const settingsQuery = useQuery<UserSettings>({
     queryKey: ["/api/settings"],
+    placeholderData: keepPreviousData,
   });
 
   const contractsQuery = useQuery<MiningContract[]>({
     queryKey: ["/api/mining/contracts"],
     refetchInterval: 5000,
+    placeholderData: keepPreviousData,
   });
 
   const poolStatusQuery = useQuery<PoolStatus>({
     queryKey: ["/api/mining/pool-status"],
     refetchInterval: 10000,
+    placeholderData: keepPreviousData,
   });
 
   const toggleMiningMutation = useMutation({
@@ -132,8 +141,10 @@ export function useMiningData() {
     change24h: walletQuery.data?.change24h ?? 0,
     isPending: toggleMiningMutation.isPending || contractsQuery.isPending,
     isLoading: miningStatsQuery.isLoading || walletQuery.isLoading || contractsQuery.isLoading,
+    isFetching: walletQuery.isFetching,
     toggleMining: () => toggleMiningMutation.mutate(),
     selectPool: (id: string) => selectPoolMutation.mutate(id),
     updateSettings: (settings: Partial<UserSettings>) => updateSettingsMutation.mutate(settings),
+    refetchBalances: () => walletQuery.refetch(),
   };
 }

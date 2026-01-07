@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, ArrowDownToLine, ArrowUpFromLine, Settings, DollarSign, User, Users, Star, X, Inbox, Gift, TrendingUp, TrendingDown, Sparkles, ExternalLink, Sun, Moon, BarChart3, Copy, Check, Menu, Home, Wallet, PieChart, History, HelpCircle, LogOut, Shield } from "lucide-react";
+import { Bell, ArrowDownToLine, ArrowUpFromLine, Settings, DollarSign, User, Users, Star, X, Inbox, Gift, TrendingUp, TrendingDown, Sparkles, ExternalLink, Sun, Moon, BarChart3, Copy, Check, Menu, Home, Wallet, PieChart, History, HelpCircle, LogOut, Shield, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import { SiX, SiInstagram } from "react-icons/si";
+import { useQuery } from "@tanstack/react-query";
 import { GlassCard, LiquidGlassCard } from "@/components/GlassCard";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
+import { OffersSlider } from "@/components/OffersSlider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -121,6 +123,8 @@ interface DashboardProps {
   isLoggedIn?: boolean;
   isAdmin?: boolean;
   onNavigateToAdmin?: () => void;
+  onRefreshBalances?: () => void;
+  isFetching?: boolean;
 }
 
 const currencies = [
@@ -143,9 +147,11 @@ export function Dashboard({
   onOpenProfile,
   onNavigateToInvest,
   onNavigateToSolo,
-    isLoggedIn = false,
-    isAdmin = false,
-    onNavigateToAdmin,
+  isLoggedIn = false,
+  isAdmin = false,
+  onNavigateToAdmin,
+  onRefreshBalances,
+  isFetching = false,
 }: DashboardProps) {
   const { convert, getSymbol, currency, setCurrency } = useCurrency();
   const { theme, toggleTheme } = useTheme();
@@ -584,9 +590,22 @@ export function Dashboard({
         </div>
 
         <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-sm text-muted-foreground">Portfolio Value</span>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-sm text-muted-foreground">Portfolio Value</span>
+            </div>
+            {onRefreshBalances && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onRefreshBalances}
+                disabled={isFetching}
+                className="h-8 w-8 p-0 rounded-full liquid-glass border-0"
+              >
+                <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
+              </Button>
+            )}
           </div>
 
           <div className="mb-1">
@@ -595,7 +614,7 @@ export function Dashboard({
               <AnimatedCounter
                 value={convertedBalance}
                 decimals={2}
-                className="text-4xl font-bold text-foreground tracking-tight"
+                className="text-3xl font-bold text-foreground tracking-tight"
               />
             </div>
           </div>
@@ -827,6 +846,9 @@ export function Dashboard({
           </div>
         </div>
       </LiquidGlassCard>
+
+      {/* Promotional Offers Slider */}
+      <OffersSlider />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}

@@ -26,7 +26,7 @@ export function GlassCard({
   const content = (
     <div
       className={cn(
-        "relative rounded-2xl p-6 overflow-hidden",
+        "relative rounded-2xl p-4 sm:p-5 overflow-hidden",
         "liquid-glass",
         variantClass,
         glowClass,
