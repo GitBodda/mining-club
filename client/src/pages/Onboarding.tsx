@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import btcMine from "@assets/Bitcoin_Mine_1766014388617.webp";
 import mixedMain from "@assets/Mixed_main_1766014388605.webp";
 import serverMining from "@assets/Server_Mining_1766014388610.webp";
+import appLogo from "@assets/App-Logo.png";
 
 interface OnboardingProps {
   onComplete: () => void;
@@ -75,18 +76,25 @@ export function Onboarding({ onComplete, onSignIn, onSkip }: OnboardingProps) {
 
       <div className="relative z-10 flex-1 flex flex-col max-w-md mx-auto w-full px-6 pt-16 pb-8">
         <div className="flex items-center justify-between mb-8">
-          <span className="font-display text-lg font-bold text-foreground">BlockMint</span>
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
+          <motion.img 
+            src={appLogo} 
+            alt="BlockMint Logo" 
+            className="h-10 w-auto"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          />
+          <div className="flex flex-col items-end gap-2">
             <button
               onClick={() => onSkip ? onSkip() : onSignIn()}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/10 transition-colors"
+              className="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-gradient-to-r hover:from-emerald-500/10 hover:to-teal-500/10 dark:hover:bg-white/10 light:border light:border-emerald-400/50 light:shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-300"
               data-testid="button-skip"
               type="button"
               aria-label="Skip onboarding"
             >
               Skip
             </button>
+            <ThemeToggle />
           </div>
         </div>
 
@@ -110,14 +118,14 @@ export function Onboarding({ onComplete, onSignIn, onSkip }: OnboardingProps) {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
             className="flex-1 flex flex-col cursor-grab active:cursor-grabbing"
           >
             <div className="flex-1 flex flex-col items-center justify-center">
               <motion.div 
                 className="relative w-64 h-64 mb-8"
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: [0.45, 0, 0.55, 1] }}
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${page.gradient} opacity-20 rounded-full blur-3xl`} />
                 <img 
@@ -132,7 +140,7 @@ export function Onboarding({ onComplete, onSignIn, onSkip }: OnboardingProps) {
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.2 }}
+                  transition={{ delay: 0.3, duration: 0.5, ease: "easeOut" }}
                   className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r ${page.gradient} text-white text-sm font-semibold`}
                 >
                   <Icon className="w-4 h-4" />
@@ -169,14 +177,23 @@ export function Onboarding({ onComplete, onSignIn, onSkip }: OnboardingProps) {
         </AnimatePresence>
 
         <div className="space-y-3">
-          <Button
-            onClick={handleNext}
-            className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-600 text-white"
-            data-testid="button-next-onboarding"
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ duration: 0.2 }}
           >
-            {currentPage === onboardingPages.length - 1 ? "Get Started" : "Continue"}
-            <ChevronRight className="w-5 h-5 ml-2" />
-          </Button>
+            <Button
+              onClick={handleNext}
+              className="relative w-full h-14 text-lg font-semibold bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/50 active:shadow-md active:shadow-emerald-500/40 transition-all duration-300 overflow-hidden group"
+              data-testid="button-next-onboarding"
+            >
+              <span className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <span className="relative z-10 flex items-center justify-center">
+                {currentPage === onboardingPages.length - 1 ? "Get Started" : "Continue"}
+                <ChevronRight className="w-5 h-5 ml-2" />
+              </span>
+            </Button>
+          </motion.div>
 
           {currentPage === onboardingPages.length - 1 && (
             <motion.p 

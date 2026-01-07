@@ -17,6 +17,7 @@ import {
 } from "@/lib/firebase";
 
 import mixedMain from "@assets/Mixed_main_1766014388605.webp";
+import appLogo from "@assets/App-Logo.png";
 
 interface AuthPageProps {
   mode: "signin" | "register";
@@ -216,7 +217,14 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <span className="font-display text-lg font-bold text-foreground">BlockMint</span>
+          <motion.img 
+            src={appLogo} 
+            alt="BlockMint Logo" 
+            className="h-10 w-auto"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          />
           <ThemeToggle />
         </div>
 
@@ -274,7 +282,7 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
               <motion.div 
                 className="w-24 h-24 mx-auto mb-6"
                 animate={{ y: [0, -5, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                transition={{ duration: 5, repeat: Infinity, ease: [0.45, 0, 0.55, 1] }}
               >
                 <img 
                   src={mixedMain} 
@@ -345,7 +353,7 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
                     placeholder="Full Name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="h-14 text-base bg-white/5 border-white/10"
+                    className="h-14 text-base bg-white/5 dark:border-white/10 light:border-2 light:border-emerald-400/50 light:focus:border-emerald-500 light:shadow-[0_0_15px_rgba(16,185,129,0.2)] light:focus:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all duration-300"
                     data-testid="input-name"
                     disabled={isLoading}
                   />
@@ -355,7 +363,7 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
                   placeholder="Email Address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-14 text-base bg-white/5 border-white/10"
+                  className="h-14 text-base bg-white/5 dark:border-white/10 light:border-2 light:border-emerald-400/50 light:focus:border-emerald-500 light:shadow-[0_0_15px_rgba(16,185,129,0.2)] light:focus:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all duration-300"
                   data-testid="input-email"
                   disabled={isLoading}
                 />
@@ -364,7 +372,7 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-14 text-base bg-white/5 border-white/10"
+                  className="h-14 text-base bg-white/5 dark:border-white/10 light:border-2 light:border-emerald-400/50 light:focus:border-emerald-500 light:shadow-[0_0_15px_rgba(16,185,129,0.2)] light:focus:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all duration-300"
                   data-testid="input-password"
                   disabled={isLoading}
                 />
@@ -382,19 +390,28 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
                 </button>
               )}
 
-              <Button
-                type="submit"
-                className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-600 text-white"
-                data-testid="button-email-auth"
-                disabled={isLoading}
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2 }}
               >
-                {isLoading ? (
-                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                ) : (
-                  <Mail className="w-5 h-5 mr-2" />
-                )}
-                {mode === "signin" ? "Sign In" : "Create Account"}
-              </Button>
+                <Button
+                  type="submit"
+                  className="relative w-full h-14 text-lg font-semibold bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/50 active:shadow-md active:shadow-emerald-500/40 transition-all duration-300 overflow-hidden group"
+                  data-testid="button-email-auth"
+                  disabled={isLoading}
+                >
+                  <span className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <span className="relative z-10 flex items-center justify-center">
+                    {isLoading ? (
+                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    ) : (
+                      <Mail className="w-5 h-5 mr-2" />
+                    )}
+                    {mode === "signin" ? "Sign In" : "Create Account"}
+                  </span>
+                </Button>
+              </motion.div>
             </form>
 
             <p className="text-center text-sm text-muted-foreground pt-4">
