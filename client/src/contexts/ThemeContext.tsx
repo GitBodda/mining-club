@@ -16,13 +16,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const saved = localStorage.getItem("theme");
     if (saved) return (saved as Theme);
     
-    // Then check system preference
-    if (typeof window !== "undefined" && window.matchMedia) {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      return prefersDark ? "dark" : "light";
-    }
-    
-    // Default to dark
+    // Force dark theme by default (ignore system preference)
     return "dark";
   });
 
@@ -33,25 +27,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  // Listen for system theme changes
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) return;
-    
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = (e: MediaQueryListEvent) => {
-      const saved = localStorage.getItem("theme");
-      // Only auto-switch if user hasn't manually set a preference
-      if (!saved) {
-        setThemeState(e.matches ? "dark" : "light");
-      }
-    };
-    
-    // Modern API
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", handleChange);
-      return () => mediaQuery.removeEventListener("change", handleChange);
-    }
-  }, []);
+  // No longer listen for system theme changes - user controls theme explicitly
 
   const toggleTheme = () => {
     setThemeState((prev) => (prev === "dark" ? "light" : "dark"));

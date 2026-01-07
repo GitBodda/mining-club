@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, Gem, Shield, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 import btcMine from "@assets/Bitcoin_Mine_1766014388617.webp";
 import mixedMain from "@assets/Mixed_main_1766014388605.webp";
@@ -75,15 +76,18 @@ export function Onboarding({ onComplete, onSignIn, onSkip }: OnboardingProps) {
       <div className="relative z-10 flex-1 flex flex-col max-w-md mx-auto w-full px-6 pt-16 pb-8">
         <div className="flex items-center justify-between mb-8">
           <span className="font-display text-lg font-bold text-foreground">BlockMint</span>
-          <button
-            onClick={() => onSkip ? onSkip() : onSignIn()}
-            className="px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/10 transition-colors"
-            data-testid="button-skip"
-            type="button"
-            aria-label="Skip onboarding"
-          >
-            Skip
-          </button>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <button
+              onClick={() => onSkip ? onSkip() : onSignIn()}
+              className="px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/10 transition-colors"
+              data-testid="button-skip"
+              type="button"
+              aria-label="Skip onboarding"
+            >
+              Skip
+            </button>
+          </div>
         </div>
 
         <AnimatePresence mode="wait">

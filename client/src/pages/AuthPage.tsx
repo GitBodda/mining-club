@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { 
   signInWithGoogle, 
   signInWithApple, 
@@ -216,7 +217,7 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
             <ArrowLeft className="w-5 h-5" />
           </button>
           <span className="font-display text-lg font-bold text-foreground">BlockMint</span>
-          <div className="w-9" />
+          <ThemeToggle />
         </div>
 
         {showVerification ? (

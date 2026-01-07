@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1 2
 
 FROM node:20-bookworm-slim AS deps
 WORKDIR /app
@@ -11,12 +11,11 @@ WORKDIR /app
 COPY . .
 
 # Build-time variables for the Vite client bundle.
-# These are NOT automatically available in Cloud Build unless you pass them as build args.
-ARG VITE_FIREBASE_API_KEY
-ARG VITE_FIREBASE_PROJECT_ID
-ARG VITE_FIREBASE_APP_ID
-ARG VITE_FIREBASE_AUTH_DOMAIN
-ARG VITE_FIREBASE_STORAGE_BUCKET
+ARG VITE_FIREBASE_API_KEY=AIzaSyCjBfwZr4k6mGHLjrhdXmlcV0ODH_6CuP0
+ARG VITE_FIREBASE_PROJECT_ID=blockmint-393d2
+ARG VITE_FIREBASE_APP_ID=1:1181184514:web:3474e047892c119fa3ad1b
+ARG VITE_FIREBASE_AUTH_DOMAIN=blockmint-393d2.firebaseapp.com
+ARG VITE_FIREBASE_STORAGE_BUCKET=blockmint-393d2.firebasestorage.app
 
 ENV VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY}
 ENV VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID}
@@ -25,6 +24,7 @@ ENV VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN}
 ENV VITE_FIREBASE_STORAGE_BUCKET=${VITE_FIREBASE_STORAGE_BUCKET}
 
 RUN npm run build
+
 
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app
