@@ -75,25 +75,26 @@ export function Onboarding({ onComplete, onSignIn, onSkip }: OnboardingProps) {
       </div>
 
       <div className="relative z-10 flex-1 flex flex-col max-w-md mx-auto w-full px-6 pt-16 pb-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-center mb-8 relative">
           <motion.img 
             src={appLogo} 
             alt="BlockMint Logo" 
-            className="h-10 w-auto"
+            className="h-12 w-auto"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
           />
-          <div className="flex flex-col items-end gap-2">
-            <button
+          <div className="absolute right-0 flex flex-col items-end gap-2">
+            <motion.button
               onClick={() => onSkip ? onSkip() : onSignIn()}
-              className="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-gradient-to-r hover:from-emerald-500/10 hover:to-teal-500/10 dark:hover:bg-white/10 light:border light:border-emerald-400/50 light:shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-300"
+              className="w-10 h-10 rounded-xl liquid-glass flex items-center justify-center hover-elevate transition-colors text-sm font-medium text-muted-foreground hover:text-foreground"
+              whileTap={{ scale: 0.95 }}
               data-testid="button-skip"
               type="button"
               aria-label="Skip onboarding"
             >
-              Skip
-            </button>
+              ×
+            </motion.button>
             <ThemeToggle />
           </div>
         </div>
