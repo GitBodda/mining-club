@@ -1,0 +1,22 @@
+spec:
+  name: mining-club
+  region: nyc
+  services:
+    - name: web
+      github:
+        repo: GitBodda/mining-club
+        branch: main
+        deploy_on_push: true
+      dockerfile_path: Dockerfile
+      http_port: 8080
+      instance_count: 1
+      instance_size_slug: basic-xxs
+      source_dir: /
+      environment_slug: node-js
+      routes:
+        - path: /
+  databases:
+    - name: mining-club-db
+      engine: PG
+      version: "15"
+      production: true

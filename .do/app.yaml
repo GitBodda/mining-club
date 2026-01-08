@@ -1,0 +1,40 @@
+name: mining-club
+region: nyc
+services:
+  - name: web
+    github:
+      repo: GitBodda/mining-club
+      branch: main
+      deploy_on_push: true
+    dockerfile_path: Dockerfile
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        type: SECRET
+      - key: SESSION_SECRET
+        type: SECRET
+      - key: FIREBASE_SERVICE_ACCOUNT
+        type: SECRET
+      - key: VITE_FIREBASE_API_KEY
+        type: SECRET
+      - key: VITE_FIREBASE_AUTH_DOMAIN
+        type: SECRET
+      - key: VITE_FIREBASE_PROJECT_ID
+        type: SECRET
+      - key: VITE_FIREBASE_STORAGE_BUCKET
+        type: SECRET
+      - key: VITE_FIREBASE_MESSAGING_SENDER_ID
+        type: SECRET
+      - key: VITE_FIREBASE_APP_ID
+        type: SECRET
+    routes:
+      - path: /
+databases:
+  - name: mining-club-db
+    engine: PG
+    version: "15"
+    production: true
