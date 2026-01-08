@@ -309,12 +309,11 @@ export function Dashboard({
                 <Button
                   data-testid="button-deposit"
                   onClick={openDeposit}
-                  className="flex-1 liquid-glass border-0 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 flex flex-col items-center justify-center gap-1 h-16 rounded-2xl"
+                  className="flex-1 liquid-glass border-0 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 flex items-center justify-center h-12 rounded-2xl"
                   variant="ghost"
                   type="button"
                 >
                   <ArrowUpFromLine className="w-3 h-3" />
-                  <span className="text-[10px] text-muted-foreground">Deposit</span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -414,12 +413,11 @@ export function Dashboard({
             <Button
               data-testid="button-create-miner"
               onClick={onNavigateToMining}
-              className="flex-1 liquid-glass border-0 bg-primary/20 hover:bg-primary/30 text-primary flex flex-col items-center justify-center gap-1 h-16 rounded-2xl"
+              className="flex-1 liquid-glass border-0 bg-primary/20 hover:bg-primary/30 text-primary flex items-center justify-center h-12 rounded-2xl"
               variant="ghost"
               type="button"
             >
               <Fan className="w-3 h-3" />
-              <span className="text-[10px] text-muted-foreground">Create Miner</span>
             </Button>
 
             <Popover open={withdrawOpen} onOpenChange={setWithdrawOpen}>
@@ -427,12 +425,11 @@ export function Dashboard({
                 <Button
                   data-testid="button-withdraw"
                   onClick={openWithdraw}
-                  className="flex-1 liquid-glass border-0 bg-red-500/10 hover:bg-red-500/20 text-red-500 flex flex-col items-center justify-center gap-1 h-16 rounded-2xl"
+                  className="flex-1 liquid-glass border-0 bg-red-500/10 hover:bg-red-500/20 text-red-500 flex items-center justify-center h-12 rounded-2xl"
                   variant="ghost"
                   type="button"
                 >
                   <ArrowDownToLine className="w-3 h-3" />
-                  <span className="text-[10px] text-muted-foreground">Withdraw</span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -531,6 +528,18 @@ export function Dashboard({
                 </div>
               </PopoverContent>
             </Popover>
+          </div>
+          
+          <div className="flex gap-2 mt-2">
+            <div className="flex-1 text-center">
+              <p className="text-xs text-muted-foreground">Deposit</p>
+            </div>
+            <div className="flex-1 text-center">
+              <p className="text-xs text-muted-foreground">Create Miner</p>
+            </div>
+            <div className="flex-1 text-center">
+              <p className="text-xs text-muted-foreground">Withdraw</p>
+            </div>
           </div>
         </div>
       </LiquidGlassCard>
