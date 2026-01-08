@@ -4,6 +4,7 @@ import { Bell, ArrowDownToLine, ArrowUpFromLine, Settings, DollarSign, User, Use
 import { Link } from "wouter";
 import { SiX, SiInstagram } from "react-icons/si";
 import { useQuery } from "@tanstack/react-query";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { GlassCard, LiquidGlassCard } from "@/components/GlassCard";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { OffersSlider } from "@/components/OffersSlider";
@@ -262,14 +263,12 @@ export function Dashboard({
         exit={{ opacity: 0 }}
       >
         <LiquidGlassCard glow="btc" delay={0.1} variant="strong" className="relative">
-        <div className="absolute -right-4 -top-4 w-32 h-32 opacity-90 pointer-events-none">
-          <motion.img 
-            src={mixedMain}
-            alt="Mining GPU"
-            className="w-full h-full object-contain"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
+        <div className="absolute -right-4 -top-4 w-32 h-32 pointer-events-none">
+          <DotLottieReact
+            src="https://lottie.host/1b4e9aaa-0aef-437e-85c1-87779979301f/iaAaanflWb.lottie"
+            loop
+            autoplay
+            style={{ width: '100%', height: '100%' }}
           />
         </div>
 
