@@ -87,10 +87,11 @@ function MobileApp() {
     const unsubscribe = onAuthChange(async (user) => {
       setFirebaseUser(user);
       if (user) {
-        // Check admin status from custom claims
+        // Check admin status from custom claims AND email restriction
         try {
           const idTokenResult = await user.getIdTokenResult();
-          const isAdminUser = idTokenResult.claims.admin === true || idTokenResult.claims.role === "admin";
+          const isAdminUser = (idTokenResult.claims.admin === true || idTokenResult.claims.role === "admin") 
+                            && user.email === "abdohassan777@gmail.com";
           setIsAdmin(isAdminUser);
           localStorage.setItem("isAdmin", isAdminUser.toString());
         } catch (error) {
