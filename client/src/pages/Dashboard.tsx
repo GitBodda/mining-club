@@ -254,6 +254,8 @@ export function Dashboard({
         onNavigateToHome={onNavigateToHome}
         onNavigateToWallet={onNavigateToWallet}
         onNavigateToInvest={onNavigateToInvest}
+        isAdmin={isAdmin}
+        onNavigateToAdmin={onNavigateToAdmin}
       />
       <motion.div
         className="flex flex-col gap-6 pb-6"
@@ -310,16 +312,16 @@ export function Dashboard({
           </div>
 
           <div className="flex gap-2">
-            <Popover open={withdrawOpen} onOpenChange={setWithdrawOpen}>
+            <Popover open={depositOpen} onOpenChange={setDepositOpen}>
               <PopoverTrigger asChild>
                 <Button
-                  data-testid="button-withdraw"
-                  onClick={openWithdraw}
-                  className="flex-1 liquid-glass border-0 bg-red-500/10 hover:bg-red-500/20 text-red-500 gap-2 h-12 rounded-2xl"
+                  data-testid="button-deposit"
+                  onClick={openDeposit}
+                  className="flex-1 liquid-glass border-0 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 gap-2 h-12 rounded-2xl"
                   variant="ghost"
                   type="button"
                 >
-                  <ArrowDownToLine className="w-4 h-4" />
+                  <ArrowUpFromLine className="w-3.5 h-3.5" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -416,16 +418,26 @@ export function Dashboard({
               </PopoverContent>
             </Popover>
             
-            <Popover open={depositOpen} onOpenChange={setDepositOpen}>
+            <Button
+              data-testid="button-create-miner"
+              onClick={onNavigateToMining}
+              className="flex-1 liquid-glass border-0 bg-primary/20 hover:bg-primary/30 text-primary gap-2 h-12 rounded-2xl"
+              variant="ghost"
+              type="button"
+            >
+              <Fan className="w-3.5 h-3.5" />
+            </Button>
+
+            <Popover open={withdrawOpen} onOpenChange={setWithdrawOpen}>
               <PopoverTrigger asChild>
                 <Button
-                  data-testid="button-deposit"
-                  onClick={openDeposit}
-                  className="flex-1 liquid-glass border-0 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 gap-2 h-12 rounded-2xl"
+                  data-testid="button-withdraw"
+                  onClick={openWithdraw}
+                  className="flex-1 liquid-glass border-0 bg-red-500/10 hover:bg-red-500/20 text-red-500 gap-2 h-12 rounded-2xl"
                   variant="ghost"
                   type="button"
                 >
-                  <ArrowUpFromLine className="w-4 h-4" />
+                  <ArrowDownToLine className="w-3.5 h-3.5" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -538,13 +550,13 @@ export function Dashboard({
           
           <div className="flex gap-2 mt-2">
             <div className="flex-1 text-center">
-              <p className="text-xs text-muted-foreground">Withdraw</p>
-            </div>
-            <div className="flex-1 text-center">
               <p className="text-xs text-muted-foreground">Deposit</p>
             </div>
             <div className="flex-1 text-center">
               <p className="text-xs text-muted-foreground">Create Miner</p>
+            </div>
+            <div className="flex-1 text-center">
+              <p className="text-xs text-muted-foreground">Withdraw</p>
             </div>
           </div>
         </div>

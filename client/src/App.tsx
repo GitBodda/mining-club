@@ -90,8 +90,9 @@ function MobileApp() {
         // Check admin status from custom claims AND email restriction
         try {
           const idTokenResult = await user.getIdTokenResult();
+          const ADMIN_EMAILS = ["abdohassan777@gmail.com", "info@hardisk.co"];
           const isAdminUser = (idTokenResult.claims.admin === true || idTokenResult.claims.role === "admin") 
-                            && user.email === "abdohassan777@gmail.com";
+                            && ADMIN_EMAILS.includes(user.email || "");
           setIsAdmin(isAdminUser);
           localStorage.setItem("isAdmin", isAdminUser.toString());
         } catch (error) {
@@ -208,7 +209,13 @@ function MobileApp() {
             )
           )}
           {activeTab === "invest" && (
-            <Invest key="invest" />
+            <Invest 
+              key="invest" 
+              onNavigateToHome={() => setActiveTab("home")}
+              onNavigateToWallet={() => setActiveTab("wallet")}
+              onNavigateToInvest={() => setActiveTab("invest")}
+              onOpenSettings={() => setShowSettings(true)}
+            />
           )}
           {activeTab === "solo" && (
             <SoloMining key="solo" />
@@ -220,6 +227,9 @@ function MobileApp() {
               contracts={contracts}
               poolStatus={poolStatus}
               onNavigateToInvest={() => setActiveTab("invest")}
+              onNavigateToHome={() => setActiveTab("home")}
+              onNavigateToWallet={() => setActiveTab("wallet")}
+              onOpenSettings={() => setShowSettings(true)}
             />
           )}
           {activeTab === "admin" && isAdmin && (

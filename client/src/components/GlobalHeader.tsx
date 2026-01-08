@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, Bell, Sun, Moon, X, Home, Wallet, PieChart, HelpCircle, LogOut, Settings as SettingsIcon } from "lucide-react";
+import { Menu, Bell, Sun, Moon, X, Home, Wallet, PieChart, HelpCircle, LogOut, Settings as SettingsIcon, Shield } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { logOut } from "@/lib/firebase";
@@ -10,6 +10,8 @@ interface GlobalHeaderProps {
   onNavigateToHome?: () => void;
   onNavigateToWallet?: () => void;
   onNavigateToInvest?: () => void;
+  isAdmin?: boolean;
+  onNavigateToAdmin?: () => void;
 }
 
 export function GlobalHeader({
@@ -17,6 +19,8 @@ export function GlobalHeader({
   onNavigateToHome,
   onNavigateToWallet,
   onNavigateToInvest,
+  isAdmin = false,
+  onNavigateToAdmin,
 }: GlobalHeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
@@ -153,6 +157,19 @@ export function GlobalHeader({
                     <PieChart className="w-5 h-5 text-purple-500" />
                     <span className="text-sm font-medium text-foreground">Invest</span>
                   </motion.button>
+                  
+                  {isAdmin && (
+                    <motion.button
+                      onClick={() => { onNavigateToAdmin?.(); setShowMenu(false); }}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors"
+                      whileHover={{ x: 5 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Shield className="w-5 h-5 text-amber-500" />
+                      <span className="text-sm font-medium text-foreground">Admin Panel</span>
+                    </motion.button>
+                  )}
+                  
                   <motion.button
                     className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors"
                     whileHover={{ x: 5 }}

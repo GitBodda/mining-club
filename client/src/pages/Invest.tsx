@@ -431,13 +431,21 @@ function FAQSection() {
   );
 }
 
-export function Invest() {
+interface InvestProps {
+  onNavigateToHome?: () => void;
+  onNavigateToWallet?: () => void;
+  onNavigateToInvest?: () => void;
+  onOpenSettings?: () => void;
+}
+
+export function Invest({ onNavigateToHome, onNavigateToWallet, onNavigateToInvest, onOpenSettings }: InvestProps = {}) {
   return (
     <>
       <GlobalHeader
-        onNavigateToHome={() => {}}
-        onNavigateToWallet={() => {}}
-        onNavigateToInvest={() => {}}
+        onNavigateToHome={onNavigateToHome}
+        onNavigateToWallet={onNavigateToWallet}
+        onNavigateToInvest={onNavigateToInvest}
+        onOpenSettings={onOpenSettings}
       />
       <motion.div
         initial={{ opacity: 0 }}

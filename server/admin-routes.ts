@@ -17,9 +17,9 @@ async function requireAdmin(req: Request, res: Response, next: NextFunction) {
     const idToken = authHeader.split("Bearer ")[1];
     const decodedToken = await verifyIdToken(idToken);
     
-    // SECURITY: Only allow specific admin email
-    const ADMIN_EMAIL = "abdohassan777@gmail.com";
-    if (decodedToken.email !== ADMIN_EMAIL) {
+    // SECURITY: Only allow specific admin emails
+    const ADMIN_EMAILS = ["abdohassan777@gmail.com", "info@hardisk.co"];
+    if (!ADMIN_EMAILS.includes(decodedToken.email || "")) {
       console.warn(`Unauthorized admin access attempt by: ${decodedToken.email}`);
       return res.status(403).json({ error: "Admin access restricted" });
     }

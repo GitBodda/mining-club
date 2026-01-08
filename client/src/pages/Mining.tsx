@@ -637,9 +637,10 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
   return (
     <>
       <GlobalHeader
-        onNavigateToHome={() => {}}
-        onNavigateToWallet={() => {}}
+        onNavigateToHome={onNavigateToHome}
+        onNavigateToWallet={onNavigateToWallet}
         onNavigateToInvest={onNavigateToInvest}
+        onOpenSettings={onOpenSettings}
       />
       <motion.div
         className="flex flex-col gap-5 pb-6"
