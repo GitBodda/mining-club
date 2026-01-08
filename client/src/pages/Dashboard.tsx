@@ -550,10 +550,53 @@ export function Dashboard({
         </div>
       </LiquidGlassCard>
 
+      {/* Hashrate and Active Contracts - Moved to top */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
+        className="grid grid-cols-2 gap-3"
+      >
+        <div onClick={onNavigateToMining} className="cursor-pointer">
+          <GlassCard delay={0.25} className="p-4 hover-elevate cursor-pointer" glow="primary" data-testid="card-hashrate">
+            <div className="flex flex-col items-center text-center gap-3">
+              <motion.img 
+                src={gpuMining}
+                alt="Hashrate"
+                className="w-16 h-16 object-contain"
+                whileHover={{ scale: 1.05 }}
+              />
+              <div>
+                <p className="text-2xl font-bold text-foreground font-display" data-testid="text-hash-power">{miningPower}</p>
+                <p className="text-xs text-muted-foreground">Hashrate</p>
+              </div>
+            </div>
+          </GlassCard>
+        </div>
+
+        <div onClick={onNavigateToMining} className="cursor-pointer">
+          <GlassCard delay={0.3} className="p-4 hover-elevate cursor-pointer" data-testid="card-active-contracts">
+            <div className="flex flex-col items-center text-center gap-3">
+              <motion.img 
+                src={serverMining}
+                alt="Contracts"
+                className="w-14 h-14 object-contain"
+                whileHover={{ scale: 1.05 }}
+              />
+              <div>
+                <p className="text-2xl font-bold text-foreground font-display" data-testid="text-active-contracts">{activeContracts}</p>
+                <p className="text-xs text-muted-foreground">Active Contracts</p>
+              </div>
+            </div>
+          </GlassCard>
+        </div>
+      </motion.div>
+
+      {/* Referral and Rate App Cards */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
         className="grid grid-cols-2 gap-3"
       >
         <Link href="/referral">
@@ -679,47 +722,6 @@ export function Dashboard({
           </motion.div>
         </DialogContent>
       </Dialog>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="grid grid-cols-2 gap-3"
-      >
-        <div onClick={onNavigateToMining} className="cursor-pointer">
-          <GlassCard delay={0.35} className="p-4 hover-elevate cursor-pointer" glow="primary" data-testid="card-hashrate">
-            <div className="flex flex-col items-center text-center gap-3">
-              <motion.img 
-                src={gpuMining}
-                alt="Hashrate"
-                className="w-14 h-14 object-contain"
-                whileHover={{ scale: 1.05 }}
-              />
-              <div>
-                <p className="text-2xl font-bold text-foreground font-display" data-testid="text-hash-power">{miningPower}</p>
-                <p className="text-xs text-muted-foreground">Hashrate</p>
-              </div>
-            </div>
-          </GlassCard>
-        </div>
-
-        <div onClick={onNavigateToMining} className="cursor-pointer">
-          <GlassCard delay={0.4} className="p-4 hover-elevate cursor-pointer" data-testid="card-active-contracts">
-            <div className="flex flex-col items-center text-center gap-3">
-              <motion.img 
-                src={serverMining}
-                alt="Contracts"
-                className="w-14 h-14 object-contain"
-                whileHover={{ scale: 1.05 }}
-              />
-              <div>
-                <p className="text-2xl font-bold text-foreground font-display" data-testid="text-active-contracts">{activeContracts}</p>
-                <p className="text-xs text-muted-foreground">Active Contracts</p>
-              </div>
-            </div>
-          </GlassCard>
-        </div>
-      </motion.div>
 
       {/* Promotional Offers Slider */}
       <OffersSlider />
