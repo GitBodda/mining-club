@@ -133,7 +133,7 @@ export function VirtualCard({ onBack }: VirtualCardProps) {
                 transition={{ delay: 0.1, duration: 0.6, type: "spring", stiffness: 100 }}
                 className="mb-3"
               >
-                <div className="relative mx-auto w-24 h-24">
+                <div className="relative mx-auto w-32 h-32">
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-emerald-500/5 rounded-full blur-xl"></div>
                   <img 
                     src="/attached_assets/BlockMint-for-All.png" 

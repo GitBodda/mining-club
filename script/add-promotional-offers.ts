@@ -46,7 +46,7 @@ async function addPromotionalOffers() {
     // Insert new offers with different themes and images
     const offers = [
       {
-        title: "🚀 Start Mining Bitcoin Today!",
+        title: "Start Mining Bitcoin Today!",
         subtitle: "Get up to 50% more hashpower",
         description: "Join thousands of miners earning passive income with our state-of-the-art mining infrastructure",
         imageUrl: "/attached_assets/Bitcoin_Mine_1766014388617.png",
@@ -57,7 +57,7 @@ async function addPromotionalOffers() {
         order: 1,
       },
       {
-        title: "💎 Premium Mining Plans",
+        title: "Premium Mining Plans",
         subtitle: "Upgrade your mining power",
         description: "Exclusive high-performance miners with guaranteed ROI in 90 days",
         imageUrl: "/attached_assets/Gpu_Mining_1766014388614.webp",
@@ -68,7 +68,7 @@ async function addPromotionalOffers() {
         order: 2,
       },
       {
-        title: "⚡ Lightning Fast Payouts",
+        title: "Lightning Fast Payouts",
         subtitle: "Daily earnings to your wallet",
         description: "Automatic payouts every 24 hours. Mine now, earn daily!",
         imageUrl: "/attached_assets/Bitcoin_Wallet_1766014388613.png",
@@ -79,7 +79,7 @@ async function addPromotionalOffers() {
         order: 3,
       },
       {
-        title: "🎁 Welcome Bonus",
+        title: "Welcome Bonus",
         subtitle: "Get 100 free GH/s",
         description: "Sign up now and receive free mining power for your first 7 days",
         imageUrl: "/attached_assets/Bitcoin_Mining_Cart_1766014388619.webp",
@@ -90,7 +90,7 @@ async function addPromotionalOffers() {
         order: 4,
       },
       {
-        title: "🏆 Top Miners Leaderboard",
+        title: "Top Miners Leaderboard",
         subtitle: "Compete and win rewards",
         description: "Top 10 miners win exclusive prizes and bonuses monthly",
         imageUrl: "/attached_assets/Mixed_main_1766014388605.png",
@@ -101,7 +101,7 @@ async function addPromotionalOffers() {
         order: 5,
       },
       {
-        title: "🔥 Limited Time Offer",
+        title: "Limited Time Offer",
         subtitle: "50% off all mining plans",
         description: "Flash sale! Get premium miners at half the price. Ends soon!",
         imageUrl: "/attached_assets/litecoin-3d-icon-png-download-4466121_1766014388608.png",
@@ -112,7 +112,7 @@ async function addPromotionalOffers() {
         order: 6,
       },
       {
-        title: "💰 Refer & Earn",
+        title: "Refer & Earn",
         subtitle: "Get 10% commission",
         description: "Invite friends and earn 10% of their mining rewards forever",
         imageUrl: "/attached_assets/ethereum-eth-logo.png",
@@ -123,7 +123,7 @@ async function addPromotionalOffers() {
         order: 7,
       },
       {
-        title: "🌟 VIP Membership",
+        title: "VIP Membership",
         subtitle: "Exclusive benefits",
         description: "Priority support, lower fees, and bonus hashpower for VIP members",
         imageUrl: "/attached_assets/Gemini_Generated_Image_1ri2av1ri2av1ri2_(1)_1766014388604.png",
@@ -134,7 +134,7 @@ async function addPromotionalOffers() {
         order: 8,
       },
       {
-        title: "📈 Track Your Earnings",
+        title: "Track Your Earnings",
         subtitle: "Real-time analytics",
         description: "Monitor your mining performance with detailed charts and statistics",
         imageUrl: "/attached_assets/Gemini_Generated_Image_46ieyx46ieyx46ie_(1)_1766014388603.png",
@@ -145,7 +145,7 @@ async function addPromotionalOffers() {
         order: 9,
       },
       {
-        title: "🎯 Multi-Coin Mining",
+        title: "Multi-Coin Mining",
         subtitle: "Mine BTC, LTC, ETH & more",
         description: "Diversify your earnings by mining multiple cryptocurrencies simultaneously",
         imageUrl: "/attached_assets/stock_images/usdt_tether_cryptocu_4498e890.jpg",

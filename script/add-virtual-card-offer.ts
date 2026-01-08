@@ -19,9 +19,9 @@ async function addVirtualCardOffer() {
   try {
     // Add the new Virtual Card offer with order 0 (first position)
     const newOffer = {
-      title: "💳 BlockMint Virtual Card Coming Soon!",
+      title: "BlockMint Virtual Card Coming Soon!",
       subtitle: "Revolutionary crypto payments",
-      description: "Join the waitlist for exclusive early access benefits!",
+      description: null,
       imageUrl: "https://lottie.host/4495e92b-9f73-41a6-9a64-d28398d29566/vSLht88QDu.lottie",
       backgroundType: 5, // Royal Purple gradient
       ctaText: "Join Whitelist",

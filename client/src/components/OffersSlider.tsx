@@ -134,9 +134,9 @@ export function OffersSlider() {
           {/* Gradient Background */}
           <div className={`absolute inset-0 ${backgroundClass}`} />
           
-          {/* Lottie Animation (Larger size, positioned in top-right corner) */}
+          {/* Lottie Animation (Right side, responsive positioning) */}
           {isLottieUrl && currentOffer.imageUrl && (
-            <div className="absolute top-2 right-2 w-38 h-38 pointer-events-none z-20">
+            <div className="absolute right-12 top-1/2 -translate-y-1/2 w-32 h-32 sm:w-36 sm:h-36 pointer-events-none z-20">
               <DotLottieReact
                 src={currentOffer.imageUrl}
                 loop={shouldPlayLottie}
@@ -150,13 +150,13 @@ export function OffersSlider() {
             </div>
           )}
           
-          {/* Content - Centered with padding for arrows */}
-          <div className="relative h-full flex flex-col justify-center px-12 py-4">
+          {/* Content - Left side with safe spacing */}
+          <div className="relative h-full flex flex-col justify-center pl-4 pr-12 py-3">
             <div className="space-y-1.5 max-w-full"
-              style={{ maxWidth: isLottieUrl ? 'calc(100% - 10rem)' : '100%' }}
+              style={{ maxWidth: isLottieUrl ? 'calc(100% - 10rem)' : 'calc(100% - 3rem)' }}
             >
               <div>
-                <h3 className="text-base font-bold text-white drop-shadow-lg leading-tight">
+                <h3 className="text-base font-bold text-white drop-shadow-lg leading-tight line-clamp-2">
                   {currentOffer.title}
                   {currentOffer.ctaLink && (
                     <a
@@ -175,11 +175,6 @@ export function OffersSlider() {
               {currentOffer.subtitle && (
                 <p className="text-sm text-white/95 font-medium drop-shadow-md leading-snug line-clamp-1">
                   {currentOffer.subtitle}
-                </p>
-              )}
-              {currentOffer.description && (
-                <p className="text-xs text-white/90 leading-relaxed line-clamp-2 drop-shadow-md">
-                  {currentOffer.description}
                 </p>
               )}
             </div>
