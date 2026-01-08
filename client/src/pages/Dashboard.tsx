@@ -558,34 +558,34 @@ export function Dashboard({
       >
         <div onClick={onNavigateToMining} className="cursor-pointer">
           <GlassCard delay={0.25} className="p-4 hover-elevate cursor-pointer" glow="primary" data-testid="card-hashrate">
-            <div className="flex flex-col items-center text-center gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-left">
+                <p className="text-2xl font-bold text-foreground font-display" data-testid="text-hash-power">{miningPower}</p>
+                <p className="text-xs text-muted-foreground">Hashrate</p>
+              </div>
               <motion.img 
-                src={gpuMining}
+                src="https://cdn3d.iconscout.com/3d/premium/thumb/mining-algorithm-3d-icon-png-download-11264737.png"
                 alt="Hashrate"
                 className="w-16 h-16 object-contain"
                 whileHover={{ scale: 1.05 }}
               />
-              <div>
-                <p className="text-2xl font-bold text-foreground font-display" data-testid="text-hash-power">{miningPower}</p>
-                <p className="text-xs text-muted-foreground">Hashrate</p>
-              </div>
             </div>
           </GlassCard>
         </div>
 
         <div onClick={onNavigateToMining} className="cursor-pointer">
           <GlassCard delay={0.3} className="p-4 hover-elevate cursor-pointer" glow="primary" data-testid="card-active-contracts">
-            <div className="flex flex-col items-center text-center gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-left">
+                <p className="text-2xl font-bold text-foreground font-display" data-testid="text-active-contracts">{activeContracts}</p>
+                <p className="text-xs text-muted-foreground">Active Contracts</p>
+              </div>
               <motion.img 
-                src={serverMining}
+                src="https://cdn3d.iconscout.com/3d/premium/thumb/crypto-contract-3d-icon-png-download-4817442.png"
                 alt="Contracts"
                 className="w-16 h-16 object-contain"
                 whileHover={{ scale: 1.05 }}
               />
-              <div>
-                <p className="text-2xl font-bold text-foreground font-display" data-testid="text-active-contracts">{activeContracts}</p>
-                <p className="text-xs text-muted-foreground">Active Contracts</p>
-              </div>
             </div>
           </GlassCard>
         </div>
