@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { GlobalHeader } from "@/components/GlobalHeader";
 import { GlassCard } from "@/components/GlassCard";
 import { HashRateChart } from "@/components/HashRateChart";
@@ -20,7 +20,9 @@ import {
   CheckCircle2,
   Calculator,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  Cpu,
+  Flame
 } from "lucide-react";
 import {
   Select,
@@ -620,6 +622,7 @@ function EmptyState({ onNavigateToInvest }: { onNavigateToInvest: () => void }) 
 }
 
 export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }: MiningProps) {
+  const [activeTab, setActiveTab] = useState<"devices" | "hot">("devices");
   const hasContracts = contracts.length > 0;
   
   const totalHashrate = contracts.reduce((sum, c) => {
@@ -655,6 +658,37 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
           <p className="text-sm text-muted-foreground mt-0.5">
             Your hashpower & mining packages
           </p>
+        </motion.div>
+
+        {/* Tabs */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="flex gap-2 px-1"
+        >
+          <button
+            onClick={() => setActiveTab("devices")}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-medium text-sm transition-all ${
+              activeTab === "devices"
+                ? "bg-primary/20 text-primary border-2 border-primary/30"
+                : "bg-white/5 text-muted-foreground border-2 border-transparent hover:bg-white/10"
+            }`}
+          >
+            <Cpu className="w-4 h-4" />
+            <span>Devices</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("hot")}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-medium text-sm transition-all ${
+              activeTab === "hot"
+                ? "bg-amber-500/20 text-amber-400 border-2 border-amber-500/30"
+                : "bg-white/5 text-muted-foreground border-2 border-transparent hover:bg-white/10"
+            }`}
+          >
+            <Flame className="w-4 h-4" />
+            <span>Hot</span>
+          </button>
         </motion.div>
 
       {/* Active Hashpower Card (Smaller) */}
@@ -712,45 +746,63 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
       </div>
 
       {/* Bitcoin Mining Packages */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-7 h-7 rounded-lg bg-amber-500/20 flex items-center justify-center">
-            <span className="text-amber-400 font-bold text-sm">₿</span>
-          </div>
-          <h2 className="text-base font-semibold text-foreground">Bitcoin Mining Packages</h2>
-        </div>
-        <div className="space-y-3">
-          {btcPackages.map((pkg, index) => (
-            <PackageCard key={pkg.id} pkg={pkg} index={index} />
-          ))}
-        </div>
-      </div>
-      
-      {/* Litecoin Mining Packages */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-7 h-7 rounded-lg bg-blue-500/20 flex items-center justify-center">
-            <span className="text-blue-400 font-bold text-sm">Ł</span>
-          </div>
-          <h2 className="text-base font-semibold text-foreground">Litecoin Mining Packages</h2>
-        </div>
-        <div className="space-y-3">
-          {ltcPackages.map((pkg, index) => (
-            <PackageCard key={pkg.id} pkg={pkg} index={index + 3} />
-          ))}
-        </div>
-      </div>
-      
-      {/* Custom Hashrate Calculator */}
-      <HashRateCalculator />
-
-      {/* Pool Status (if has contracts) */}
-      {hasContracts && (
-        <>
-          <HashRateChart data={chartData} title="Earnings Over Time" />
-          <PoolStatusCard status={poolStatus} />
-        </>
-      )}
+      <AnimatePresence mode="wait">
+        {activeTab === "devices" ? (
+          <motion.div
+            key="devices"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-5"
+          >
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                  <span className="text-amber-400 font-bold text-sm">₿</span>
+                </div>
+                <h2 className="text-base font-semibold text-foreground">Bitcoin Mining Devices</h2>
+              </div>
+              <div className="space-y-3">
+                {btcPackages.slice(0, 4).map((pkg, index) => (
+                  <PackageCard key={pkg.id} pkg={pkg} index={index} />
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                  <span className="text-blue-400 font-bold text-sm">Ł</span>
+                </div>
+                <h2 className="text-base font-semibold text-foreground">Litecoin Mining Devices</h2>
+              </div>
+              <div className="space-y-3">
+                {ltcPackages.slice(0, 4).map((pkg, index) => (
+                  <PackageCard key={pkg.id} pkg={pkg} index={index + 3} />
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="hot"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-5"
+          >
+            <HashRateCalculator />
+            {hasContracts && (
+              <>
+                <HashRateChart data={chartData} title="Earnings Over Time" />
+                <PoolStatusCard status={poolStatus} />
+              </>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
       </motion.div>
     </>
   );
