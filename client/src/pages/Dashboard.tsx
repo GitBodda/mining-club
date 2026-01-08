@@ -308,11 +308,11 @@ export function Dashboard({
                 <Button
                   data-testid="button-withdraw"
                   onClick={openWithdraw}
-                  className="flex-1 liquid-glass border-0 bg-red-500/10 hover:bg-red-500/20 text-red-500 gap-2 h-12"
+                  className="flex-1 liquid-glass border-0 bg-red-500/10 hover:bg-red-500/20 text-red-500 gap-2 h-12 rounded-2xl"
                   variant="ghost"
                   type="button"
                 >
-                  <Minus className="w-5 h-5" />
+                  <ArrowDownToLine className="w-4 h-4" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -414,11 +414,11 @@ export function Dashboard({
                 <Button
                   data-testid="button-deposit"
                   onClick={openDeposit}
-                  className="flex-1 liquid-glass border-0 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 gap-2 h-12"
+                  className="flex-1 liquid-glass border-0 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 gap-2 h-12 rounded-2xl"
                   variant="ghost"
                   type="button"
                 >
-                  <Plus className="w-5 h-5" />
+                  <ArrowUpFromLine className="w-4 h-4" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -521,11 +521,11 @@ export function Dashboard({
             <Link href="/mining" className="flex-1">
               <Button
                 data-testid="button-create-miner"
-                className="w-full liquid-glass border-0 bg-primary/20 hover:bg-primary/30 text-foreground gap-2 h-12"
+                className="w-full liquid-glass border-0 bg-primary/20 hover:bg-primary/30 text-primary gap-2 h-12 rounded-2xl"
                 variant="ghost"
                 type="button"
               >
-                <Fan className="w-5 h-5" />
+                <Fan className="w-4 h-4" />
               </Button>
             </Link>
           </div>

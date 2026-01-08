@@ -660,37 +660,6 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
           </p>
         </motion.div>
 
-        {/* Tabs */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className="flex gap-2 px-1"
-        >
-          <button
-            onClick={() => setActiveTab("devices")}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-medium text-sm transition-all ${
-              activeTab === "devices"
-                ? "bg-primary/20 text-primary border-2 border-primary/30"
-                : "bg-white/5 text-muted-foreground border-2 border-transparent hover:bg-white/10"
-            }`}
-          >
-            <Cpu className="w-4 h-4" />
-            <span>Devices</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("hot")}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-medium text-sm transition-all ${
-              activeTab === "hot"
-                ? "bg-amber-500/20 text-amber-400 border-2 border-amber-500/30"
-                : "bg-white/5 text-muted-foreground border-2 border-transparent hover:bg-white/10"
-            }`}
-          >
-            <Flame className="w-4 h-4" />
-            <span>Hot</span>
-          </button>
-        </motion.div>
-
       {/* Active Hashpower Card (Smaller) */}
       <GlassCard delay={0.1} variant="strong" className="relative py-4 px-5">
         <FloatingParticles />
@@ -713,6 +682,40 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
           </div>
         </div>
       </GlassCard>
+
+      {/* Tabs */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.15 }}
+        className="flex gap-2 px-1"
+      >
+        <button
+          onClick={() => setActiveTab("devices")}
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-medium text-sm transition-all ${
+            activeTab === "devices"
+              ? "bg-primary/20 text-primary border-2 border-primary/30"
+              : "bg-white/5 text-muted-foreground border-2 border-transparent hover:bg-white/10"
+          }`}
+        >
+          <Cpu className="w-4 h-4" />
+          <span>Devices</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("hot")}
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-medium text-sm transition-all ${
+            activeTab === "hot"
+              ? "bg-red-500/20 text-red-400 border-2 border-red-500/30"
+              : "bg-white/5 text-muted-foreground border-2 border-transparent hover:bg-white/10"
+          }`}
+        >
+          <Flame className="w-4 h-4" />
+          <span className="flex items-center gap-1.5">
+            Hashrate
+            <span className="text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wide">HOT</span>
+          </span>
+        </button>
+      </motion.div>
 
       {/* Active Contracts (if any) */}
       {hasContracts && (
