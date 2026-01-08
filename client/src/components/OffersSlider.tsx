@@ -17,6 +17,20 @@ interface Offer {
   order: number;
 }
 
+// Gradient backgrounds for each offer type
+const backgrounds = [
+  "bg-gradient-to-br from-blue-500/90 via-indigo-500/85 to-purple-600/90",
+  "bg-gradient-to-br from-orange-400/90 via-rose-500/85 to-pink-600/90",
+  "bg-gradient-to-br from-teal-400/90 via-cyan-500/85 to-blue-600/90",
+  "bg-gradient-to-br from-green-500/90 via-emerald-500/85 to-teal-600/90",
+  "bg-gradient-to-br from-purple-500/90 via-violet-500/85 to-indigo-600/90",
+  "bg-gradient-to-br from-amber-400/90 via-yellow-500/85 to-orange-500/90",
+  "bg-gradient-to-br from-slate-600/90 via-gray-500/85 to-zinc-700/90",
+  "bg-gradient-to-br from-red-400/90 via-rose-400/85 to-pink-500/90",
+  "bg-gradient-to-br from-emerald-400/90 via-teal-400/85 to-cyan-500/90",
+  "bg-gradient-to-br from-slate-800/95 via-purple-900/90 to-slate-900/95",
+];
+
 export function OffersSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
@@ -73,10 +87,12 @@ export function OffersSlider() {
   }
 
   const currentOffer = offers[currentIndex];
+  const bgIndex = (currentOffer?.backgroundType || 1) - 1;
+  const backgroundClass = backgrounds[bgIndex] || backgrounds[0];
 
   return (
     <div 
-      className="relative overflow-hidden rounded-2xl h-48"
+      className="relative overflow-hidden rounded-2xl h-40"
       onMouseEnter={handleInteraction}
       onTouchStart={handleInteraction}
     >
@@ -89,25 +105,17 @@ export function OffersSlider() {
           transition={{ duration: 0.3 }}
           className="absolute inset-0"
         >
-          {/* Image Only - No Background Gradients */}
-          {currentOffer.imageUrl && (
-            <div 
-              className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: `url(${currentOffer.imageUrl})` }}
-            >
-              {/* Dark gradient overlay at bottom for text readability */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
-            </div>
-          )}
+          {/* Gradient Background Only - No Images */}
+          <div className={`absolute inset-0 ${backgroundClass}`} />
           
-          {/* Content - Positioned at bottom with proper spacing */}
-          <div className="relative h-full flex flex-col justify-end p-5">
-            <div className="space-y-1.5">
-              <h3 className="text-lg font-bold text-white drop-shadow-2xl leading-tight">
+          {/* Content - Centered with padding for arrows */}
+          <div className="relative h-full flex flex-col justify-center px-12 py-4">
+            <div className="space-y-1.5 max-w-full">
+              <h3 className="text-base font-bold text-white drop-shadow-lg leading-tight truncate">
                 {currentOffer.title}
               </h3>
               {currentOffer.subtitle && (
-                <p className="text-sm text-white/95 font-semibold drop-shadow-lg leading-snug">
+                <p className="text-sm text-white/95 font-medium drop-shadow-md leading-snug truncate">
                   {currentOffer.subtitle}
                 </p>
               )}
@@ -117,11 +125,11 @@ export function OffersSlider() {
                 </p>
               )}
               {currentOffer.ctaText && currentOffer.ctaLink && (
-                <div className="pt-2">
+                <div className="pt-1">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 px-4 text-xs bg-white hover:bg-white/90 text-black font-bold shadow-lg"
+                    className="h-7 px-3 text-xs bg-white/20 hover:bg-white/30 text-white border border-white/30 font-semibold"
                     onClick={() => window.open(currentOffer.ctaLink!, '_blank')}
                   >
                     {currentOffer.ctaText}
