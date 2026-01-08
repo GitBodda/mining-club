@@ -24,7 +24,6 @@ import { DashboardSkeleton, WalletSkeleton } from "@/components/LoadingSkeleton"
 import { PrivacyPolicy } from "@/pages/PrivacyPolicy";
 import Exchange from "@/pages/Exchange";
 import { Admin } from "@/pages/Admin";
-import { AdminModern } from "@/pages/AdminModern";
 import { Referral } from "@/pages/Referral";
 import { History } from "@/pages/History";
 import { SiX, SiInstagram } from "react-icons/si";
@@ -173,7 +172,7 @@ function MobileApp() {
         onNavigateToAdmin={() => setActiveTab("admin")}
       />
 
-      <main className="relative z-10 max-w-md mx-auto px-4 pt-safe pb-48">
+      <main className="relative z-10 max-w-md mx-auto px-4 pt-[20px] pb-48">
         <AnimatePresence mode="wait">
           {activeTab === "home" && (
             isLoading ? (
@@ -245,7 +244,7 @@ function MobileApp() {
             />
           )}
           {activeTab === "admin" && isAdmin && (
-            <AdminModern key="admin" onBack={() => setActiveTab("home")} />
+            <Admin key="admin" onBack={() => setActiveTab("home")} />
           )}
         </AnimatePresence>
 
@@ -375,7 +374,7 @@ function App() {
                   )}
                 </Route>
                 <Route path="/admin">
-                  {() => <AdminModern onBack={() => window.history.back()} />}
+                  {() => <Admin onBack={() => window.history.back()} />}
                 </Route>
                 <Route path="/" component={MobileApp} />
                 <Route component={MobileApp} />

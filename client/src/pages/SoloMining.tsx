@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { GlobalHeader } from "@/components/GlobalHeader";
 import { 
   Zap, 
   Target, 
@@ -105,11 +104,6 @@ export function SoloMining() {
 
   return (
     <>
-      <GlobalHeader
-        onNavigateToHome={() => {}}
-        onNavigateToWallet={() => {}}
-        onNavigateToInvest={() => {}}
-      />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
