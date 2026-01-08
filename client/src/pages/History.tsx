@@ -86,7 +86,14 @@ const mockTransactions: HistoryTransaction[] = [
   },
 ];
 
-export function History() {
+interface HistoryProps {
+  onNavigateToHome?: () => void;
+  onNavigateToWallet?: () => void;
+  onNavigateToInvest?: () => void;
+  onOpenSettings?: () => void;
+}
+
+export function History({ onNavigateToHome, onNavigateToWallet, onNavigateToInvest, onOpenSettings }: HistoryProps = {}) {
   const { convert, getSymbol } = useCurrency();
   const [activeTab, setActiveTab] = useState<"all" | "withdrawals" | "payouts">("all");
 
@@ -145,9 +152,10 @@ export function History() {
   return (
     <>
       <GlobalHeader
-        onNavigateToHome={() => {}}
-        onNavigateToWallet={() => {}}
-        onNavigateToInvest={() => {}}
+        onNavigateToHome={onNavigateToHome}
+        onNavigateToWallet={onNavigateToWallet}
+        onNavigateToInvest={onNavigateToInvest}
+        onOpenSettings={onOpenSettings}
       />
       <div className="min-h-screen bg-background">
       <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />

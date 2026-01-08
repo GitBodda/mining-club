@@ -352,7 +352,16 @@ function App() {
                 <Route path="/privacy" component={PrivacyPolicy} />
                 <Route path="/exchange" component={Exchange} />
                 <Route path="/referral" component={Referral} />
-                <Route path="/history" component={History} />
+                <Route path="/history">
+                  {() => (
+                    <History
+                      onNavigateToHome={() => setActiveTab("home")}
+                      onNavigateToWallet={() => setActiveTab("wallet")}
+                      onNavigateToInvest={() => setActiveTab("invest")}
+                      onOpenSettings={() => setShowSettings(true)}
+                    />
+                  )}
+                </Route>
                 <Route path="/admin">
                   {() => <Admin onBack={() => window.history.back()} />}
                 </Route>

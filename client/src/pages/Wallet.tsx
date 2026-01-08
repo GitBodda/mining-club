@@ -13,13 +13,10 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCryptoPrices } from "@/hooks/useCryptoPrices";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -380,24 +377,290 @@ export function Wallet({
 
           <div className="flex flex-col gap-3 mt-6">
             <div className="flex gap-3">
-              <Button
-                data-testid="button-wallet-deposit"
-                variant="secondary"
-                className="flex-1 liquid-glass border-0 bg-emerald-500/20"
-                onClick={() => openDepositModal()}
-              >
-                <ArrowDownToLine className="w-5 h-5 mr-2" />
-                Deposit
-              </Button>
-              <Button
-                data-testid="button-wallet-withdraw"
-                variant="secondary"
-                className="flex-1 liquid-glass border-0 bg-amber-500/20"
-                onClick={() => openWithdrawModal()}
-              >
-                <ArrowUpFromLine className="w-5 h-5 mr-2" />
-                Withdraw
-              </Button>
+              <Popover open={depositOpen} onOpenChange={setDepositOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    data-testid="button-wallet-deposit"
+                    variant="secondary"
+                    className="flex-1 liquid-glass border-0 bg-emerald-500/20"
+                    onClick={() => openDepositModal()}
+                  >
+                    <ArrowDownToLine className="w-5 h-5 mr-2" />
+                    Deposit
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  side="bottom"
+                  align="start"
+                  sideOffset={10}
+                  className="liquid-glass border-white/10 bg-background/95 backdrop-blur-xl w-[min(400px,calc(100vw-1.5rem))] max-h-[85vh] overflow-y-auto"
+                  data-testid="popover-wallet-deposit"
+                >
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Deposit Crypto</p>
+                      <p className="text-xs text-muted-foreground">Select a cryptocurrency and network to receive funds</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="deposit-crypto">Cryptocurrency</Label>
+                        <Select
+                          value={selectedCrypto}
+                          onValueChange={(value) => handleCryptoChange(value as CryptoType)}
+                        >
+                          <SelectTrigger 
+                            id="deposit-crypto" 
+                            className="liquid-glass border-white/10"
+                            data-testid="select-deposit-crypto"
+                          >
+                            <SelectValue placeholder="Select crypto" />
+                          </SelectTrigger>
+                          <SelectContent className="liquid-glass border-white/10 bg-background/95 backdrop-blur-xl">
+                            {(["BTC", "LTC", "ETH", "ZCASH", "TON"] as CryptoType[]).map((crypto) => (
+                              <SelectItem key={crypto} value={crypto} data-testid={`option-deposit-crypto-${crypto.toLowerCase()}`}>
+                                <div className="flex items-center gap-2">
+                                  <CryptoIcon crypto={crypto} className="w-4 h-4" />
+                                  <span>{cryptoConfig[crypto].name}</span>
+                                  <span className="text-muted-foreground">({crypto})</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="deposit-network">Network</Label>
+                        <Select
+                          value={selectedNetwork}
+                          onValueChange={handleNetworkChange}
+                        >
+                          <SelectTrigger 
+                            id="deposit-network" 
+                            className="liquid-glass border-white/10"
+                            data-testid="select-deposit-network"
+                          >
+                            <SelectValue placeholder="Select network" />
+                          </SelectTrigger>
+                          <SelectContent className="liquid-glass border-white/10 bg-background/95 backdrop-blur-xl">
+                            {cryptoNetworks[selectedCrypto]?.map((network) => (
+                              <SelectItem key={network.id} value={network.id} data-testid={`option-deposit-network-${network.id}`}>
+                                <div className="flex items-center justify-between w-full">
+                                  <span>{network.name}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Your Deposit Address</Label>
+                        <div className="liquid-glass rounded-xl p-4 border border-white/10">
+                          <p 
+                            className="text-sm font-mono break-all text-foreground mb-3"
+                            data-testid="text-deposit-address"
+                          >
+                            {depositAddress || "Select network to generate address"}
+                          </p>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="w-full liquid-glass border-0"
+                            onClick={copyAddress}
+                            disabled={!depositAddress}
+                            data-testid="button-copy-address"
+                          >
+                            {copied ? (
+                              <>
+                                <Check className="w-4 h-4 mr-2 text-emerald-400" />
+                                Copied!
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-4 h-4 mr-2" />
+                                Copy Address
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Estimated Arrival</span>
+                          <span>{getSelectedNetworkTime()}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Minimum Deposit</span>
+                          <span>{getSelectedNetworkFee() * 2} {selectedCrypto}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2 p-3 rounded-lg border border-amber-500/20">
+                        <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                        <p className="text-sm text-amber-200/80">
+                          Only send {selectedCrypto} via {cryptoNetworks[selectedCrypto]?.find(n => n.id === selectedNetwork)?.name || "selected network"} to this address. Sending via wrong network may result in permanent loss of funds.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+              <Popover open={withdrawOpen} onOpenChange={setWithdrawOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    data-testid="button-wallet-withdraw"
+                    variant="secondary"
+                    className="flex-1 liquid-glass border-0 bg-amber-500/20"
+                    onClick={() => openWithdrawModal()}
+                  >
+                    <ArrowUpFromLine className="w-5 h-5 mr-2" />
+                    Withdraw
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  side="bottom"
+                  align="end"
+                  sideOffset={10}
+                  className="liquid-glass border-white/10 bg-background/95 backdrop-blur-xl w-[min(400px,calc(100vw-1.5rem))] max-h-[85vh] overflow-y-auto"
+                  data-testid="popover-wallet-withdraw"
+                >
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Withdraw Crypto</p>
+                      <p className="text-xs text-muted-foreground">Transfer funds to your external wallet</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="withdraw-crypto">Cryptocurrency</Label>
+                        <Select
+                          value={selectedCrypto}
+                          onValueChange={(value) => setSelectedCrypto(value as CryptoType)}
+                        >
+                          <SelectTrigger 
+                            id="withdraw-crypto" 
+                            className="liquid-glass border-white/10"
+                            data-testid="select-withdraw-crypto"
+                          >
+                            <SelectValue placeholder="Select crypto" />
+                          </SelectTrigger>
+                          <SelectContent className="liquid-glass border-white/10 bg-background/95 backdrop-blur-xl">
+                            {(["BTC", "LTC", "ETH", "ZCASH", "TON"] as CryptoType[]).map((crypto) => (
+                              <SelectItem key={crypto} value={crypto} data-testid={`option-withdraw-crypto-${crypto.toLowerCase()}`}>
+                                <div className="flex items-center gap-2">
+                                  <CryptoIcon crypto={crypto} className="w-4 h-4" />
+                                  <span>{cryptoConfig[crypto].name}</span>
+                                  <span className="text-muted-foreground">({crypto})</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="withdraw-network">Network</Label>
+                        <Select
+                          value={selectedNetwork}
+                          onValueChange={setSelectedNetwork}
+                        >
+                          <SelectTrigger 
+                            id="withdraw-network" 
+                            className="liquid-glass border-white/10"
+                            data-testid="select-withdraw-network"
+                          >
+                            <SelectValue placeholder="Select network" />
+                          </SelectTrigger>
+                          <SelectContent className="liquid-glass border-white/10 bg-background/95 backdrop-blur-xl">
+                            {cryptoNetworks[selectedCrypto]?.map((network) => (
+                              <SelectItem key={network.id} value={network.id} data-testid={`option-withdraw-network-${network.id}`}>
+                                <span>{network.name}</span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="withdraw-address">Withdrawal Address</Label>
+                        <Input
+                          id="withdraw-address"
+                          placeholder={`Enter ${selectedCrypto} address`}
+                          value={withdrawAddress}
+                          onChange={(e) => setWithdrawAddress(e.target.value)}
+                          className="liquid-glass border-white/10 font-mono text-sm"
+                          data-testid="input-withdraw-address"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="withdraw-amount">Amount</Label>
+                          <button
+                            type="button"
+                            className="text-xs text-primary hover:text-primary/80 font-medium"
+                            onClick={handleMaxWithdraw}
+                          >
+                            MAX
+                          </button>
+                        </div>
+                        <div className="relative">
+                          <Input
+                            id="withdraw-amount"
+                            type="number"
+                            placeholder="0.00"
+                            value={withdrawAmount}
+                            onChange={(e) => setWithdrawAmount(e.target.value)}
+                            step="0.00000001"
+                            className="liquid-glass border-white/10 pr-16"
+                            data-testid="input-withdraw-amount"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                            {selectedCrypto}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Available: {currentBalance.toFixed(8)} {selectedCrypto}
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Network Fee</span>
+                          <span>{getSelectedNetworkFee()} {selectedCrypto}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">You Will Receive</span>
+                          <span className="font-semibold">{getWithdrawReceiveAmount()} {selectedCrypto}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Estimated Time</span>
+                          <span>{getSelectedNetworkTime()}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2 p-3 rounded-lg border border-amber-500/20">
+                        <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                        <p className="text-sm text-amber-200/80">
+                          Double check the address and network before confirming. Transactions cannot be reversed.
+                        </p>
+                      </div>
+
+                      <Button
+                        onClick={handleWithdraw}
+                        className="w-full liquid-glass border-0 bg-primary/20 hover:bg-primary/30"
+                        disabled={!withdrawAddress || !withdrawAmount || Number(withdrawAmount) <= 0}
+                        data-testid="button-confirm-withdraw"
+                      >
+                        Confirm Withdrawal
+                      </Button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
             <Link href="/exchange">
               <Button
@@ -443,436 +706,6 @@ export function Wallet({
           )}
         </GlassCard>
       </div>
-
-      <Dialog open={depositOpen} onOpenChange={setDepositOpen}>
-        <DialogContent
-          className="max-w-md max-h-[90vh] overflow-y-auto border border-white/12 bg-gradient-to-br from-white/[0.12] via-white/[0.04] to-white/[0.02] backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.25)]"
-          data-testid="modal-deposit"
-        >
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Deposit Crypto</DialogTitle>
-            <DialogDescription>
-              Select a cryptocurrency and network to receive funds
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-5 mt-4">
-            <div className="space-y-2">
-              <Label htmlFor="deposit-crypto">Cryptocurrency</Label>
-              <Select
-                value={selectedCrypto}
-                onValueChange={(value) => handleCryptoChange(value as CryptoType)}
-              >
-                <SelectTrigger 
-                  id="deposit-crypto" 
-                  className="liquid-glass border-white/10"
-                  data-testid="select-deposit-crypto"
-                >
-                  <SelectValue placeholder="Select crypto" />
-                </SelectTrigger>
-                <SelectContent className="liquid-glass border-white/10 bg-background/95 backdrop-blur-xl">
-                  {(["BTC", "LTC", "ETH", "ZCASH", "TON"] as CryptoType[]).map((crypto) => (
-                    <SelectItem key={crypto} value={crypto} data-testid={`option-deposit-crypto-${crypto.toLowerCase()}`}>
-                      <div className="flex items-center gap-2">
-                        <CryptoIcon crypto={crypto} className="w-4 h-4" />
-                        <span>{cryptoConfig[crypto].name}</span>
-                        <span className="text-muted-foreground">({crypto})</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="deposit-network">Network</Label>
-              <Select
-                value={selectedNetwork}
-                onValueChange={handleNetworkChange}
-              >
-                <SelectTrigger 
-                  id="deposit-network" 
-                  className="liquid-glass border-white/10"
-                  data-testid="select-deposit-network"
-                >
-                  <SelectValue placeholder="Select network" />
-                </SelectTrigger>
-                <SelectContent className="liquid-glass border-white/10 bg-background/95 backdrop-blur-xl">
-                  {cryptoNetworks[selectedCrypto]?.map((network) => (
-                    <SelectItem key={network.id} value={network.id} data-testid={`option-deposit-network-${network.id}`}>
-                      <div className="flex items-center justify-between w-full">
-                        <span>{network.name}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Your Deposit Address</Label>
-              <div className="liquid-glass rounded-xl p-4 border border-white/10">
-                <p 
-                  className="text-sm font-mono break-all text-foreground mb-3"
-                  data-testid="text-deposit-address"
-                >
-                  {depositAddress || "Select network to generate address"}
-                </p>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="w-full liquid-glass border-0"
-                  onClick={copyAddress}
-                  disabled={!depositAddress}
-                  data-testid="button-copy-address"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="w-4 h-4 mr-2 text-emerald-400" />
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-4 h-4 mr-2" />
-                      Copy Address
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Estimated Arrival</span>
-                <span>{getSelectedNetworkTime()}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Minimum Deposit</span>
-                <span>{getSelectedNetworkFee() * 2} {selectedCrypto}</span>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-2 p-3 rounded-lg border border-amber-500/20">
-              <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-amber-200/80">
-                Only send {selectedCrypto} via {cryptoNetworks[selectedCrypto]?.find(n => n.id === selectedNetwork)?.name || "selected network"} to this address. Sending via wrong network may result in permanent loss of funds.
-              </p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
-        <DialogContent
-          className="max-w-md max-h-[90vh] overflow-y-auto border border-white/12 bg-gradient-to-br from-white/[0.12] via-white/[0.04] to-white/[0.02] backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.25)]"
-          data-testid="modal-withdraw"
-        >
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Withdraw Crypto</DialogTitle>
-            <DialogDescription>
-              Send cryptocurrency to an external wallet
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-3 mt-3">
-            {hasNoBalance && (
-              <div className="flex items-start gap-2 p-3 rounded-lg border border-red-500/20">
-                <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-red-400">No Balance Available</p>
-                  <p className="text-xs text-red-300/80 mt-1">
-                    You don't have any funds to withdraw. Please deposit or earn mining rewards first.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="withdraw-crypto">Cryptocurrency</Label>
-              <Select
-                value={selectedCrypto}
-                onValueChange={(value) => handleCryptoChange(value as CryptoType)}
-              >
-                <SelectTrigger 
-                  id="withdraw-crypto" 
-                  className="liquid-glass border-white/10"
-                  data-testid="select-withdraw-crypto"
-                >
-                  <SelectValue placeholder="Select crypto" />
-                </SelectTrigger>
-                <SelectContent className="liquid-glass border-white/10 bg-background/95 backdrop-blur-xl">
-                  {(["BTC", "LTC", "ETH", "ZCASH", "TON"] as CryptoType[]).map((crypto) => (
-                    <SelectItem key={crypto} value={crypto} data-testid={`option-withdraw-crypto-${crypto.toLowerCase()}`}>
-                      <div className="flex items-center gap-2">
-                        <CryptoIcon crypto={crypto} className="w-4 h-4" />
-                        <span>{cryptoConfig[crypto].name}</span>
-                        <span className="text-muted-foreground">({crypto})</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Available: {getCurrentBalance(selectedCrypto).toFixed(6)} {selectedCrypto}
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="withdraw-network">Network</Label>
-              <Select
-                value={selectedNetwork}
-                onValueChange={setSelectedNetwork}
-              >
-                <SelectTrigger 
-                  id="withdraw-network" 
-                  className="liquid-glass border-white/10"
-                  data-testid="select-withdraw-network"
-                >
-                  <SelectValue placeholder="Select network" />
-                </SelectTrigger>
-                <SelectContent className="liquid-glass border-white/10 bg-background/95 backdrop-blur-xl">
-                  {cryptoNetworks[selectedCrypto]?.map((network) => (
-                    <SelectItem key={network.id} value={network.id} data-testid={`option-withdraw-network-${network.id}`}>
-                      <div className="flex items-center justify-between w-full gap-4">
-                        <span>{network.name}</span>
-                        <span className="text-muted-foreground text-xs">Fee: {network.fee} {selectedCrypto}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="withdraw-address">Destination Address</Label>
-              <div className="relative">
-                <Input
-                  id="withdraw-address"
-                  type="text"
-                  placeholder={`Paste ${selectedCrypto} address`}
-                  value={withdrawAddress}
-                  onChange={(e) => setWithdrawAddress(e.target.value)}
-                  className="liquid-glass border-white/10 font-mono text-sm pr-20"
-                  data-testid="input-withdraw-address"
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 px-3 text-xs"
-                  onClick={async () => {
-                    try {
-                      const text = await navigator.clipboard.readText();
-                      setWithdrawAddress(text);
-                    } catch (err) {
-                      console.error('Failed to read clipboard:', err);
-                    }
-                  }}
-                >
-                  Paste
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="withdraw-amount">Amount</Label>
-              <div className="relative">
-                <Input
-                  id="withdraw-amount"
-                  type="number"
-                  step="any"
-                  placeholder="0.00"
-                  value={withdrawAmount}
-                  onChange={(e) => setWithdrawAmount(e.target.value)}
-                  className="liquid-glass border-white/10 pr-16"
-                  data-testid="input-withdraw-amount"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                  {selectedCrypto}
-                </span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs text-primary hover:text-primary/80"
-                onClick={() => {
-                  const balance = getCurrentBalance(selectedCrypto);
-                  const fee = getSelectedNetworkFee();
-                  const maxAmount = Math.max(0, balance - fee);
-                  setWithdrawAmount(maxAmount.toFixed(6));
-                }}
-              >
-                Use Max
-              </Button>
-            </div>
-
-            <div className="liquid-glass rounded-xl p-3 border border-white/10 space-y-1.5">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground text-xs">Network Fee</span>
-                <span className="text-sm" data-testid="text-withdraw-fee">{getSelectedNetworkFee()} {selectedCrypto}</span>
-              </div>
-              <div className="flex justify-between text-sm border-t border-white/10 pt-1.5 mt-1.5">
-                <span className="text-muted-foreground text-xs">You will receive</span>
-                <span className="font-semibold text-sm" data-testid="text-withdraw-receive">
-                  {withdrawAmount && parseFloat(withdrawAmount) > getSelectedNetworkFee() 
-                    ? (parseFloat(withdrawAmount) - getSelectedNetworkFee()).toFixed(6) 
-                    : "0.00"} {selectedCrypto}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-2 p-2.5 rounded-lg border border-amber-500/20 bg-amber-500/5">
-              <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-amber-300/90">
-                Ensure correct address and network to avoid permanent loss of funds.
-              </p>
-            </div>
-
-            <Button
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-              disabled={!withdrawAmount || !withdrawAddress || parseFloat(withdrawAmount) <= getSelectedNetworkFee() || parseFloat(withdrawAmount) > getCurrentBalance(selectedCrypto)}
-              onClick={handleWithdraw}
-              data-testid="button-confirm-withdraw"
-            >
-              Confirm Withdrawal
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={exchangeOpen} onOpenChange={setExchangeOpen}>
-        <DialogContent className="liquid-glass border-white/10 bg-background/95 backdrop-blur-xl max-w-md" data-testid="modal-exchange">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Exchange Crypto</DialogTitle>
-            <DialogDescription>
-              Swap between supported cryptocurrencies instantly
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-5 mt-4">
-            {hasNoBalance && (
-              <div className="flex items-start gap-2 p-3 rounded-lg border border-red-500/20">
-                <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-red-400">Insufficient Balance</p>
-                  <p className="text-xs text-red-300/80 mt-1">
-                    You don't have any funds to exchange. Please deposit funds first.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-start gap-2 p-3 rounded-lg border border-blue-500/20">
-              <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-blue-200/80">
-                We handle all blockchain bridging and network conversions for you. Your exchange will be processed at the current market rate.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label>From</Label>
-              <div className="flex gap-2">
-                <Select
-                  value={exchangeFrom}
-                  onValueChange={(value) => setExchangeFrom(value as CryptoType)}
-                >
-                  <SelectTrigger className="w-32 liquid-glass border-white/10" data-testid="select-exchange-from">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="liquid-glass border-white/10 bg-background/95 backdrop-blur-xl">
-                    {(["BTC", "LTC", "ETH", "ZCASH", "TON"] as CryptoType[]).map((crypto) => (
-                      <SelectItem key={crypto} value={crypto} data-testid={`option-exchange-from-${crypto.toLowerCase()}`}>
-                        <div className="flex items-center gap-2">
-                          <CryptoIcon crypto={crypto} className="w-4 h-4" />
-                          <span>{crypto}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="number"
-                  step="any"
-                  placeholder="0.00"
-                  value={exchangeAmount}
-                  onChange={(e) => setExchangeAmount(e.target.value)}
-                  className="flex-1 liquid-glass border-white/10"
-                  data-testid="input-exchange-amount"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Available: {getCurrentBalance(exchangeFrom).toFixed(6)} {exchangeFrom}
-              </p>
-            </div>
-
-            <div className="flex justify-center">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full"
-                onClick={() => {
-                  const temp = exchangeFrom;
-                  setExchangeFrom(exchangeTo);
-                  setExchangeTo(temp);
-                }}
-                data-testid="button-swap-direction"
-              >
-                <ArrowLeftRight className="w-5 h-5" />
-              </Button>
-            </div>
-
-            <div className="space-y-2">
-              <Label>To</Label>
-              <div className="flex gap-2">
-                <Select
-                  value={exchangeTo}
-                  onValueChange={(value) => setExchangeTo(value as CryptoType)}
-                >
-                  <SelectTrigger className="w-32 liquid-glass border-white/10" data-testid="select-exchange-to">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="liquid-glass border-white/10 bg-background/95 backdrop-blur-xl">
-                    {(["BTC", "LTC", "ETH", "ZCASH", "TON"] as CryptoType[]).filter(c => c !== exchangeFrom).map((crypto) => (
-                      <SelectItem key={crypto} value={crypto} data-testid={`option-exchange-to-${crypto.toLowerCase()}`}>
-                        <div className="flex items-center gap-2">
-                          <CryptoIcon crypto={crypto} className="w-4 h-4" />
-                          <span>{crypto}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="text"
-                  value={calculateExchangeOutput()}
-                  readOnly
-                  className="flex-1 liquid-glass border-white/10 bg-white/5"
-                  data-testid="text-exchange-output"
-                />
-              </div>
-            </div>
-
-            <div className="liquid-glass rounded-xl p-4 border border-white/10 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Exchange Rate</span>
-                <span>1 {exchangeFrom} = {(cryptoPrices[exchangeFrom] / cryptoPrices[exchangeTo]).toFixed(6)} {exchangeTo}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Processing Fee</span>
-                <span>0.5%</span>
-              </div>
-            </div>
-
-            <Button
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-              disabled={!exchangeAmount || parseFloat(exchangeAmount) <= 0 || parseFloat(exchangeAmount) > getCurrentBalance(exchangeFrom)}
-              onClick={handleExchange}
-              data-testid="button-confirm-exchange"
-            >
-              Confirm Exchange
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
       </motion.div>
     </>
   );
