@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -35,7 +35,6 @@ export function OffersSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [progress, setProgress] = useState(0);
-  const lottieLoadCountRef = useRef<{[key: string]: number}>({});
 
   const { data: offers = [] } = useQuery<Offer[]>({
     queryKey: ["/api/offers"],
@@ -48,6 +47,18 @@ export function OffersSlider() {
     refetchInterval: false, // Disable automatic refetching
     refetchOnWindowFocus: false, // Don't refetch on window focus
   });
+
+  // Track Lottie play count per visit (session storage)
+  const getLottiePlayCount = (lottieKey: string): number => {
+    const key = `lottie_play_${lottieKey}`;
+    return parseInt(sessionStorage.getItem(key) || '0', 10);
+  };
+
+  const incrementLottiePlayCount = (lottieKey: string) => {
+    const key = `lottie_play_${lottieKey}`;
+    const count = getLottiePlayCount(lottieKey);
+    sessionStorage.setItem(key, String(count + 1));
+  };
 
   const goToNext = useCallback(() => {
     if (offers.length === 0) return;
@@ -96,9 +107,10 @@ export function OffersSlider() {
   // Check if imageUrl is a Lottie file
   const isLottieUrl = currentOffer?.imageUrl?.includes('.lottie');
   
-  // Track Lottie load count (max 2 times)
+  // Check Lottie play count from session storage (max 2 times per visit)
   const lottieKey = currentOffer?.imageUrl || '';
-  const shouldPlayLottie = !lottieLoadCountRef.current[lottieKey] || lottieLoadCountRef.current[lottieKey] < 2;
+  const playCount = getLottiePlayCount(lottieKey);
+  const shouldPlayLottie = playCount < 2;
 
   return (
     <div 
@@ -129,10 +141,9 @@ export function OffersSlider() {
                   console.error('Lottie load error');
                 }}
                 onLoad={() => {
-                  if (!lottieLoadCountRef.current[lottieKey]) {
-                    lottieLoadCountRef.current[lottieKey] = 0;
+                  if (shouldPlayLottie) {
+                    incrementLottiePlayCount(lottieKey);
                   }
-                  lottieLoadCountRef.current[lottieKey]++;
                 }}
               />
             </div>

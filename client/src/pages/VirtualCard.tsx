@@ -124,40 +124,47 @@ export function VirtualCard({ onBack }: VirtualCardProps) {
           transition={{ delay: 0.1 }}
         >
           <LiquidGlassCard className="relative overflow-hidden" variant="strong">
-            {/* Always-animating Lottie Background */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30">
-              <div className="w-full h-full max-w-md">
-                <DotLottieReact
-                  src="https://lottie.host/4495e92b-9f73-41a6-9a64-d28398d29566/vSLht88QDu.lottie"
-                  loop
-                  autoplay
-                  style={{ width: '100%', height: '100%' }}
-                />
-              </div>
-            </div>
-
             {/* Content */}
             <div className="relative z-10 p-6 text-center">
+              {/* Large Lottie Animation - Shows First */}
               <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
+                initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.2, type: "spring" }}
-                className="mb-4"
+                transition={{ delay: 0.1, duration: 0.6, type: "spring", stiffness: 100 }}
+                className="mb-6"
               >
-                <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-purple-600/20 backdrop-blur-sm">
-                  <CreditCard className="w-10 h-10 text-primary" />
+                <div className="w-64 h-64 mx-auto">
+                  <DotLottieReact
+                    src="https://lottie.host/4495e92b-9f73-41a6-9a64-d28398d29566/vSLht88QDu.lottie"
+                    loop
+                    autoplay
+                    style={{ width: '100%', height: '100%' }}
+                  />
                 </div>
               </motion.div>
 
-              <h2 className="text-3xl font-bold text-foreground mb-3">
-                The Future of Crypto Payments
-              </h2>
-              <p className="text-muted-foreground text-lg mb-6 max-w-md mx-auto">
-                Spend your crypto earnings anywhere, anytime. The revolutionary BlockMint Virtual Card is almost here.
-              </p>
+              {/* Text Content - Shows After Lottie */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <h2 className="text-3xl font-bold text-foreground mb-3">
+                  The Future of Crypto Payments
+                </h2>
+                <p className="text-muted-foreground text-lg mb-6 max-w-md mx-auto">
+                  Spend your crypto earnings anywhere, anytime. The revolutionary BlockMint Virtual Card is almost here.
+                </p>
+              </motion.div>
 
-              {/* Waitlist Form */}
-              <form onSubmit={handleJoinWaitlist} className="max-w-md mx-auto">
+              {/* Waitlist Form - Shows After Text */}
+              <motion.form
+                onSubmit={handleJoinWaitlist}
+                className="max-w-md mx-auto"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+              >
                 <div className="flex gap-2">
                   <Input
                     type="email"
@@ -179,7 +186,7 @@ export function VirtualCard({ onBack }: VirtualCardProps) {
                 <p className="text-xs text-muted-foreground mt-2">
                   Be the first to know when we launch and get exclusive early access benefits
                 </p>
-              </form>
+              </motion.form>
             </div>
           </LiquidGlassCard>
         </motion.div>
