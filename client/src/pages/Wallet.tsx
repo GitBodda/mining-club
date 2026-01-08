@@ -438,7 +438,7 @@ export function Wallet({
 
       <Dialog open={depositOpen} onOpenChange={setDepositOpen}>
         <DialogContent
-          className="max-w-md border border-white/12 bg-gradient-to-br from-white/[0.12] via-white/[0.04] to-white/[0.02] backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.25)]"
+          className="max-w-md max-h-[90vh] overflow-y-auto border border-white/12 bg-gradient-to-br from-white/[0.12] via-white/[0.04] to-white/[0.02] backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.25)]"
           data-testid="modal-deposit"
         >
           <DialogHeader>
@@ -556,7 +556,7 @@ export function Wallet({
 
       <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
         <DialogContent
-          className="max-w-md border border-white/12 bg-gradient-to-br from-white/[0.12] via-white/[0.04] to-white/[0.02] backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.25)]"
+          className="max-w-md max-h-[90vh] overflow-y-auto border border-white/12 bg-gradient-to-br from-white/[0.12] via-white/[0.04] to-white/[0.02] backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.25)]"
           data-testid="modal-withdraw"
         >
           <DialogHeader>
@@ -566,7 +566,7 @@ export function Wallet({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-5 mt-4">
+          <div className="space-y-3 mt-3">
             {hasNoBalance && (
               <div className="flex items-start gap-2 p-3 rounded-lg border border-red-500/20">
                 <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
@@ -637,15 +637,32 @@ export function Wallet({
 
             <div className="space-y-2">
               <Label htmlFor="withdraw-address">Destination Address</Label>
-              <Input
-                id="withdraw-address"
-                type="text"
-                placeholder={`Enter ${selectedCrypto} address`}
-                value={withdrawAddress}
-                onChange={(e) => setWithdrawAddress(e.target.value)}
-                className="liquid-glass border-white/10 font-mono text-sm"
-                data-testid="input-withdraw-address"
-              />
+              <div className="relative">
+                <Input
+                  id="withdraw-address"
+                  type="text"
+                  placeholder={`Paste ${selectedCrypto} address`}
+                  value={withdrawAddress}
+                  onChange={(e) => setWithdrawAddress(e.target.value)}
+                  className="liquid-glass border-white/10 font-mono text-sm pr-20"
+                  data-testid="input-withdraw-address"
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 px-3 text-xs"
+                  onClick={async () => {
+                    try {
+                      const text = await navigator.clipboard.readText();
+                      setWithdrawAddress(text);
+                    } catch (err) {
+                      console.error('Failed to read clipboard:', err);
+                    }
+                  }}
+                >
+                  Paste
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -680,18 +697,14 @@ export function Wallet({
               </Button>
             </div>
 
-            <div className="liquid-glass rounded-xl p-4 border border-white/10 space-y-2">
+            <div className="liquid-glass rounded-xl p-3 border border-white/10 space-y-1.5">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Network Fee</span>
-                <span data-testid="text-withdraw-fee">{getSelectedNetworkFee()} {selectedCrypto}</span>
+                <span className="text-muted-foreground text-xs">Network Fee</span>
+                <span className="text-sm" data-testid="text-withdraw-fee">{getSelectedNetworkFee()} {selectedCrypto}</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Estimated Time</span>
-                <span>{getSelectedNetworkTime()}</span>
-              </div>
-              <div className="flex justify-between text-sm border-t border-white/10 pt-2 mt-2">
-                <span className="text-muted-foreground">You will receive</span>
-                <span className="font-semibold" data-testid="text-withdraw-receive">
+              <div className="flex justify-between text-sm border-t border-white/10 pt-1.5 mt-1.5">
+                <span className="text-muted-foreground text-xs">You will receive</span>
+                <span className="font-semibold text-sm" data-testid="text-withdraw-receive">
                   {withdrawAmount && parseFloat(withdrawAmount) > getSelectedNetworkFee() 
                     ? (parseFloat(withdrawAmount) - getSelectedNetworkFee()).toFixed(6) 
                     : "0.00"} {selectedCrypto}
@@ -699,14 +712,11 @@ export function Wallet({
               </div>
             </div>
 
-            <div className="flex items-start gap-2 p-3 rounded-lg border border-red-500/20">
-              <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-red-400">Important Warning</p>
-                <p className="text-xs text-red-300/80 mt-1">
-                  Please ensure the destination address and network are correct. Sending funds to the wrong address or network may result in permanent loss of your cryptocurrency.
-                </p>
-              </div>
+            <div className="flex items-start gap-2 p-2.5 rounded-lg border border-amber-500/20 bg-amber-500/5">
+              <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-300/90">
+                Ensure correct address and network to avoid permanent loss of funds.
+              </p>
             </div>
 
             <Button
