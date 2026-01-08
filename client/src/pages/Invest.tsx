@@ -441,12 +441,6 @@ interface InvestProps {
 export function Invest({ onNavigateToHome, onNavigateToWallet, onNavigateToInvest, onOpenSettings }: InvestProps = {}) {
   return (
     <>
-      <GlobalHeader
-        onNavigateToHome={onNavigateToHome}
-        onNavigateToWallet={onNavigateToWallet}
-        onNavigateToInvest={onNavigateToInvest}
-        onOpenSettings={onOpenSettings}
-      />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeftRight, Copy, Check, AlertCircle, ArrowDownToLine, ArrowUpFromLine, AlertTriangle, Info } from "lucide-react";
-import { GlobalHeader } from "@/components/GlobalHeader";
 import { GlassCard } from "@/components/GlassCard";
 import { CryptoCard } from "@/components/CryptoCard";
 import { TransactionItem } from "@/components/TransactionItem";
@@ -335,12 +334,6 @@ export function Wallet({
 
   return (
     <>
-      <GlobalHeader
-        onOpenSettings={onOpenSettings}
-        onNavigateToHome={onNavigateToHome}
-        onNavigateToWallet={onNavigateToWallet}
-        onNavigateToInvest={onNavigateToInvest}
-      />
       <motion.div
         className="flex flex-col gap-6 pb-6"
         initial={{ opacity: 0 }}

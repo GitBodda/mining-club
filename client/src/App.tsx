@@ -11,6 +11,7 @@ import { X } from "lucide-react";
 import { Switch, Route, Link } from "wouter";
 
 import { BottomNav, type TabType } from "@/components/BottomNav";
+import { GlobalHeader } from "@/components/GlobalHeader";
 import { Dashboard } from "@/pages/Dashboard";
 import { Wallet } from "@/pages/Wallet";
 import { Invest } from "@/pages/Invest";
@@ -160,6 +161,16 @@ function MobileApp() {
         <div className="absolute -top-[40%] -left-[20%] w-[80%] h-[80%] bg-primary/10 rounded-full blur-[120px]" />
         <div className="absolute -bottom-[30%] -right-[20%] w-[60%] h-[60%] bg-purple-500/5 rounded-full blur-[100px]" />
       </div>
+
+      {/* Global Header - persists across all tabs */}
+      <GlobalHeader
+        onOpenSettings={() => setShowSettings(true)}
+        onNavigateToHome={() => setActiveTab("home")}
+        onNavigateToWallet={() => setActiveTab("wallet")}
+        onNavigateToInvest={() => setActiveTab("invest")}
+        isAdmin={isAdmin}
+        onNavigateToAdmin={() => setActiveTab("admin")}
+      />
 
       <main className="relative z-10 max-w-md mx-auto px-4 pt-safe pb-48">
         <AnimatePresence mode="wait">
