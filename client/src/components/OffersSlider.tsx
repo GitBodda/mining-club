@@ -136,7 +136,7 @@ export function OffersSlider() {
           
           {/* Lottie Animation (Right side, responsive positioning) */}
           {isLottieUrl && currentOffer.imageUrl && (
-            <div className="absolute right-12 top-1/2 -translate-y-1/2 w-32 h-32 sm:w-36 sm:h-36 pointer-events-none z-20">
+            <div className="absolute right-6 top-1/3 -translate-y-1/3 w-40 h-40 sm:w-44 sm:h-44 pointer-events-none z-20">
               <DotLottieReact
                 src={currentOffer.imageUrl}
                 loop={shouldPlayLottie}
