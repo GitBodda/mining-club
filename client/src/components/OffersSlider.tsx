@@ -58,6 +58,7 @@ const backgroundIcons = [
 export function OffersSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [progress, setProgress] = useState(0);
 
   const { data: offers = [] } = useQuery<Offer[]>({
     queryKey: ["/api/offers"],
@@ -72,19 +73,34 @@ export function OffersSlider() {
   const goToNext = useCallback(() => {
     if (offers.length === 0) return;
     setCurrentIndex((prev) => (prev + 1) % offers.length);
+    setProgress(0);
   }, [offers.length]);
 
   const goToPrev = useCallback(() => {
     if (offers.length === 0) return;
     setCurrentIndex((prev) => (prev - 1 + offers.length) % offers.length);
+    setProgress(0);
   }, [offers.length]);
 
-  // Auto-rotate every 5 seconds
+  // Auto-rotate every 30 seconds with progress bar
   useEffect(() => {
     if (!isAutoPlaying || offers.length <= 1) return;
     
-    const interval = setInterval(goToNext, 5000);
-    return () => clearInterval(interval);
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          return 0;
+        }
+        return prev + (100 / 300); // 300 intervals for 30 seconds (100ms each)
+      });
+    }, 100);
+
+    const slideInterval = setInterval(goToNext, 30000);
+    
+    return () => {
+      clearInterval(progressInterval);
+      clearInterval(slideInterval);
+    };
   }, [isAutoPlaying, goToNext, offers.length]);
 
   // Pause auto-play on interaction
@@ -186,29 +202,33 @@ export function OffersSlider() {
           {/* Navigation Buttons */}
           <button
             onClick={() => { handleInteraction(); goToPrev(); }}
-            className="absolute left-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center transition-colors"
+            className="absolute left-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center transition-colors z-10"
           >
             <ChevronLeft className="w-4 h-4 text-white" />
           </button>
           <button
             onClick={() => { handleInteraction(); goToNext(); }}
-            className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center transition-colors"
+            className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center transition-colors z-10"
           >
             <ChevronRight className="w-4 h-4 text-white" />
           </button>
 
-          {/* Dots Indicator */}
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+          {/* Progress Bars - Story Style */}
+          <div className="absolute top-2 left-2 right-2 flex gap-1 z-10">
             {offers.map((_, idx) => (
-              <button
+              <div
                 key={idx}
-                onClick={() => { handleInteraction(); setCurrentIndex(idx); }}
-                className={`w-1.5 h-1.5 rounded-full transition-all ${
-                  idx === currentIndex 
-                    ? "bg-white w-3" 
-                    : "bg-white/50 hover:bg-white/70"
-                }`}
-              />
+                className="flex-1 h-0.5 bg-white/30 rounded-full overflow-hidden backdrop-blur-sm"
+              >
+                <motion.div
+                  className="h-full bg-white rounded-full"
+                  initial={{ width: idx < currentIndex ? "100%" : "0%" }}
+                  animate={{ 
+                    width: idx < currentIndex ? "100%" : idx === currentIndex ? `${progress}%` : "0%"
+                  }}
+                  transition={{ duration: 0.1, ease: "linear" }}
+                />
+              </div>
             ))}
           </div>
         </>

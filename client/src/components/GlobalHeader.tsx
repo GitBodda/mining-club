@@ -32,7 +32,7 @@ export function GlobalHeader({
   return (
     <>
       <motion.header
-        className="bg-background/80 backdrop-blur-xl border-b border-border/50"
+        className="bg-transparent"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -41,7 +41,7 @@ export function GlobalHeader({
           {/* Hamburger Menu */}
           <motion.button
             onClick={() => setShowMenu(!showMenu)}
-            className="w-10 h-10 rounded-xl liquid-glass flex items-center justify-center hover-elevate transition-transform"
+            className="w-10 h-10 rounded-2xl liquid-glass flex items-center justify-center hover-elevate transition-transform"
             whileTap={{ scale: 0.95 }}
             type="button"
           >
@@ -51,9 +51,9 @@ export function GlobalHeader({
           {/* Centered Logo */}
           <div className="flex-1 flex items-center justify-center">
             <img
-              src="/attached_assets/BlockMint-for-All.png"
+              src="/attached_assets/App-Icon-New.png"
               alt="BlockMint"
-              className="h-10 w-auto object-contain drop-shadow-lg"
+              className="h-14 w-auto object-contain drop-shadow-lg"
               style={{ background: 'transparent' }}
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
@@ -63,7 +63,7 @@ export function GlobalHeader({
           <div className="flex items-center gap-2">
             <motion.button
               onClick={toggleTheme}
-              className="w-10 h-10 rounded-xl liquid-glass flex items-center justify-center hover-elevate transition-transform"
+              className="w-10 h-10 rounded-2xl liquid-glass flex items-center justify-center hover-elevate transition-transform"
               whileTap={{ scale: 0.95 }}
               type="button"
             >
@@ -75,15 +75,13 @@ export function GlobalHeader({
             </motion.button>
             <div className="relative">
               <motion.button
-                className="w-10 h-10 rounded-xl liquid-glass flex items-center justify-center hover-elevate"
+                className="w-10 h-10 rounded-2xl liquid-glass flex items-center justify-center hover-elevate"
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowNotifications(!showNotifications)}
               >
                 <Bell className="w-5 h-5 text-muted-foreground" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center text-[10px] font-medium text-primary-foreground">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
+                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full shadow-lg shadow-red-500/50" />
                 )}
               </motion.button>
             </div>
