@@ -179,6 +179,9 @@ function MobileApp() {
                 onOpenProfile={() => firebaseUser ? setShowSettings(true) : setAppView("auth")}
                 onNavigateToInvest={() => setActiveTab("invest")}
                 onNavigateToSolo={() => setActiveTab("solo")}
+                onNavigateToMining={() => setActiveTab("mining")}
+                onNavigateToWallet={() => setActiveTab("wallet")}
+                onNavigateToHome={() => setActiveTab("home")}
                 isLoggedIn={localStorage.getItem("isLoggedIn") === "true"}
                 isAdmin={isAdmin}
                 onNavigateToAdmin={() => setActiveTab("admin")}
@@ -197,6 +200,10 @@ function MobileApp() {
                 transactions={transactions}
                 totalBalance={totalBalance}
                 change24h={change24h}
+                onNavigateToHome={() => setActiveTab("home")}
+                onNavigateToWallet={() => setActiveTab("wallet")}
+                onNavigateToInvest={() => setActiveTab("invest")}
+                onOpenSettings={() => setShowSettings(true)}
               />
             )
           )}

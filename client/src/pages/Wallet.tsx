@@ -116,6 +116,10 @@ interface WalletProps {
   onOpenExchange?: () => void;
   onOpenDeposit?: () => void;
   onOpenWithdraw?: () => void;
+  onNavigateToHome?: () => void;
+  onNavigateToWallet?: () => void;
+  onNavigateToInvest?: () => void;
+  onOpenSettings?: () => void;
 }
 
 export function Wallet({ 
@@ -125,7 +129,11 @@ export function Wallet({
   change24h = 0,
   onOpenExchange,
   onOpenDeposit,
-  onOpenWithdraw 
+  onOpenWithdraw,
+  onNavigateToHome,
+  onNavigateToWallet,
+  onNavigateToInvest,
+  onOpenSettings
 }: WalletProps) {
   const { convert, getSymbol } = useCurrency();
   const { toast } = useToast();
@@ -333,7 +341,7 @@ export function Wallet({
       <GlobalHeader
         onOpenSettings={onOpenSettings}
         onNavigateToHome={onNavigateToHome}
-        onNavigateToWallet={() => {}}
+        onNavigateToWallet={onNavigateToWallet}
         onNavigateToInvest={onNavigateToInvest}
       />
       <motion.div

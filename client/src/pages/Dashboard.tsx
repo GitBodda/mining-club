@@ -102,6 +102,9 @@ interface DashboardProps {
   onOpenProfile?: () => void;
   onNavigateToInvest?: () => void;
   onNavigateToSolo?: () => void;
+  onNavigateToMining?: () => void;
+  onNavigateToWallet?: () => void;
+  onNavigateToHome?: () => void;
   isLoggedIn?: boolean;
   isAdmin?: boolean;
   onNavigateToAdmin?: () => void;
@@ -244,8 +247,8 @@ export function Dashboard({
     <>
       <GlobalHeader
         onOpenSettings={onOpenSettings}
-        onNavigateToHome={() => {}}
-        onNavigateToWallet={() => {}}
+        onNavigateToHome={onNavigateToHome}
+        onNavigateToWallet={onNavigateToWallet}
         onNavigateToInvest={onNavigateToInvest}
       />
       <motion.div
@@ -518,16 +521,15 @@ export function Dashboard({
               </PopoverContent>
             </Popover>
             
-            <Link href="/mining" className="flex-1">
-              <Button
-                data-testid="button-create-miner"
-                className="w-full liquid-glass border-0 bg-primary/20 hover:bg-primary/30 text-primary gap-2 h-12 rounded-2xl"
-                variant="ghost"
-                type="button"
-              >
-                <Fan className="w-4 h-4" />
-              </Button>
-            </Link>
+            <Button
+              data-testid="button-create-miner"
+              onClick={onNavigateToMining}
+              className="flex-1 liquid-glass border-0 bg-primary/20 hover:bg-primary/30 text-primary gap-2 h-12 rounded-2xl"
+              variant="ghost"
+              type="button"
+            >
+              <Fan className="w-4 h-4" />
+            </Button>
           </div>
           
           <div className="flex gap-2 mt-2">
@@ -683,7 +685,7 @@ export function Dashboard({
         transition={{ delay: 0.3 }}
         className="grid grid-cols-2 gap-3"
       >
-        <Link href="/mining">
+        <div onClick={onNavigateToMining} className="cursor-pointer">
           <GlassCard delay={0.35} className="p-4 hover-elevate cursor-pointer" glow="primary" data-testid="card-hashrate">
             <div className="flex flex-col items-center text-center gap-3">
               <motion.img 
@@ -698,9 +700,9 @@ export function Dashboard({
               </div>
             </div>
           </GlassCard>
-        </Link>
+        </div>
 
-        <Link href="/mining">
+        <div onClick={onNavigateToMining} className="cursor-pointer">
           <GlassCard delay={0.4} className="p-4 hover-elevate cursor-pointer" data-testid="card-active-contracts">
             <div className="flex flex-col items-center text-center gap-3">
               <motion.img 
@@ -715,7 +717,7 @@ export function Dashboard({
               </div>
             </div>
           </GlassCard>
-        </Link>
+        </div>
       </motion.div>
 
       <motion.div
