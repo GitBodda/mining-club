@@ -151,9 +151,9 @@ export function OffersSlider() {
           )}
           
           {/* Content - Left side with safe spacing */}
-          <div className="relative h-full flex flex-col justify-center pl-4 pr-12 py-3">
+          <div className="relative h-full flex flex-col justify-center pl-4 pr-4 pb-12 pt-3">
             <div className="space-y-1.5 max-w-full"
-              style={{ maxWidth: isLottieUrl ? 'calc(100% - 10rem)' : 'calc(100% - 3rem)' }}
+              style={{ maxWidth: isLottieUrl ? 'calc(100% - 10rem)' : '100%' }}
             >
               <div>
                 <h3 className="text-base font-bold text-white drop-shadow-lg leading-tight line-clamp-2">
@@ -182,18 +182,18 @@ export function OffersSlider() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Navigation Controls */}
+      {/* Navigation Controls - Bottom */}
       {offers.length > 1 && (
         <>
           <button
             onClick={() => { handleInteraction(); goToPrev(); }}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center transition-colors z-10 backdrop-blur-sm"
+            className="absolute left-1/2 -translate-x-16 bottom-2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center transition-colors z-10 backdrop-blur-sm"
           >
             <ChevronLeft className="w-5 h-5 text-white" />
           </button>
           <button
             onClick={() => { handleInteraction(); goToNext(); }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center transition-colors z-10 backdrop-blur-sm"
+            className="absolute left-1/2 translate-x-8 bottom-2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center transition-colors z-10 backdrop-blur-sm"
           >
             <ChevronRight className="w-5 h-5 text-white" />
           </button>
