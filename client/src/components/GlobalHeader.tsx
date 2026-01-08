@@ -59,7 +59,7 @@ export function GlobalHeader({
             <img
               src="/attached_assets/App-Icon-New.png"
               alt="BlockMint"
-              className="h-[50px] w-auto object-contain drop-shadow-lg"
+              className="h-[47.5px] w-auto object-contain drop-shadow-lg"
               style={{ background: 'transparent' }}
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />

@@ -24,7 +24,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
     <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none pb-safe">
       <motion.nav
         className={cn(
-          "pointer-events-auto w-full max-w-md mx-4 mb-4",
+          "pointer-events-auto w-[90%] max-w-md mx-4 mb-4",
           "rounded-3xl",
           "dark:bg-white/[0.08] bg-white/95",
           "backdrop-blur-2xl",

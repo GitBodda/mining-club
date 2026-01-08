@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { GlobalHeader } from "@/components/GlobalHeader";
 import { GlassCard } from "@/components/GlassCard";
 import { HashRateChart } from "@/components/HashRateChart";
 import { Button } from "@/components/ui/button";
