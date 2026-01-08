@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 interface Offer {
   id: number;
@@ -34,6 +35,7 @@ export function OffersSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [progress, setProgress] = useState(0);
+  const lottieLoadCountRef = useRef<{[key: string]: number}>({});
 
   const { data: offers = [] } = useQuery<Offer[]>({
     queryKey: ["/api/offers"],
@@ -42,7 +44,9 @@ export function OffersSlider() {
       if (!res.ok) throw new Error("Failed to fetch offers");
       return res.json();
     },
-    refetchInterval: 60000,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: false, // Disable automatic refetching
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 
   const goToNext = useCallback(() => {
@@ -88,6 +92,13 @@ export function OffersSlider() {
   const currentOffer = offers[currentIndex];
   const bgIndex = (currentOffer?.backgroundType || 1) - 1;
   const backgroundClass = backgrounds[bgIndex] || backgrounds[0];
+  
+  // Check if imageUrl is a Lottie file
+  const isLottieUrl = currentOffer?.imageUrl?.includes('.lottie');
+  
+  // Track Lottie load count (max 2 times)
+  const lottieKey = currentOffer?.imageUrl || '';
+  const shouldPlayLottie = !lottieLoadCountRef.current[lottieKey] || lottieLoadCountRef.current[lottieKey] < 2;
 
   return (
     <div 
@@ -104,12 +115,34 @@ export function OffersSlider() {
           transition={{ duration: 0.3 }}
           className="absolute inset-0"
         >
-          {/* Gradient Background Only - No Images */}
+          {/* Gradient Background */}
           <div className={`absolute inset-0 ${backgroundClass}`} />
+          
+          {/* Lottie Animation (Small, positioned in top-right corner) */}
+          {isLottieUrl && currentOffer.imageUrl && (
+            <div className="absolute top-2 right-2 w-16 h-16 pointer-events-none z-20">
+              <DotLottieReact
+                src={currentOffer.imageUrl}
+                loop={shouldPlayLottie}
+                autoplay={shouldPlayLottie}
+                onLoadError={() => {
+                  console.error('Lottie load error');
+                }}
+                onLoad={() => {
+                  if (!lottieLoadCountRef.current[lottieKey]) {
+                    lottieLoadCountRef.current[lottieKey] = 0;
+                  }
+                  lottieLoadCountRef.current[lottieKey]++;
+                }}
+              />
+            </div>
+          )}
           
           {/* Content - Centered with padding for arrows */}
           <div className="relative h-full flex flex-col justify-center px-12 py-4">
-            <div className="space-y-1.5 max-w-full">
+            <div className="space-y-1.5 max-w-full"
+              style={{ maxWidth: isLottieUrl ? 'calc(100% - 4rem)' : '100%' }}
+            >
               <div>
                 <h3 className="text-base font-bold text-white drop-shadow-lg leading-tight">
                   {currentOffer.title}

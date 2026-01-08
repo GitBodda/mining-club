@@ -60,7 +60,9 @@ export function AdminModern({ onBack }: AdminProps) {
   const { data: stats } = useQuery<DashboardStats>({
     queryKey: ["admin-stats"],
     queryFn: () => adminFetch("/api/admin/stats"),
-    refetchInterval: 30000,
+    refetchInterval: 60000, // Increased from 30s to 60s to reduce load
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
   });
 
   const tabs = [

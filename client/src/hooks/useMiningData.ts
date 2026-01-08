@@ -32,17 +32,19 @@ export function useMiningData() {
   const miningStatsQuery = useQuery<MiningStats>({
     ...stableQueryOptions,
     queryKey: ["/api/mining/stats"],
-    refetchInterval: 15000,
+    refetchInterval: 30000, // Increased from 15s to 30s
     refetchIntervalInBackground: false,
     placeholderData: keepPreviousData,
+    staleTime: 15000,
   });
 
   const walletQuery = useQuery<WalletResponse>({
     ...stableQueryOptions,
     queryKey: ["/api/wallet/balances"],
-    refetchInterval: 60000, // Refresh every minute
+    refetchInterval: 120000, // Refresh every 2 minutes
     refetchIntervalInBackground: false,
     placeholderData: keepPreviousData, // Prevents flickering
+    staleTime: 60000,
   });
 
   const transactionsQuery = useQuery<Transaction[]>({
@@ -66,9 +68,10 @@ export function useMiningData() {
   const portfolioHistoryQuery = useQuery<PortfolioHistoryPoint[]>({
     ...stableQueryOptions,
     queryKey: ["/api/portfolio/history"],
-    refetchInterval: 60000, // Refresh every minute
+    refetchInterval: 120000, // Refresh every 2 minutes
     refetchIntervalInBackground: false,
     placeholderData: keepPreviousData,
+    staleTime: 60000,
   });
 
   const settingsQuery = useQuery<UserSettings>({
@@ -80,17 +83,19 @@ export function useMiningData() {
   const contractsQuery = useQuery<MiningContract[]>({
     ...stableQueryOptions,
     queryKey: ["/api/mining/contracts"],
-    refetchInterval: 20000,
+    refetchInterval: 60000, // Increased from 20s to 60s
     refetchIntervalInBackground: false,
     placeholderData: keepPreviousData,
+    staleTime: 30000,
   });
 
   const poolStatusQuery = useQuery<PoolStatus>({
     ...stableQueryOptions,
     queryKey: ["/api/mining/pool-status"],
-    refetchInterval: 20000,
+    refetchInterval: 60000, // Increased from 20s to 60s
     refetchIntervalInBackground: false,
     placeholderData: keepPreviousData,
+    staleTime: 30000,
   });
 
   const toggleMiningMutation = useMutation({

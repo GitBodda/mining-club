@@ -118,8 +118,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       return res.json();
     },
     enabled: !!userId,
-    refetchInterval: 30000, // Refresh every 30 seconds
-    staleTime: 10000,
+    refetchInterval: 60000, // Refresh every 60 seconds
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
+    staleTime: 30000,
   });
 
   // Fetch admin notifications (only if admin)
@@ -135,8 +137,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       return res.json();
     },
     enabled: isAdmin,
-    refetchInterval: 15000, // Refresh every 15 seconds for admins
-    staleTime: 5000,
+    refetchInterval: 30000, // Refresh every 30 seconds for admins
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
+    staleTime: 15000,
   });
 
   // Mark as read mutation
