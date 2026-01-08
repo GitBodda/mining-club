@@ -110,8 +110,7 @@ export function OffersSlider() {
           {/* Content - Centered with padding for arrows */}
           <div className="relative h-full flex flex-col justify-center px-12 py-4">
             <div className="space-y-1.5 max-w-full">
-              <h3 className="text-base font-bold text-white drop-shadow-lg leading-tight truncate">
-               div>
+              <div>
                 <h3 className="text-base font-bold text-white drop-shadow-lg leading-tight">
                   {currentOffer.title}
                   {currentOffer.ctaLink && (
@@ -136,7 +135,8 @@ export function OffersSlider() {
               {currentOffer.description && (
                 <p className="text-xs text-white/90 leading-relaxed line-clamp-2 drop-shadow-md">
                   {currentOffer.description}
-                </p
+                </p>
+              )}
             </div>
           </div>
         </motion.div>
