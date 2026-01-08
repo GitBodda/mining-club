@@ -345,7 +345,7 @@ export function Dashboard({
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent className="liquid-glass border-white/10 bg-background/95 backdrop-blur-xl">
-                          {(["BTC", "LTC", "ETH", "USDT", "USDC", "TON"] as CryptoType[]).map((c) => (
+                          {(["BTC", "LTC", "ETH", "ZCASH", "TON", "BNB"] as CryptoType[]).map((c) => (
                             <SelectItem key={c} value={c}>{c}</SelectItem>
                           ))}
                         </SelectContent>
