@@ -21,6 +21,10 @@ import {
 import { cn } from "@/lib/utils";
 import btcLogo from "@assets/bitcoin-sign-3d-icon-png-download-4466132_1766014388601.png";
 import ltcLogo from "@assets/litecoin-3d-icon-png-download-4466121_1766014388608.png";
+import ethLogo from "@assets/ethereum-eth-3d-logo.png";
+import zcashLogo from "@assets/zcash-zec-3d-logo.png";
+import tonLogo from "@assets/ton-coin-3d-logo.png";
+import bnbLogo from "@assets/bnb-binance-3d-logo.png";
 import usdtLogo from "@assets/tether-usdt-coin-3d-icon-png-download-3478983@0_1766038564971.webp";
 import usdcLogo from "@assets/usd-coin-3d-icon-png-download-4102016_1766038596188.webp";
 
@@ -38,6 +42,10 @@ const cryptoConfig: Record<CryptoType, { name: string; color: string; iconBg: st
 const logoMap: Record<string, string> = {
   BTC: btcLogo,
   LTC: ltcLogo,
+  ETH: ethLogo,
+  ZCASH: zcashLogo,
+  TON: tonLogo,
+  BNB: bnbLogo,
   USDT: usdtLogo,
   USDC: usdcLogo,
 };

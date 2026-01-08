@@ -28,10 +28,12 @@ import { Link } from "wouter";
 import type { WalletBalance, Transaction } from "@/lib/types";
 import btcLogo from "@assets/bitcoin-sign-3d-icon-png-download-4466132_1766014388601.png";
 import ltcLogo from "@assets/litecoin-3d-icon-png-download-4466121_1766014388608.png";
-import ethLogo from "@assets/ethereum-eth-logo.png";
-import zcashLogo from "@assets/zcash-zec-logo.png";
+import ethLogo from "@assets/ethereum-eth-3d-logo.png";
+import zcashLogo from "@assets/zcash-zec-3d-logo.png";
+import tonLogo from "@assets/ton-coin-3d-logo.png";
+import bnbLogo from "@assets/bnb-binance-3d-logo.png";
 
-type CryptoType = "BTC" | "LTC" | "ETH" | "ZCASH" | "TON";
+type CryptoType = "BTC" | "LTC" | "ETH" | "ZCASH" | "TON" | "BNB";
 
 interface NetworkOption {
   id: string;
@@ -59,6 +61,10 @@ const cryptoNetworks: Record<CryptoType, NetworkOption[]> = {
   TON: [
     { id: "ton-native", name: "TON Network", fee: 0.01, estimatedTime: "1-2 min" },
   ],
+  BNB: [
+    { id: "bnb-bsc", name: "BNB Smart Chain (BSC)", fee: 0.0005, estimatedTime: "1-3 min" },
+    { id: "bnb-bep2", name: "BNB Beacon Chain (BEP-2)", fee: 0.001, estimatedTime: "1-2 min" },
+  ],
 };
 
 const generateDepositAddress = (crypto: CryptoType, network: string): string => {
@@ -71,6 +77,8 @@ const generateDepositAddress = (crypto: CryptoType, network: string): string => 
     "eth-optimism": "0x",
     "zcash-native": "t1",
     "ton-native": "UQ",
+    "bnb-bsc": "0x",
+    "bnb-bep2": "bnb",
   };
   
   const prefix = addressPrefixes[network] || "0x";
@@ -95,6 +103,7 @@ const cryptoConfig: Record<CryptoType, { name: string; color: string; iconBg: st
   ETH: { name: "Ethereum", color: "text-purple-400", iconBg: "bg-purple-500/20" },
   ZCASH: { name: "Zcash", color: "text-amber-400", iconBg: "bg-amber-500/20" },
   TON: { name: "Toncoin", color: "text-cyan-400", iconBg: "bg-cyan-500/20" },
+  BNB: { name: "BNB", color: "text-yellow-400", iconBg: "bg-yellow-500/20" },
 };
 
 const defaultBalances: WalletBalance[] = [
@@ -221,6 +230,8 @@ export function Wallet({
     LTC: ltcLogo,
     ETH: ethLogo,
     ZCASH: zcashLogo,
+    TON: tonLogo,
+    BNB: bnbLogo,
   };
 
   const openDepositModal = (crypto?: string) => {
@@ -410,7 +421,7 @@ export function Wallet({
                             <SelectValue placeholder="Select crypto" />
                           </SelectTrigger>
                           <SelectContent className="liquid-glass border-white/10 bg-background/95 backdrop-blur-xl">
-                            {(["BTC", "LTC", "ETH", "ZCASH", "TON"] as CryptoType[]).map((crypto) => (
+                            {(["BTC", "LTC", "ETH", "ZCASH", "TON", "BNB"] as CryptoType[]).map((crypto) => (
                               <SelectItem key={crypto} value={crypto} data-testid={`option-deposit-crypto-${crypto.toLowerCase()}`}>
                                 <div className="flex items-center gap-2">
                                   <CryptoIcon crypto={crypto} className="w-4 h-4" />
@@ -541,7 +552,7 @@ export function Wallet({
                             <SelectValue placeholder="Select crypto" />
                           </SelectTrigger>
                           <SelectContent className="liquid-glass border-white/10 bg-background/95 backdrop-blur-xl">
-                            {(["BTC", "LTC", "ETH", "ZCASH", "TON"] as CryptoType[]).map((crypto) => (
+                            {(["BTC", "LTC", "ETH", "ZCASH", "TON", "BNB"] as CryptoType[]).map((crypto) => (
                               <SelectItem key={crypto} value={crypto} data-testid={`option-withdraw-crypto-${crypto.toLowerCase()}`}>
                                 <div className="flex items-center gap-2">
                                   <CryptoIcon crypto={crypto} className="w-4 h-4" />
@@ -595,7 +606,12 @@ export function Wallet({
                           <button
                             type="button"
                             className="text-xs text-primary hover:text-primary/80 font-medium"
-                            onClick={handleMaxWithdraw}
+                            onClick={() => {
+                              const balance = pricedBalances.find(b => b.symbol === selectedCrypto);
+                              if (balance) {
+                                setWithdrawAmount(balance.balance.toString());
+                              }
+                            }}
                           >
                             MAX
                           </button>

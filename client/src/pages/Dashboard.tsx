@@ -41,10 +41,12 @@ import serverMining from "@assets/Server_Mining_1766014388610.webp";
 import btcShop from "@assets/Bitcoin_shop_1766014388611.webp";
 import btcLogo from "@assets/bitcoin-sign-3d-icon-png-download-4466132_1766014388601.png";
 import ltcLogo from "@assets/litecoin-3d-icon-png-download-4466121_1766014388608.png";
-import ethLogo from "@assets/ethereum-eth-logo.png";
-import zcashLogo from "@assets/zcash-zec-logo.png";
+import ethLogo from "@assets/ethereum-eth-3d-logo.png";
+import zcashLogo from "@assets/zcash-zec-3d-logo.png";
+import tonLogo from "@assets/ton-coin-3d-logo.png";
+import bnbLogo from "@assets/bnb-binance-3d-logo.png";
 
-type CryptoType = "BTC" | "LTC" | "ETH" | "ZCASH" | "TON";
+type CryptoType = "BTC" | "LTC" | "ETH" | "ZCASH" | "TON" | "BNB";
 
 interface NetworkOption {
   id: string;
@@ -64,6 +66,10 @@ const cryptoNetworks: Record<CryptoType, NetworkOption[]> = {
   ],
   ZCASH: [{ id: "zcash-native", name: "Zcash (Native)" }],
   TON: [{ id: "ton-native", name: "TON Network" }],
+  BNB: [
+    { id: "bnb-bsc", name: "BNB Smart Chain (BSC)" },
+    { id: "bnb-bep2", name: "BNB Beacon Chain (BEP-2)" },
+  ],
 };
 
 const generateDepositAddress = (crypto: CryptoType, network: string): string => {
@@ -453,7 +459,7 @@ export function Dashboard({
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent className="liquid-glass border-white/10 bg-background/95 backdrop-blur-xl">
-                          {(["BTC", "LTC", "ETH", "ZCASH", "TON"] as CryptoType[]).map((c) => (
+                          {(["BTC", "LTC", "ETH", "ZCASH", "TON", "BNB"] as CryptoType[]).map((c) => (
                             <SelectItem key={c} value={c}>{c}</SelectItem>
                           ))}
                         </SelectContent>
@@ -741,7 +747,10 @@ export function Dashboard({
                       src={
                         balance.symbol === 'BTC' ? btcLogo : 
                         balance.symbol === 'LTC' ? ltcLogo :
-                        balance.symbol === 'ETH' ? ethLogo : zcashLogo
+                        balance.symbol === 'ETH' ? ethLogo :
+                        balance.symbol === 'ZCASH' ? zcashLogo :
+                        balance.symbol === 'TON' ? tonLogo :
+                        balance.symbol === 'BNB' ? bnbLogo : ethLogo
                       } 
                       alt={balance.symbol}
                       className="shrink-0 object-contain w-10 h-10"
@@ -809,7 +818,10 @@ export function Dashboard({
                     src={
                       balance.symbol === 'BTC' ? btcLogo : 
                       balance.symbol === 'LTC' ? ltcLogo :
-                      balance.symbol === 'ETH' ? ethLogo : zcashLogo
+                      balance.symbol === 'ETH' ? ethLogo :
+                      balance.symbol === 'ZCASH' ? zcashLogo :
+                      balance.symbol === 'TON' ? tonLogo :
+                      balance.symbol === 'BNB' ? bnbLogo : ethLogo
                     } 
                     alt={balance.symbol}
                     className={`object-contain w-8 h-8`}

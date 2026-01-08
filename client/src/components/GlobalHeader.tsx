@@ -35,11 +35,8 @@ export function GlobalHeader({
 
   return (
     <>
-      <motion.header
-        className="bg-transparent"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+      <header
+        className="bg-transparent pt-[35px]"
       >
         <div className="flex items-center gap-4 px-4 h-16">
           {/* Left Side - Hamburger Menu */}
@@ -93,7 +90,7 @@ export function GlobalHeader({
             </div>
           </div>
         </div>
-      </motion.header>
+      </header>
 
       {/* Hamburger Menu */}
       <AnimatePresence>
