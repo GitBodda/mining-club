@@ -4,6 +4,7 @@ import { db } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
 import * as schema from "@shared/schema";
 import { verifyIdToken, setCustomClaims } from "./firebase-admin";
+import { HDWalletService } from "./services/hdWalletService";
 
 // Middleware to verify admin authentication
 async function requireAdmin(req: Request, res: Response, next: NextFunction) {
@@ -145,6 +146,57 @@ export function registerAdminRoutes(app: Express) {
       res.json(wallets[0]);
     } catch (error) {
       res.status(500).json({ error: "Failed to update wallet" });
+    }
+  });
+
+  // Generate new HD wallet mnemonic
+  app.post("/api/admin/wallet/generate-mnemonic", devAdmin, async (req, res) => {
+    try {
+      const { strength } = req.body;
+      const wordCount = strength === 128 ? 128 : 256; // 12 or 24 words
+      const mnemonic = HDWalletService.generateMnemonic(wordCount as 128 | 256);
+      
+      res.json({ 
+        mnemonic,
+        wordCount: wordCount === 128 ? 12 : 24,
+        warning: "Store this mnemonic in a secure location. It cannot be recovered if lost."
+      });
+    } catch (error) {
+      console.error("Error generating mnemonic:", error);
+      res.status(500).json({ error: "Failed to generate mnemonic" });
+    }
+  });
+
+  // Validate mnemonic phrase
+  app.post("/api/admin/wallet/validate-mnemonic", devAdmin, async (req, res) => {
+    try {
+      const { mnemonic } = req.body;
+      if (!mnemonic) {
+        return res.status(400).json({ error: "Mnemonic is required" });
+      }
+
+      const isValid = HDWalletService.validateMnemonic(mnemonic);
+      
+      if (isValid) {
+        // Generate sample addresses to show what would be generated
+        const hdWallet = new HDWalletService(mnemonic);
+        const sampleAddresses = hdWallet.generateAllAddresses(0);
+        
+        res.json({ 
+          valid: true,
+          sampleAddresses: {
+            bitcoin: sampleAddresses.bitcoin.address,
+            litecoin: sampleAddresses.litecoin.address,
+            ethereum: sampleAddresses.ethereum.address,
+            zcash: sampleAddresses.zcash.address,
+          }
+        });
+      } else {
+        res.json({ valid: false, error: "Invalid mnemonic phrase" });
+      }
+    } catch (error) {
+      console.error("Error validating mnemonic:", error);
+      res.status(500).json({ error: "Failed to validate mnemonic" });
     }
   });
 

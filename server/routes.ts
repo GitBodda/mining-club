@@ -7,6 +7,7 @@ import {
   adminActions, networkConfig, blockchainDeposits, interestPayments 
 } from "@shared/schema";
 import { blockchainService } from "./services/blockchain";
+import { getMasterWalletService } from "./services/hdWalletService";
 import { eq, and, desc } from "drizzle-orm";
 
 export async function registerRoutes(
@@ -177,11 +178,35 @@ export async function registerRoutes(
 
       const nextIndex = maxIndex.length > 0 ? maxIndex[0].derivationIndex + 1 : 1;
 
-      // Generate address from HD wallet
-      const address = blockchainService.deriveDepositAddress(nextIndex);
+      // Generate address from HD wallet based on cryptocurrency type
+      let address: string | null = null;
+      
+      // Get HD wallet service
+      const hdWallet = getMasterWalletService();
+      
+      if (symbol === 'BTC' && hdWallet) {
+        // Bitcoin address generation
+        const btcAddress = hdWallet.generateBitcoinAddress(nextIndex);
+        address = btcAddress.address;
+      } else if (symbol === 'LTC' && hdWallet) {
+        // Litecoin address generation
+        const ltcAddress = hdWallet.generateLitecoinAddress(nextIndex);
+        address = ltcAddress.address;
+      } else if (symbol === 'ZCASH' && hdWallet) {
+        // Zcash address generation
+        const zcashAddress = hdWallet.generateZcashAddress(nextIndex);
+        address = zcashAddress.address;
+      } else if ((symbol === 'ETH' || symbol === 'USDT' || symbol === 'USDC' || symbol === 'BNB') && hdWallet) {
+        // Ethereum and EVM tokens use the same address
+        const ethAddress = hdWallet.generateEthereumAddress(nextIndex);
+        address = ethAddress.address;
+      } else {
+        // Fallback to EVM blockchain service
+        address = blockchainService.deriveDepositAddress(nextIndex);
+      }
       
       if (!address) {
-        return res.status(500).json({ error: "HD wallet not initialized" });
+        return res.status(500).json({ error: "HD wallet not initialized or address generation failed" });
       }
 
       // Save to database
