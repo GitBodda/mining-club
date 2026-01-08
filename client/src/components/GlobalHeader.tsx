@@ -54,7 +54,7 @@ export function GlobalHeader({
           {/* Centered Logo */}
           <div className="absolute left-1/2 -translate-x-1/2">
             <img
-              src="/attached_assets/App-Icon-New.png"
+              src="/attached_assets/mining-club-logo.png"
               alt="BlockMint"
               className="h-[47.5px] w-auto object-contain drop-shadow-lg"
               style={{ background: 'transparent' }}
