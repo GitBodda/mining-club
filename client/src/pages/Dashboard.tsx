@@ -580,7 +580,7 @@ export function Dashboard({
               <motion.img 
                 src={serverMining}
                 alt="Contracts"
-                className="w-14 h-14 object-contain"
+                className="w-16 h-16 object-contain"
                 whileHover={{ scale: 1.05 }}
               />
               <div>
