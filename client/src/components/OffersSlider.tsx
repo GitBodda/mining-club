@@ -72,24 +72,28 @@ export function OffersSlider() {
     setProgress(0);
   }, [offers.length]);
 
-  // Auto-rotate every 5 seconds with progress bar
+  // Auto-rotate with dynamic timing: 15 seconds for Virtual Card (first offer), 5 seconds for others
   useEffect(() => {
     if (!isAutoPlaying || offers.length <= 1) return;
+    
+    // First offer (Virtual Card) gets 15 seconds, others get 5 seconds
+    const slideTime = currentIndex === 0 ? 15000 : 5000;
+    const progressIntervals = currentIndex === 0 ? 150 : 50; // 150 intervals for 15s, 50 for 5s
     
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) return 0;
-        return prev + (100 / 50); // 50 intervals for 5 seconds (100ms each)
+        return prev + (100 / progressIntervals); // Dynamic intervals based on slide
       });
     }, 100);
 
-    const slideInterval = setInterval(goToNext, 5000);
+    const slideInterval = setInterval(goToNext, slideTime);
     
     return () => {
       clearInterval(progressInterval);
       clearInterval(slideInterval);
     };
-  }, [isAutoPlaying, goToNext, offers.length]);
+  }, [isAutoPlaying, goToNext, offers.length, currentIndex]);
 
   const handleInteraction = () => {
     setIsAutoPlaying(false);
@@ -130,9 +134,9 @@ export function OffersSlider() {
           {/* Gradient Background */}
           <div className={`absolute inset-0 ${backgroundClass}`} />
           
-          {/* Lottie Animation (Medium size, positioned in top-right corner) */}
+          {/* Lottie Animation (Larger size, positioned in top-right corner) */}
           {isLottieUrl && currentOffer.imageUrl && (
-            <div className="absolute top-2 right-2 w-32 h-32 pointer-events-none z-20">
+            <div className="absolute top-2 right-2 w-38 h-38 pointer-events-none z-20">
               <DotLottieReact
                 src={currentOffer.imageUrl}
                 loop={shouldPlayLottie}
@@ -149,7 +153,7 @@ export function OffersSlider() {
           {/* Content - Centered with padding for arrows */}
           <div className="relative h-full flex flex-col justify-center px-12 py-4">
             <div className="space-y-1.5 max-w-full"
-              style={{ maxWidth: isLottieUrl ? 'calc(100% - 9rem)' : '100%' }}
+              style={{ maxWidth: isLottieUrl ? 'calc(100% - 10rem)' : '100%' }}
             >
               <div>
                 <h3 className="text-base font-bold text-white drop-shadow-lg leading-tight">
