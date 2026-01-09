@@ -81,7 +81,7 @@ const miningPackages: MiningPackage[] = [
     hashrate: "6 TH/s",
     hashrateValue: 6,
     hashrateUnit: "TH/s",
-    duration: 0, // Lifetime
+    duration: 0, // One-time
     returnPercent: 34,
     dailyReturnBTC: 0.00000390,
     paybackMonths: 8,
@@ -96,7 +96,7 @@ const miningPackages: MiningPackage[] = [
     hashrate: "14 TH/s",
     hashrateValue: 14,
     hashrateUnit: "TH/s",
-    duration: 0, // Lifetime
+    duration: 0, // One-time
     returnPercent: 38,
     dailyReturnBTC: 0.0000088,
     paybackMonths: 7,
@@ -112,7 +112,7 @@ const miningPackages: MiningPackage[] = [
     hashrate: "30 TH/s",
     hashrateValue: 30,
     hashrateUnit: "TH/s",
-    duration: 0, // Lifetime
+    duration: 0, // One-time
     returnPercent: 38,
     dailyReturnBTC: 0.00002,
     paybackMonths: 6,
@@ -382,7 +382,7 @@ function PackageCard({ pkg, index }: { pkg: MiningPackage; index: number }) {
               </span>
               <h3 className="font-semibold text-foreground text-sm">{pkg.name}</h3>
               <Badge className="text-[10px] bg-green-500/20 text-green-400 border-green-500/30 px-1.5 py-0">
-                LIFETIME
+                ONE-TIME
               </Badge>
             </div>
             
@@ -447,6 +447,7 @@ function HashRateCalculator() {
   const { btcPrice } = useBTCPrice();
   
   const [btcHashrate, setBtcHashrate] = useState<number>(1);
+  const [period, setPeriod] = useState<"daily" | "annual">("annual");
   
   // Base price is $18 per 1TH
   const basePrice = 18;
@@ -465,13 +466,18 @@ function HashRateCalculator() {
   const pricePerTH = getPricePerTH(btcHashrate);
   const estimatedCost = btcHashrate * pricePerTH;
   
-  // Annual return in BTC (0.00028 BTC per 1TH annually, scales with volume)
-  const baseAnnualBTCPerTH = 0.00028;
-  const annualBTCReturn = btcHashrate * baseAnnualBTCPerTH * (btcHashrate >= 10 ? 1.1 : 1); // 10% bonus for 10+ TH
-  const annualUSDReturn = annualBTCReturn * btcPrice;
+  // New calculation logic: up to 20% return on investment
+  // The return is approximately 20% of the purchase price
+  const annualUSDReturn = estimatedCost * 1.20; // 20% return
+  const dailyUSDReturn = annualUSDReturn / 365;
   
-  const dailyBTCReturn = annualBTCReturn / 365;
-  const dailyUSDReturn = dailyBTCReturn * btcPrice;
+  // Convert USD returns to BTC
+  const annualBTCReturn = annualUSDReturn / btcPrice;
+  const dailyBTCReturn = dailyUSDReturn / btcPrice;
+  
+  // Calculate potential return if BTC reaches $150,000
+  const futurePrice = 150000;
+  const futureAnnualReturn = annualBTCReturn * futurePrice;
   
   const hashrateDisplay = `${btcHashrate} TH/s`;
   
@@ -483,14 +489,14 @@ function HashRateCalculator() {
         </div>
         <div>
           <h2 className="text-base font-semibold text-foreground">Custom Hashrate Calculator</h2>
-          <p className="text-xs text-muted-foreground">Build your own lifetime mining package</p>
+          <p className="text-xs text-muted-foreground">Build your own one-time mining package</p>
         </div>
       </div>
       
       <div className="space-y-4">
         <div className="mb-4">
           <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-            LIFETIME CONTRACT
+            ONE-TIME PAYMENT
           </Badge>
         </div>
         
@@ -530,36 +536,61 @@ function HashRateCalculator() {
           </div>
           
           <div className="border-t border-white/[0.08] pt-3">
-            <span className="text-xs text-muted-foreground">Total Cost (Lifetime)</span>
+            <span className="text-xs text-muted-foreground">One-time Cost</span>
             <p className="text-2xl font-bold text-foreground">
               {getSymbol()}{convert(estimatedCost).toFixed(2)}
             </p>
           </div>
         </div>
         
+        <div>
+          <Label className="text-xs text-muted-foreground mb-2 block">Yield Calculator</Label>
+          <Select 
+            value={period} 
+            onValueChange={(v) => setPeriod(v as "daily" | "annual")}
+            defaultValue="annual"
+          >
+            <SelectTrigger data-testid="select-period" className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="daily">Daily Return</SelectItem>
+              <SelectItem value="annual">Annual Return</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
         <div className="p-3 rounded-xl bg-primary/5 border border-primary/10 space-y-2">
           <div className="flex justify-between">
-            <span className="text-xs text-muted-foreground">Daily Return</span>
-            <div className="text-right">
-              <p className="text-sm font-bold text-amber-400">
-                {getSymbol()}{convert(dailyUSDReturn).toFixed(2)}/day
-              </p>
-              <p className="text-[9px] text-muted-foreground">
-                ₿{dailyBTCReturn.toFixed(8)}
-              </p>
-            </div>
-          </div>
-          <div className="flex justify-between pt-2 border-t border-border/30">
-            <span className="text-xs text-muted-foreground">Annual Return</span>
+            <span className="text-xs text-muted-foreground">
+              {period === "daily" ? "Daily" : "Annual"} Return
+            </span>
             <div className="text-right">
               <p className="text-sm font-bold text-green-400">
-                {getSymbol()}{convert(annualUSDReturn).toFixed(2)}
+                {getSymbol()}{convert(period === "daily" ? dailyUSDReturn : annualUSDReturn).toFixed(2)}
+                {period === "daily" ? "/day" : "/year"}
               </p>
               <p className="text-[9px] text-muted-foreground">
-                ₿{annualBTCReturn.toFixed(8)}
+                ₿{(period === "daily" ? dailyBTCReturn : annualBTCReturn).toFixed(8)}
               </p>
             </div>
           </div>
+          
+          <div className="pt-2 border-t border-border/30">
+            <p className="text-[10px] text-muted-foreground">
+              * Based on today's BTC price: ${btcPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+          </div>
+          
+          <div className="pt-2 border-t border-border/30">
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] text-amber-400">If BTC reaches $150,000:</span>
+              <p className="text-xs font-bold text-amber-400">
+                {getSymbol()}{convert(futureAnnualReturn).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}/year
+              </p>
+            </div>
+          </div>
+          
           {btcHashrate >= 10 && (
             <div className="pt-2 border-t border-border/30">
               <Badge className="text-[10px] bg-green-500/20 text-green-400 border-green-500/30">
@@ -579,7 +610,7 @@ function HashRateCalculator() {
         </Button>
         
         <p className="text-center text-[10px] text-muted-foreground">
-          Lifetime contract • All rewards paid in BTC
+          One-time payment • All rewards paid in BTC
         </p>
       </div>
     </GlassCard>
@@ -752,7 +783,7 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
                 </div>
                 <h2 className="text-base font-semibold text-foreground">Bitcoin Mining Devices</h2>
                 <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[10px]">
-                  LIFETIME
+                  ONE-TIME
                 </Badge>
               </div>
               <div className="space-y-3">
