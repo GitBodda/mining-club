@@ -721,9 +721,6 @@ export function Dashboard({
         </DialogContent>
       </Dialog>
 
-      {/* Promotional Offers Slider */}
-      <OffersSlider />
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -785,6 +782,9 @@ export function Dashboard({
           </div>
         </GlassCard>
       </motion.div>
+
+      {/* Promotional Offers Slider */}
+      <OffersSlider />
 
       {/* Educational Slider */}
       <EducationalSlider />
