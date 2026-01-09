@@ -82,7 +82,7 @@ export function Onboarding({ onComplete, onSignIn, onSkip }: OnboardingProps) {
             transition={{ duration: 0.5, ease: "easeOut" }}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-emerald-500/10 dark:from-primary/15 dark:via-transparent dark:to-emerald-500/10 rounded-full blur-2xl"></div>
-            <div className="absolute inset-0 bg-white/40 dark:bg-transparent rounded-full blur-xl"></div>
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-1/3 bg-white/70 dark:bg-transparent rounded-full blur-xl"></div>
             <img
               src="/attached_assets/BlockMint-Logo.svg"
               alt="BlockMint"
