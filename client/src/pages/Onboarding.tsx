@@ -73,8 +73,8 @@ export function Onboarding({ onComplete, onSignIn, onSkip }: OnboardingProps) {
         <div className="absolute -bottom-[30%] -right-[20%] w-[60%] h-[60%] bg-purple-500/10 rounded-full blur-[100px]" />
       </div>
 
-      <div className="relative z-10 flex-1 flex flex-col max-w-md mx-auto w-full px-6 pt-16 pb-8">
-        <div className="flex items-center justify-center mb-8 relative">
+      <div className="relative z-10 flex-1 flex flex-col max-w-md mx-auto w-full px-6 pt-4 pb-8">
+        <div className="flex items-center justify-center mb-2 relative">
           <motion.div 
             className="h-52 flex items-center justify-center relative"
             initial={{ opacity: 0, scale: 0.8 }}
@@ -170,7 +170,7 @@ export function Onboarding({ onComplete, onSignIn, onSkip }: OnboardingProps) {
               </div>
             </div>
 
-            <div className="flex justify-center gap-2 mb-8">
+            <div className="flex justify-center gap-2 my-8 mt-6">
               {onboardingPages.map((_, index) => (
                 <motion.div
                   key={index}
@@ -188,19 +188,58 @@ export function Onboarding({ onComplete, onSignIn, onSkip }: OnboardingProps) {
 
         <div className="space-y-3">
           <motion.div
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
             transition={{ duration: 0.2 }}
+            className="relative"
           >
+            {/* Pulsing glow effect */}
+            <motion.div
+              className="absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 opacity-60 blur-xl"
+              animate={{
+                scale: [1, 1.05, 1],
+                opacity: [0.4, 0.7, 0.4],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
             <Button
               onClick={handleNext}
-              className="relative w-full h-12 text-base font-semibold bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/50 active:shadow-md active:shadow-emerald-500/40 transition-all duration-300 overflow-hidden group"
+              className="relative w-full h-14 text-lg font-bold bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 text-white shadow-2xl shadow-emerald-500/50 border-2 border-white/20 hover:border-white/40 transition-all duration-300 overflow-hidden group"
               data-testid="button-next-onboarding"
             >
-              <span className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <span className="relative z-10 flex items-center justify-center">
-                {currentPage === onboardingPages.length - 1 ? "Get Started" : "Continue"}
-                <ChevronRight className="w-5 h-5 ml-2" />
+              {/* Shimmer effect */}
+              <motion.span
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                animate={{
+                  x: ["-200%", "200%"]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "linear",
+                  repeatDelay: 1
+                }}
+              />
+              {/* Hover gradient overlay */}
+              <span className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              {/* Button content */}
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                <motion.span
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  {currentPage === onboardingPages.length - 1 ? "Get Started" : "Continue"}
+                </motion.span>
+                <motion.div
+                  animate={{ x: [0, 4, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </motion.div>
               </span>
             </Button>
           </motion.div>
