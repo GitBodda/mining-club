@@ -900,3 +900,107 @@ export const insertPromotionalOfferSchema = createInsertSchema(promotionalOffers
 
 export type InsertPromotionalOffer = z.infer<typeof insertPromotionalOfferSchema>;
 export type PromotionalOffer = typeof promotionalOffers.$inferSelect;
+
+// ============ APP CONFIGURATION (Database-driven settings) ============
+
+export const appConfig = pgTable("app_config", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  description: text("description"),
+  category: text("category").notNull().default("general"), // general, wallet, pricing, notifications
+  isActive: boolean("is_active").notNull().default(true),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertAppConfigSchema = createInsertSchema(appConfig).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type InsertAppConfig = z.infer<typeof insertAppConfigSchema>;
+export type AppConfig = typeof appConfig.$inferSelect;
+
+// ============ DEPOSIT REQUESTS (Request-based deposits - no user wallets) ============
+
+export const depositRequests = pgTable("deposit_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  amount: real("amount").notNull(),
+  currency: text("currency").notNull(), // BTC, ETH, USDT, LTC, USDC
+  network: text("network").notNull(), // bitcoin, ethereum, trc20, erc20, bep20, etc.
+  walletAddress: text("wallet_address").notNull(), // The shared app wallet address used
+  txHash: text("tx_hash"), // Transaction hash (optional, can be added by admin)
+  status: text("status").notNull().default("pending"), // pending, confirmed, rejected, expired
+  adminNote: text("admin_note"), // Note from admin (e.g., rejection reason)
+  confirmedAmount: real("confirmed_amount"), // Actual amount confirmed (may differ from requested)
+  confirmedAt: timestamp("confirmed_at"),
+  confirmedBy: varchar("confirmed_by"), // Admin who confirmed
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at"), // Optional expiry for the request
+});
+
+export const insertDepositRequestSchema = createInsertSchema(depositRequests).omit({
+  id: true,
+  createdAt: true,
+  confirmedAt: true,
+  confirmedBy: true,
+  confirmedAmount: true,
+});
+
+export type InsertDepositRequest = z.infer<typeof insertDepositRequestSchema>;
+export type DepositRequest = typeof depositRequests.$inferSelect;
+
+// ============ ORDERS (All purchases and transactions) ============
+
+export const orders = pgTable("orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  type: text("type").notNull(), // mining_purchase, earn_subscription, withdrawal, reward
+  productId: varchar("product_id"), // Reference to package/plan ID if applicable
+  productName: text("product_name").notNull(), // Human-readable name
+  amount: real("amount").notNull(), // Amount in USDT or specified currency
+  currency: text("currency").notNull().default("USDT"),
+  status: text("status").notNull().default("pending"), // pending, processing, completed, failed, refunded
+  metadata: jsonb("metadata"), // Additional order data (hashrate, duration, etc.)
+  paymentMethod: text("payment_method"), // balance, deposit, etc.
+  balanceDeducted: boolean("balance_deducted").notNull().default(false),
+  completedAt: timestamp("completed_at"),
+  failedReason: text("failed_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at"),
+});
+
+export const insertOrderSchema = createInsertSchema(orders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  completedAt: true,
+});
+
+export type InsertOrder = z.infer<typeof insertOrderSchema>;
+export type Order = typeof orders.$inferSelect;
+
+// ============ USER REWARDS (Track rewards given to users) ============
+
+export const userRewards = pgTable("user_rewards", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  ruleId: varchar("rule_id").references(() => rewardRules.id),
+  orderId: varchar("order_id").references(() => orders.id),
+  amount: real("amount").notNull(),
+  currency: text("currency").notNull().default("USDT"),
+  status: text("status").notNull().default("pending"), // pending, credited, failed
+  creditedAt: timestamp("credited_at"),
+  occurrence: integer("occurrence").notNull().default(1), // For recurring rewards
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertUserRewardSchema = createInsertSchema(userRewards).omit({
+  id: true,
+  createdAt: true,
+  creditedAt: true,
+});
+
+export type InsertUserReward = z.infer<typeof insertUserRewardSchema>;
+export type UserReward = typeof userRewards.$inferSelect;

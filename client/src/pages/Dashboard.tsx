@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, ArrowDownToLine, ArrowUpFromLine, Settings, DollarSign, User, Users, Star, X, Inbox, Gift, TrendingUp, TrendingDown, Sparkles, ExternalLink, Sun, Moon, BarChart3, Copy, Check, Menu, Home, Wallet, PieChart, History, HelpCircle, LogOut, Shield, RefreshCw, ChevronLeft, ChevronRight, Fan, Minus, Plus } from "lucide-react";
+import { Bell, ArrowDownToLine, ArrowUpFromLine, Settings, DollarSign, User, Users, Star, X, Inbox, Gift, TrendingUp, TrendingDown, Sparkles, ExternalLink, Sun, Moon, BarChart3, Copy, Check, Menu, Home, Wallet, PieChart, History, HelpCircle, LogOut, Shield, RefreshCw, ChevronLeft, ChevronRight, Fan, Minus, Plus, Loader2, CheckCircle2 } from "lucide-react";
 import { Link } from "wouter";
 import { SiX, SiInstagram } from "react-icons/si";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { GlassCard, LiquidGlassCard } from "@/components/GlassCard";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
@@ -74,25 +74,22 @@ const cryptoNetworks: Record<CryptoType, NetworkOption[]> = {
 };
 
 const generateDepositAddress = (crypto: CryptoType, network: string): string => {
-  const addressPrefixes: Record<string, string> = {
-    "btc-native": "bc1q",
-    "btc-lightning": "lnbc",
-    "ltc-native": "ltc1q",
-    "eth-erc20": "0x",
-    "eth-arbitrum": "0x",
-    "eth-optimism": "0x",
-    "zcash-native": "t1",
-    "ton-native": "EQ",
-  };
+  // Placeholder - actual addresses will be fetched from database
+  return "Loading...";
+};
 
-  const prefix = addressPrefixes[network] || "0x";
-  const randomPart = Array.from({ length: 34 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
-  const address = `${prefix}${randomPart}`;
-
-  if (crypto === "BTC" && network === "btc-lightning") return `${prefix}${randomPart.substring(0, 20)}`;
-  if (crypto === "ETH" || crypto === "ZCASH") return `${prefix}${randomPart.substring(0, 40)}`;
-  if (crypto === "TON") return `${prefix}${randomPart.substring(0, 46)}`;
-  return address;
+// Wallet address mapping from network to config key
+const networkToConfigKey: Record<string, string> = {
+  "btc-native": "wallet_btc_native",
+  "btc-lightning": "wallet_btc_lightning",
+  "ltc-native": "wallet_ltc_native",
+  "eth-erc20": "wallet_eth_erc20",
+  "eth-arbitrum": "wallet_eth_arbitrum",
+  "eth-optimism": "wallet_eth_optimism",
+  "zcash-native": "wallet_zcash_native",
+  "ton-native": "wallet_ton_native",
+  "bnb-bsc": "wallet_bnb_bsc",
+  "bnb-bep2": "wallet_bnb_bep2",
 };
 
 interface DashboardProps {
@@ -113,8 +110,6 @@ interface DashboardProps {
   onNavigateToWallet?: () => void;
   onNavigateToHome?: () => void;
   isLoggedIn?: boolean;
-  isAdmin?: boolean;
-  onNavigateToAdmin?: () => void;
   onRefreshBalances?: () => void;
   isFetching?: boolean;
 }
@@ -144,8 +139,6 @@ export function Dashboard({
   onNavigateToWallet,
   onNavigateToHome,
   isLoggedIn = false,
-  isAdmin = false,
-  onNavigateToAdmin,
   onRefreshBalances,
   isFetching = false,
 }: DashboardProps) {
@@ -163,10 +156,115 @@ export function Dashboard({
   const [withdrawAddress, setWithdrawAddress] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [copiedDeposit, setCopiedDeposit] = useState(false);
+  const [depositSubmitted, setDepositSubmitted] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showRewardCelebration, setShowRewardCelebration] = useState(false);
   const [hasRatedApp, setHasRatedApp] = useState(() => localStorage.getItem("hasRatedApp") === "true");
+  
+  const queryClient = useQueryClient();
+
+  // Fetch wallet addresses from database
+  const { data: walletAddresses } = useQuery({
+    queryKey: ["wallet-addresses"],
+    queryFn: async () => {
+      const res = await fetch("/api/config/wallets/all");
+      if (!res.ok) return {};
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  // Update deposit address when crypto/network changes
+  useEffect(() => {
+    if (selectedNetwork && walletAddresses) {
+      const configKey = networkToConfigKey[selectedNetwork];
+      const address = walletAddresses[configKey] || "Address not configured - contact support";
+      setDepositAddress(address);
+    }
+  }, [selectedNetwork, walletAddresses]);
+
+  // Get user ID
+  const userStr = typeof localStorage !== 'undefined' ? localStorage.getItem("user") : null;
+  const user = userStr ? JSON.parse(userStr) : null;
+  const userId = user?.uid;
+
+  // Fetch pending deposits
+  const { data: pendingDeposits } = useQuery({
+    queryKey: ["pending-deposits", userId],
+    queryFn: async () => {
+      if (!userId) return { requests: [], totals: {} };
+      const res = await fetch(`/api/deposits/pending/${userId}`);
+      if (!res.ok) return { requests: [], totals: {} };
+      return res.json();
+    },
+    enabled: !!userId,
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  // Calculate total pending value
+  const pendingTotal = Object.entries(pendingDeposits?.totals || {}).reduce((sum, [currency, amount]) => {
+    const price = cryptoPrices[currency as keyof typeof cryptoPrices]?.price ?? 0;
+    return sum + (amount as number) * price;
+  }, 0);
+
+  // Submit deposit request mutation
+  const submitDepositMutation = useMutation({
+    mutationFn: async (data: { amount: string; currency: string; network: string; walletAddress: string }) => {
+      if (!userId) throw new Error("Please log in to submit deposit");
+
+      const res = await fetch("/api/deposits/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          amount: data.amount,
+          currency: data.currency,
+          network: data.network,
+          walletAddress: data.walletAddress,
+        }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to submit deposit request");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      setDepositSubmitted(true);
+      queryClient.invalidateQueries({ queryKey: ["pending-deposits"] });
+      toast({
+        title: "Deposit Request Submitted!",
+        description: "We'll confirm your deposit once we verify the transaction. This usually takes 10-30 minutes.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to Submit",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmitDeposit = () => {
+    if (!depositAmount || parseFloat(depositAmount) <= 0) {
+      toast({
+        title: "Enter Amount",
+        description: "Please enter the amount you deposited.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    submitDepositMutation.mutate({
+      amount: depositAmount,
+      currency: selectedCrypto,
+      network: selectedNetwork,
+      walletAddress: depositAddress,
+    });
+  };
+
   const safeChange24h = change24h ?? 0;
   const isPositiveChange = safeChange24h >= 0;
   const totalEarned = 0;
@@ -183,12 +281,14 @@ export function Dashboard({
     setSelectedCrypto(crypto);
     const firstNetwork = cryptoNetworks[crypto]?.[0]?.id ?? cryptoNetworks.BTC[0].id;
     setSelectedNetwork(firstNetwork);
-    setDepositAddress(generateDepositAddress(crypto, firstNetwork));
+    // Address will be set by useEffect
+    setDepositSubmitted(false);
   };
 
   const handleSelectNetwork = (value: string) => {
     setSelectedNetwork(value);
-    setDepositAddress(generateDepositAddress(selectedCrypto, value));
+    // Address will be set by useEffect
+    setDepositSubmitted(false);
   };
 
   const copyDepositAddress = async () => {
@@ -202,6 +302,8 @@ export function Dashboard({
   const openDeposit = () => {
     if (onDeposit) return onDeposit();
     setWithdrawOpen(false);
+    setDepositAmount("");
+    setDepositSubmitted(false);
     setDepositOpen((v) => !v);
   };
 
@@ -307,6 +409,19 @@ export function Dashboard({
             <span className="text-sm text-muted-foreground">24H Change</span>
           </div>
 
+          {/* Pending Deposits Display */}
+          {pendingTotal > 0 && (
+            <div className="mb-4 flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
+              <div className="flex-1">
+                <p className="text-xs text-amber-400 font-medium">Pending Deposits</p>
+                <p className="text-sm text-amber-300">
+                  {getSymbol()}{convert(pendingTotal).toFixed(2)}
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-2">
             <Popover open={depositOpen} onOpenChange={setDepositOpen}>
               <PopoverTrigger asChild>
@@ -396,20 +511,53 @@ export function Dashboard({
                     />
                   </div>
 
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="text-xs text-muted-foreground space-y-1">
-                      <p>Live price: {getSymbol()}{convert(cryptoPrices[selectedCrypto as keyof typeof cryptoPrices]?.price ?? 0).toFixed(2)}</p>
-                      <p className="text-amber-400">Warning: Sending on the wrong network can result in permanent loss.</p>
-                    </div>
-                    <Button
-                      variant="secondary"
-                      className="liquid-glass border-0"
-                      onClick={() => setDepositOpen(false)}
-                      type="button"
-                    >
-                      Done
-                    </Button>
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p>Live price: {getSymbol()}{convert(cryptoPrices[selectedCrypto as keyof typeof cryptoPrices]?.price ?? 0).toFixed(2)}</p>
+                    <p className="text-amber-400">Warning: Sending on the wrong network can result in permanent loss.</p>
                   </div>
+
+                  {/* Deposit Confirmation Button */}
+                  {!depositSubmitted ? (
+                    <Button
+                      className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
+                      onClick={handleSubmitDeposit}
+                      disabled={submitDepositMutation.isPending || !depositAmount || !depositAddress}
+                      data-testid="button-confirm-deposit"
+                    >
+                      {submitDepositMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 mr-2" />
+                          I Have Completed My Deposit
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                        <div>
+                          <p className="text-sm font-medium text-emerald-400">Submitted!</p>
+                          <p className="text-xs text-muted-foreground">We'll verify within 10-30 min.</p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => {
+                          setDepositSubmitted(false);
+                          setDepositAmount("");
+                        }}
+                      >
+                        Submit Another
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </PopoverContent>
             </Popover>

@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Home, Wallet, TrendingUp, Pickaxe, Gem } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type TabType = "home" | "wallet" | "invest" | "mining" | "solo" | "admin";
+type TabType = "home" | "wallet" | "invest" | "mining" | "solo";
 
 export type { TabType };
 

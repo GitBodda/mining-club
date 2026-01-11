@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Sansation font */
+@import url('https://fonts.cdnfonts.com/css/sansation');
+
 /* LIGHT MODE */
 :root {
   --button-outline: rgba(0,0,0, .15);
@@ -538,6 +541,20 @@ body.admin-mode,
 
 .left-safe {
   left: max(env(safe-area-inset-left, 0), 0);
+}
+
+/* Apply Outfit font to all headings and titles */
+h1, h2, h3, h4, h5, h6,
+.font-heading,
+.font-display,
+[class*="text-"][class*="font-bold"],
+[class*="text-"][class*="font-semibold"] {
+  font-family: 'Outfit', sans-serif !important;
+}
+
+/* Ensure body text uses Sansation */
+body {
+  font-family: 'Sansation', system-ui, sans-serif;
 }
 
 .right-safe {

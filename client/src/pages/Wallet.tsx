@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeftRight, Copy, Check, AlertCircle, ArrowDownToLine, ArrowUpFromLine, AlertTriangle, Info } from "lucide-react";
+import { ArrowLeftRight, Copy, Check, AlertCircle, ArrowDownToLine, ArrowUpFromLine, AlertTriangle, Info, Loader2, CheckCircle2 } from "lucide-react";
 import { GlassCard } from "@/components/GlassCard";
 import { CryptoCard } from "@/components/CryptoCard";
 import { TransactionItem } from "@/components/TransactionItem";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCryptoPrices } from "@/hooks/useCryptoPrices";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Popover,
   PopoverContent,
@@ -68,33 +69,22 @@ const cryptoNetworks: Record<CryptoType, NetworkOption[]> = {
 };
 
 const generateDepositAddress = (crypto: CryptoType, network: string): string => {
-  const addressPrefixes: Record<string, string> = {
-    "btc-native": "bc1q",
-    "btc-lightning": "lnbc",
-    "ltc-native": "ltc1q",
-    "eth-erc20": "0x",
-    "eth-arbitrum": "0x",
-    "eth-optimism": "0x",
-    "zcash-native": "t1",
-    "ton-native": "UQ",
-    "bnb-bsc": "0x",
-    "bnb-bep2": "bnb",
-  };
-  
-  const prefix = addressPrefixes[network] || "0x";
-  const randomPart = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-  
-  if (prefix === "0x") {
-    return prefix + "742d35Cc6634C0532925a3b844Bc9e7595f8" + randomPart.substring(0, 4).toUpperCase();
-  } else if (prefix === "T") {
-    return prefix + "JYkrshGGkQdXbQpACT6Zy8SiNmvk9kL" + randomPart.substring(0, 3);
-  } else if (prefix === "UQ") {
-    return prefix + "B3mWpBrjI2TxGwMKl_JxZTMVvQ1TChJtR" + randomPart.substring(0, 8);
-  } else if (prefix === "bc1q" || prefix === "ltc1q") {
-    return prefix + "nwgk7zq9pmfd4kf8xyv7szpq3sn9v2hkz8xl7c";
-  } else {
-    return prefix + "1500n1psd9j2ypp5v4t6n7x5d9z0w5";
-  }
+  // Placeholder - actual addresses will be fetched from database
+  return "Loading...";
+};
+
+// Wallet address mapping from network to config key
+const networkToConfigKey: Record<string, string> = {
+  "btc-native": "wallet_btc_native",
+  "btc-lightning": "wallet_btc_lightning",
+  "ltc-native": "wallet_ltc_native",
+  "eth-erc20": "wallet_eth_erc20",
+  "eth-arbitrum": "wallet_eth_arbitrum",
+  "eth-optimism": "wallet_eth_optimism",
+  "zcash-native": "wallet_zcash_native",
+  "ton-native": "wallet_ton_native",
+  "bnb-bsc": "wallet_bnb_bsc",
+  "bnb-bep2": "wallet_bnb_bep2",
 };
 
 const cryptoConfig: Record<CryptoType, { name: string; color: string; iconBg: string }> = {
@@ -152,10 +142,115 @@ export function Wallet({
   const [withdrawAddress, setWithdrawAddress] = useState("");
   const [copied, setCopied] = useState(false);
   const [depositAddress, setDepositAddress] = useState("");
+  const [depositAmount, setDepositAmount] = useState("");
+  const [depositSubmitted, setDepositSubmitted] = useState(false);
   
   const [exchangeFrom, setExchangeFrom] = useState<CryptoType>("BTC");
   const [exchangeTo, setExchangeTo] = useState<CryptoType>("USDT");
   const [exchangeAmount, setExchangeAmount] = useState("");
+
+  const queryClient = useQueryClient();
+
+  // Fetch wallet addresses from database
+  const { data: walletAddresses } = useQuery({
+    queryKey: ["wallet-addresses"],
+    queryFn: async () => {
+      const res = await fetch("/api/config/wallets/all");
+      if (!res.ok) return {};
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  // Update deposit address when crypto/network changes
+  useEffect(() => {
+    if (selectedNetwork && walletAddresses) {
+      const configKey = networkToConfigKey[selectedNetwork];
+      const address = walletAddresses[configKey] || "Address not configured - contact support";
+      setDepositAddress(address);
+    }
+  }, [selectedNetwork, walletAddresses]);
+
+  // Get user ID
+  const userStr = typeof localStorage !== 'undefined' ? localStorage.getItem("user") : null;
+  const user = userStr ? JSON.parse(userStr) : null;
+  const userId = user?.uid;
+
+  // Fetch pending deposits
+  const { data: pendingDeposits } = useQuery({
+    queryKey: ["pending-deposits", userId],
+    queryFn: async () => {
+      if (!userId) return { requests: [], totals: {} };
+      const res = await fetch(`/api/deposits/pending/${userId}`);
+      if (!res.ok) return { requests: [], totals: {} };
+      return res.json();
+    },
+    enabled: !!userId,
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  // Calculate total pending value
+  const pendingTotal = Object.entries(pendingDeposits?.totals || {}).reduce((sum, [currency, amount]) => {
+    const price = cryptoPrices[currency] ?? 0;
+    return sum + (amount as number) * price;
+  }, 0);
+
+  // Submit deposit request mutation
+  const submitDepositMutation = useMutation({
+    mutationFn: async (data: { amount: string; currency: string; network: string; walletAddress: string }) => {
+      if (!userId) throw new Error("Please log in to submit deposit");
+
+      const res = await fetch("/api/deposits/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          amount: data.amount,
+          currency: data.currency,
+          network: data.network,
+          walletAddress: data.walletAddress,
+        }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to submit deposit request");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      setDepositSubmitted(true);
+      queryClient.invalidateQueries({ queryKey: ["pending-deposits"] });
+      toast({
+        title: "Deposit Request Submitted!",
+        description: "We'll confirm your deposit once we verify the transaction. This usually takes 10-30 minutes.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to Submit",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmitDeposit = () => {
+    if (!depositAmount || parseFloat(depositAmount) <= 0) {
+      toast({
+        title: "Enter Amount",
+        description: "Please enter the amount you deposited.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    submitDepositMutation.mutate({
+      amount: depositAmount,
+      currency: selectedCrypto,
+      network: selectedNetwork,
+      walletAddress: depositAddress,
+    });
+  };
 
   const cryptoPrices: Record<string, number> = {
     BTC: cryptoPricesData.BTC?.price || 67000,
@@ -196,13 +291,16 @@ export function Wallet({
     const networks = cryptoNetworks[crypto];
     if (networks && networks.length > 0) {
       setSelectedNetwork(networks[0].id);
-      setDepositAddress(generateDepositAddress(crypto, networks[0].id));
+      // Address will be set by useEffect watching selectedNetwork
     }
+    // Reset deposit submitted state when changing crypto
+    setDepositSubmitted(false);
   };
 
   const handleNetworkChange = (network: string) => {
     setSelectedNetwork(network);
-    setDepositAddress(generateDepositAddress(selectedCrypto, network));
+    // Address will be set by useEffect watching selectedNetwork
+    setDepositSubmitted(false);
   };
 
   const copyAddress = async () => {
@@ -249,8 +347,10 @@ export function Wallet({
     const networks = cryptoNetworks[cryptoType];
     if (networks && networks.length > 0) {
       setSelectedNetwork(networks[0].id);
-      setDepositAddress(generateDepositAddress(cryptoType, networks[0].id));
     }
+    // Reset deposit state
+    setDepositAmount("");
+    setDepositSubmitted(false);
     setDepositOpen(true);
   };
 
@@ -388,6 +488,22 @@ export function Wallet({
             <span className="text-muted-foreground">today</span>
           </div>
 
+          {/* Pending Deposits Display */}
+          {pendingTotal > 0 && (
+            <div className="mt-3 flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
+              <div className="flex-1">
+                <p className="text-xs text-amber-400 font-medium">Pending Deposits</p>
+                <p className="text-sm text-amber-300">
+                  {getSymbol()}{convert(pendingTotal).toFixed(2)}
+                  <span className="text-xs text-muted-foreground ml-1">
+                    ({Object.entries(pendingDeposits?.totals || {}).map(([c, a]) => `${a} ${c}`).join(", ")})
+                  </span>
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col gap-3 mt-6">
             <div className="flex gap-3">
               <Popover open={depositOpen} onOpenChange={setDepositOpen}>
@@ -517,6 +633,63 @@ export function Wallet({
                           Only send {selectedCrypto} via {cryptoNetworks[selectedCrypto]?.find(n => n.id === selectedNetwork)?.name || "selected network"} to this address. Sending via wrong network may result in permanent loss of funds.
                         </p>
                       </div>
+
+                      {/* Deposit Amount and Confirmation */}
+                      {!depositSubmitted ? (
+                        <div className="space-y-4 pt-2 border-t border-white/10">
+                          <div className="space-y-2">
+                            <Label htmlFor="deposit-amount">Amount Deposited</Label>
+                            <Input
+                              id="deposit-amount"
+                              type="number"
+                              step="any"
+                              placeholder={`Enter ${selectedCrypto} amount`}
+                              value={depositAmount}
+                              onChange={(e) => setDepositAmount(e.target.value)}
+                              className="liquid-glass border-white/10"
+                              data-testid="input-deposit-amount"
+                            />
+                          </div>
+                          <Button
+                            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
+                            onClick={handleSubmitDeposit}
+                            disabled={submitDepositMutation.isPending || !depositAmount || !depositAddress}
+                            data-testid="button-confirm-deposit"
+                          >
+                            {submitDepositMutation.isPending ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Submitting...
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle2 className="w-4 h-4 mr-2" />
+                                I Have Completed My Deposit
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-3 pt-2 border-t border-white/10">
+                          <div className="flex items-center gap-2 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                            <div>
+                              <p className="text-sm font-medium text-emerald-400">Deposit Request Submitted!</p>
+                              <p className="text-xs text-muted-foreground">We'll verify your transaction and credit your balance within 10-30 minutes.</p>
+                            </div>
+                          </div>
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={() => {
+                              setDepositSubmitted(false);
+                              setDepositAmount("");
+                            }}
+                          >
+                            Submit Another Deposit
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </PopoverContent>

@@ -1115,7 +1115,7 @@ export async function registerRoutes(
         returnPercent,
         paybackMonths
       } = req.body;
-      const { miningPurchases, wallets } = await import("@shared/schema");
+      const { miningPurchases, wallets, orders, notifications } = await import("@shared/schema");
       
       // Check user has sufficient USDT balance
       const userWallets = await db.select()
@@ -1145,6 +1145,32 @@ export async function registerRoutes(
         paybackMonths,
         status: "active",
       }).returning();
+
+      // Create order record for tracking
+      await db.insert(orders).values({
+        userId,
+        type: "mining_purchase",
+        productId: purchase[0].id,
+        productName: `${crypto} Mining - ${packageName} (${hashrate} ${hashrateUnit})`,
+        amount,
+        currency: "USDT",
+        paymentMethod: "balance",
+        balanceDeducted: true,
+        status: "completed",
+        completedAt: new Date(),
+        metadata: { crypto, hashrate, hashrateUnit, efficiency, dailyReturnBTC, returnPercent, paybackMonths },
+      });
+
+      // Create notification
+      await db.insert(notifications).values({
+        userId,
+        type: "purchase",
+        category: "user",
+        title: "Mining Package Activated!",
+        message: `Your ${packageName} ${crypto} mining package (${hashrate} ${hashrateUnit}) is now active and earning rewards.`,
+        priority: "normal",
+        data: { purchaseId: purchase[0].id, packageName, crypto, hashrate },
+      });
 
       res.json(purchase[0]);
     } catch (error) {
@@ -1239,6 +1265,271 @@ export async function registerRoutes(
       res.json(validOffers);
     } catch (error) {
       res.status(500).json({ error: "Failed to get offers" });
+    }
+  });
+
+  // ============ APP CONFIG (Database-driven settings) ============
+
+  // Get app configuration value
+  app.get("/api/config/:key", async (req, res) => {
+    try {
+      const { appConfig } = await import("@shared/schema");
+      const config = await db.select()
+        .from(appConfig)
+        .where(and(eq(appConfig.key, req.params.key), eq(appConfig.isActive, true)));
+      
+      if (config.length === 0) {
+        return res.status(404).json({ error: "Config not found" });
+      }
+      res.json(config[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get config" });
+    }
+  });
+
+  // Get all wallet addresses for deposits
+  app.get("/api/config/wallets/all", async (_req, res) => {
+    try {
+      const { appConfig } = await import("@shared/schema");
+      const wallets = await db.select()
+        .from(appConfig)
+        .where(and(
+          eq(appConfig.category, "wallet"),
+          eq(appConfig.isActive, true)
+        ));
+      
+      // Convert to a map for easy access
+      const walletMap: Record<string, string> = {};
+      wallets.forEach(w => {
+        walletMap[w.key] = w.value;
+      });
+      
+      res.json(walletMap);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get wallet addresses" });
+    }
+  });
+
+  // ============ DEPOSIT REQUESTS ============
+
+  // Create a deposit request
+  app.post("/api/deposits/request", async (req, res) => {
+    try {
+      const { userId, amount, currency, network, walletAddress } = req.body;
+      const { depositRequests, notifications } = await import("@shared/schema");
+      
+      if (!userId || !amount || !currency || !network || !walletAddress) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Create deposit request
+      const [request] = await db.insert(depositRequests).values({
+        userId,
+        amount: parseFloat(amount),
+        currency,
+        network,
+        walletAddress,
+        status: "pending",
+      }).returning();
+
+      // Create notification for user
+      await db.insert(notifications).values({
+        userId,
+        type: "deposit",
+        category: "user",
+        title: "Deposit Request Created",
+        message: `Your deposit request for ${amount} ${currency} has been submitted. We'll confirm it once we verify the transaction.`,
+        priority: "normal",
+      });
+
+      res.json({ 
+        success: true, 
+        request,
+        message: "Deposit request created successfully. Please wait for confirmation."
+      });
+    } catch (error) {
+      console.error("Error creating deposit request:", error);
+      res.status(500).json({ error: "Failed to create deposit request" });
+    }
+  });
+
+  // Get user's deposit requests
+  app.get("/api/deposits/requests/:userId", async (req, res) => {
+    try {
+      const { depositRequests } = await import("@shared/schema");
+      const requests = await db.select()
+        .from(depositRequests)
+        .where(eq(depositRequests.userId, req.params.userId))
+        .orderBy(desc(depositRequests.createdAt));
+      
+      res.json(requests);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get deposit requests" });
+    }
+  });
+
+  // Get user's pending deposits (for display)
+  app.get("/api/deposits/pending/:userId", async (req, res) => {
+    try {
+      const { depositRequests } = await import("@shared/schema");
+      const pending = await db.select()
+        .from(depositRequests)
+        .where(and(
+          eq(depositRequests.userId, req.params.userId),
+          eq(depositRequests.status, "pending")
+        ))
+        .orderBy(desc(depositRequests.createdAt));
+      
+      // Calculate total pending by currency
+      const pendingByCurrency: Record<string, number> = {};
+      pending.forEach(p => {
+        pendingByCurrency[p.currency] = (pendingByCurrency[p.currency] || 0) + p.amount;
+      });
+      
+      res.json({ 
+        requests: pending,
+        totals: pendingByCurrency
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get pending deposits" });
+    }
+  });
+
+  // ============ USER BALANCE (from wallets table) ============
+
+  // Get user balances (confirmed only)
+  app.get("/api/balances/:userId", async (req, res) => {
+    try {
+      const { wallets } = await import("@shared/schema");
+      const userWallets = await db.select()
+        .from(wallets)
+        .where(eq(wallets.userId, req.params.userId));
+      
+      // Get pending deposits
+      const { depositRequests } = await import("@shared/schema");
+      const pending = await db.select()
+        .from(depositRequests)
+        .where(and(
+          eq(depositRequests.userId, req.params.userId),
+          eq(depositRequests.status, "pending")
+        ));
+      
+      const pendingByCurrency: Record<string, number> = {};
+      pending.forEach(p => {
+        pendingByCurrency[p.currency] = (pendingByCurrency[p.currency] || 0) + p.amount;
+      });
+      
+      res.json({
+        balances: userWallets,
+        pending: pendingByCurrency
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get balances" });
+    }
+  });
+
+  // ============ ORDERS ============
+
+  // Create an order
+  app.post("/api/orders", async (req, res) => {
+    try {
+      const { userId, type, productId, productName, amount, currency, metadata, paymentMethod } = req.body;
+      const { orders, wallets, notifications } = await import("@shared/schema");
+      
+      if (!userId || !type || !productName || !amount) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Check balance if paying from balance
+      if (paymentMethod === "balance") {
+        const userWallets = await db.select()
+          .from(wallets)
+          .where(and(eq(wallets.userId, userId), eq(wallets.symbol, currency || "USDT")));
+        
+        if (userWallets.length === 0 || userWallets[0].balance < amount) {
+          return res.status(400).json({ 
+            error: "Insufficient balance",
+            required: amount,
+            available: userWallets[0]?.balance || 0
+          });
+        }
+
+        // Deduct balance
+        await db.update(wallets)
+          .set({ balance: userWallets[0].balance - amount })
+          .where(eq(wallets.id, userWallets[0].id));
+      }
+
+      // Create order
+      const [order] = await db.insert(orders).values({
+        userId,
+        type,
+        productId,
+        productName,
+        amount,
+        currency: currency || "USDT",
+        metadata,
+        paymentMethod: paymentMethod || "balance",
+        balanceDeducted: paymentMethod === "balance",
+        status: "completed", // Immediate completion for balance payments
+        completedAt: paymentMethod === "balance" ? new Date() : null,
+      }).returning();
+
+      // Create notification
+      await db.insert(notifications).values({
+        userId,
+        type: "order",
+        category: "user",
+        title: "Order Completed",
+        message: `Your purchase of ${productName} for $${amount} ${currency || "USDT"} was successful!`,
+        priority: "normal",
+        data: { orderId: order.id, amount, productName },
+      });
+
+      res.json({ 
+        success: true, 
+        order,
+        message: "Order completed successfully!"
+      });
+    } catch (error) {
+      console.error("Error creating order:", error);
+      res.status(500).json({ error: "Failed to create order" });
+    }
+  });
+
+  // Get user's orders
+  app.get("/api/orders/:userId", async (req, res) => {
+    try {
+      const { orders } = await import("@shared/schema");
+      const userOrders = await db.select()
+        .from(orders)
+        .where(eq(orders.userId, req.params.userId))
+        .orderBy(desc(orders.createdAt));
+      
+      res.json(userOrders);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get orders" });
+    }
+  });
+
+  // ============ GLOBAL NOTIFICATIONS ============
+
+  // Get global/broadcast notifications (for all users) - shows announcements from database
+  app.get("/api/notifications/global/all", async (_req, res) => {
+    try {
+      const { notifications } = await import("@shared/schema");
+      const { sql } = await import("drizzle-orm");
+      
+      // Get notifications where userId is null (broadcast to all)
+      const globalNotifications = await db.select()
+        .from(notifications)
+        .where(sql`${notifications.userId} IS NULL`)
+        .orderBy(desc(notifications.createdAt))
+        .limit(20);
+      
+      res.json(globalNotifications);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get global notifications" });
     }
   });
 

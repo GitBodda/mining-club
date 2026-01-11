@@ -434,7 +434,7 @@ function ActiveMiningPurchases({
   );
 }
 
-function PackageCard({ pkg, index, onPurchase }: { pkg: MiningPackage; index: number; onPurchase: (pkg: MiningPackage) => void }) {
+function PackageCard({ pkg, index, onPurchase, isPending }: { pkg: MiningPackage; index: number; onPurchase: (pkg: MiningPackage) => void; isPending?: boolean }) {
   const { convert, getSymbol } = useCurrency();
   const { btcPrice } = useBTCPrice();
   const isBTC = pkg.crypto === "BTC";
@@ -533,10 +533,11 @@ function PackageCard({ pkg, index, onPurchase }: { pkg: MiningPackage; index: nu
                 ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 h-8 text-xs w-full" 
                 : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-0 h-8 text-xs w-full"
               }
+              disabled={isPending}
               onClick={() => onPurchase(pkg)}
               data-testid={`button-buy-${pkg.id}`}
             >
-              Buy Now
+              {isPending ? "Processing..." : "Buy Now"}
               <ArrowRight className="w-3 h-3 ml-1" />
             </Button>
           </div>
@@ -546,7 +547,7 @@ function PackageCard({ pkg, index, onPurchase }: { pkg: MiningPackage; index: nu
   );
 }
 
-function HashRateCalculator({ onPurchase }: { onPurchase: (data: { hashrate: number; cost: number; dailyReturnBTC: number; returnPercent: number }) => void }) {
+function HashRateCalculator({ onPurchase, isPending }: { onPurchase: (data: { hashrate: number; cost: number; dailyReturnBTC: number; returnPercent: number }) => void; isPending?: boolean }) {
   const { convert, getSymbol } = useCurrency();
   const { btcPrice } = useBTCPrice();
   
@@ -707,15 +708,27 @@ function HashRateCalculator({ onPurchase }: { onPurchase: (data: { hashrate: num
         <Button 
           className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0"
           size="default"
-          onClick={() => onPurchase({
-            hashrate: btcHashrate,
-            cost: estimatedCost,
-            dailyReturnBTC,
-            returnPercent: 20,
-          })}
+          disabled={isPending}
+          onClick={() => {
+            console.log("=== BUY CUSTOM HASHPOWER BUTTON CLICKED ===");
+            console.log("Button state:", { isPending });
+            console.log("Data being sent:", {
+              hashrate: btcHashrate,
+              cost: estimatedCost,
+              dailyBTCReturn,
+              returnPercent: 20,
+            });
+            onPurchase({
+              hashrate: btcHashrate,
+              cost: estimatedCost,
+              dailyReturnBTC: dailyBTCReturn,
+              returnPercent: 20,
+            });
+            console.log("=== onPurchase called ===");
+          }}
           data-testid="button-buy-custom"
         >
-          Buy Custom Hashpower
+          {isPending ? "Processing..." : "Buy Custom Hashpower"}
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
         
@@ -759,12 +772,13 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const user = getCurrentUser();
+  const { btcPrice } = useBTCPrice();
   
   const hasContracts = contracts.length > 0;
   
   // Fetch user's wallet balances
   const { data: wallets = [] } = useQuery({
-    queryKey: ["/api/wallets", user?.uid],
+    queryKey: [`/api/wallets/${user?.uid}`],
     enabled: !!user?.uid,
   });
 
@@ -789,7 +803,7 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/wallets"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/wallets/${user?.uid}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.uid}/mining-purchases`] });
       toast({
         title: "Purchase Successful!",
@@ -808,9 +822,19 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
   const usdtWallet = wallets.find((w: any) => w.symbol === "USDT");
   const availableBalance = usdtWallet?.balance || 0;
   
+  console.log("Wallets loaded:", wallets);
+  console.log("USDT Wallet:", usdtWallet);
+  console.log("Available Balance:", availableBalance);
+  
   // Handle package purchase
   const handlePackagePurchase = (pkg: MiningPackage) => {
+    console.log("=== HANDLE PACKAGE PURCHASE CALLED ===");
+    console.log("Package:", pkg.name, "Cost:", pkg.cost);
+    console.log("User:", user?.uid);
+    console.log("Available USDT balance:", availableBalance);
+    
     if (!user) {
+      console.log("❌ No user found");
       toast({
         title: "Authentication Required",
         description: "Please sign in to purchase mining packages.",
@@ -819,16 +843,24 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
       return;
     }
 
+    console.log("✅ Balance check:", {
+      required: pkg.cost,
+      available: availableBalance,
+      sufficient: availableBalance >= pkg.cost
+    });
+
     if (availableBalance < pkg.cost) {
+      const amountNeeded = pkg.cost - availableBalance;
+      console.log("❌ Insufficient balance");
       toast({
-        title: "Insufficient Balance",
-        description: `You need ${pkg.cost.toFixed(2)} USDT but only have ${availableBalance.toFixed(2)} USDT available.`,
+        title: "Deposit Required",
+        description: `You need to deposit $${amountNeeded.toFixed(2)} USDT to buy this contract. Total cost: $${pkg.cost.toFixed(2)} USDT`,
         variant: "destructive",
       });
       return;
     }
 
-    createPurchase.mutate({
+    const purchasePayload = {
       userId: user.uid,
       packageName: pkg.name,
       crypto: pkg.crypto,
@@ -839,12 +871,23 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
       dailyReturnBTC: pkg.dailyReturnBTC,
       returnPercent: pkg.returnPercent,
       paybackMonths: pkg.paybackMonths,
-    });
+    };
+
+    console.log("✅ Creating purchase with payload:", purchasePayload);
+    console.log("=== CALLING MUTATION ===");
+    
+    createPurchase.mutate(purchasePayload);
   };
 
   // Handle custom hashpower purchase
   const handleCustomPurchase = (data: { hashrate: number; cost: number; dailyReturnBTC: number; returnPercent: number }) => {
+    console.log("=== HANDLE CUSTOM PURCHASE CALLED ===");
+    console.log("Purchase data received:", data);
+    console.log("User:", user?.uid);
+    console.log("Available USDT balance:", availableBalance);
+    
     if (!user) {
+      console.log("❌ No user found");
       toast({
         title: "Authentication Required",
         description: "Please sign in to purchase mining packages.",
@@ -853,16 +896,29 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
       return;
     }
 
+    console.log("✅ Balance check:", {
+      required: data.cost,
+      available: availableBalance,
+      sufficient: availableBalance >= data.cost
+    });
+    
     if (availableBalance < data.cost) {
+      const amountNeeded = data.cost - availableBalance;
+      console.log("❌ Insufficient balance");
       toast({
-        title: "Insufficient Balance",
-        description: `You need ${data.cost.toFixed(2)} USDT but only have ${availableBalance.toFixed(2)} USDT available.`,
+        title: "Deposit Required",
+        description: `You need to deposit $${amountNeeded.toFixed(2)} USDT to buy this contract. Total cost: $${data.cost.toFixed(2)} USDT`,
         variant: "destructive",
       });
       return;
     }
 
-    createPurchase.mutate({
+    // Calculate payback months safely
+    const dailyUSDReturn = data.dailyReturnBTC * btcPrice;
+    const paybackDays = dailyUSDReturn > 0 ? data.cost / dailyUSDReturn : 365;
+    const paybackMonths = Math.ceil(paybackDays / 30);
+    
+    const purchasePayload = {
       userId: user.uid,
       packageName: "Custom",
       crypto: "BTC",
@@ -872,8 +928,13 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
       efficiency: "15W/TH",
       dailyReturnBTC: data.dailyReturnBTC,
       returnPercent: data.returnPercent,
-      paybackMonths: Math.ceil((data.cost / (data.dailyReturnBTC * 95000)) / 30), // Rough estimate
-    });
+      paybackMonths: paybackMonths,
+    };
+    
+    console.log("✅ Creating purchase with payload:", purchasePayload);
+    console.log("=== CALLING MUTATION ===");
+    
+    createPurchase.mutate(purchasePayload);
   };
   
   const totalHashrate = contracts.reduce((sum, c) => {
@@ -1019,7 +1080,7 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
               </div>
               <div className="space-y-3">
                 {btcPackages.map((pkg, index) => (
-                  <PackageCard key={pkg.id} pkg={pkg} index={index} onPurchase={handlePackagePurchase} />
+                  <PackageCard key={pkg.id} pkg={pkg} index={index} onPurchase={handlePackagePurchase} isPending={createPurchase.isPending} />
                 ))}
               </div>
             </div>
@@ -1033,7 +1094,7 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
             transition={{ duration: 0.3 }}
             className="space-y-5"
           >
-            <HashRateCalculator onPurchase={handleCustomPurchase} />
+            <HashRateCalculator onPurchase={handleCustomPurchase} isPending={createPurchase.isPending} />
             {hasContracts && (
               <>
                 <HashRateChart data={chartData} title="Earnings Over Time" />

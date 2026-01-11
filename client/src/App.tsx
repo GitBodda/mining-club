@@ -23,7 +23,6 @@ import { AuthPage } from "@/pages/AuthPage";
 import { DashboardSkeleton, WalletSkeleton } from "@/components/LoadingSkeleton";
 import { PrivacyPolicy } from "@/pages/PrivacyPolicy";
 import Exchange from "@/pages/Exchange";
-import { Admin } from "@/pages/Admin";
 import { Referral } from "@/pages/Referral";
 import { History } from "@/pages/History";
 import { VirtualCard } from "@/pages/VirtualCard";
@@ -41,7 +40,6 @@ function MobileApp() {
   const [appView, setAppView] = useState<AppView>("onboarding");
   const [authMode, setAuthMode] = useState<AuthMode>("signin");
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   
   const {
     miningStats,
@@ -89,24 +87,10 @@ function MobileApp() {
     const unsubscribe = onAuthChange(async (user) => {
       setFirebaseUser(user);
       if (user) {
-        // Check admin status from custom claims AND email restriction
-        try {
-          const idTokenResult = await user.getIdTokenResult();
-          const ADMIN_EMAILS = ["abdohassan777@gmail.com", "info@hardisk.co"];
-          const isAdminUser = (idTokenResult.claims.admin === true || idTokenResult.claims.role === "admin") 
-                            && ADMIN_EMAILS.includes(user.email || "");
-          setIsAdmin(isAdminUser);
-          localStorage.setItem("isAdmin", isAdminUser.toString());
-        } catch (error) {
-          console.error("Error checking admin status:", error);
-          setIsAdmin(false);
-        }
         localStorage.setItem("isLoggedIn", "true");
       } else if (appView === "main") {
         // User signed out remotely - clear state and go to auth
         localStorage.removeItem("isLoggedIn");
-        localStorage.removeItem("isAdmin");
-        setIsAdmin(false);
         setAppView("auth");
       }
     });
@@ -169,8 +153,6 @@ function MobileApp() {
         onNavigateToHome={() => setActiveTab("home")}
         onNavigateToWallet={() => setActiveTab("wallet")}
         onNavigateToInvest={() => setActiveTab("invest")}
-        isAdmin={isAdmin}
-        onNavigateToAdmin={() => setActiveTab("admin")}
       />
 
       <main className="relative z-10 max-w-md mx-auto px-4 pt-[10px] pb-48">
@@ -196,8 +178,6 @@ function MobileApp() {
                 onNavigateToWallet={() => setActiveTab("wallet")}
                 onNavigateToHome={() => setActiveTab("home")}
                 isLoggedIn={localStorage.getItem("isLoggedIn") === "true"}
-                isAdmin={isAdmin}
-                onNavigateToAdmin={() => setActiveTab("admin")}
                 onRefreshBalances={refetchBalances}
                 isFetching={isFetching}
               />
@@ -240,9 +220,6 @@ function MobileApp() {
               poolStatus={poolStatus}
               onNavigateToInvest={() => setActiveTab("invest")}
             />
-          )}
-          {activeTab === "admin" && isAdmin && (
-            <Admin key="admin" onBack={() => setActiveTab("home")} />
           )}
         </AnimatePresence>
 
@@ -382,9 +359,6 @@ function App() {
                 </Route>
                 <Route path="/history">
                   {() => <History />}
-                </Route>
-                <Route path="/admin">
-                  {() => <Admin onBack={() => window.history.back()} />}
                 </Route>
                 <Route path="/" component={MobileApp} />
                 <Route component={MobileApp} />
