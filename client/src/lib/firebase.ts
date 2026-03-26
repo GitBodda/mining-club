@@ -38,7 +38,10 @@ if (firebaseConfigured) {
   try {
     const firebaseConfig = {
       apiKey,
-      authDomain: `${projectId}.firebaseapp.com`,
+      // Use our own domain as authDomain so Firebase's __/auth/handler runs
+      // same-origin (proxied by our server).  This avoids iOS ITP wiping
+      // sessionStorage during cross-origin redirects.
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'hardisk.co',
       projectId,
       storageBucket: `${projectId}.firebasestorage.app`,
       appId,
