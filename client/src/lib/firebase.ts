@@ -203,10 +203,9 @@ export async function signInWithGoogle(): Promise<User | null> {
     return null;
   }
 
-  // iOS native: use a dedicated browser-based helper to avoid the external-browser trap
-  if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
-    return googleSignInViaBrowser();
-  }
+  // With authDomain set to our own domain (hardisk.co) and /__/auth/* proxied
+  // to Firebase, signInWithPopup works same-origin on all platforms including
+  // iOS Capacitor — no need for a separate browser-based flow.
 
   // Web / Android: popup with in-app-browser redirect fallback
   try {
