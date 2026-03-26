@@ -2088,20 +2088,75 @@ export async function registerRoutes(
     });
   }, GOOGLE_SESSION_TTL);
 
-  // Helper page served to @capacitor/browser — handles Google OAuth in a real browser
-  app.get("/google-auth", (_req, res) => {
-    const cfg = {
-      apiKey: process.env.VITE_FIREBASE_API_KEY || "",
-      authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || `${process.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
-      projectId: process.env.VITE_FIREBASE_PROJECT_ID || "",
-      appId: process.env.VITE_FIREBASE_APP_ID || "",
-    };
-    const html = `<!DOCTYPE html>
+  // ─── Google OAuth pending map  (app-sid → Firebase sessionId) ───────────────
+  const googleOAuthPending = new Map<string, { firebaseSessionId: string; ts: number }>();
+  const OAUTH_PENDING_TTL = 10 * 60 * 1000;
+  setInterval(() => {
+    const now = Date.now();
+    googleOAuthPending.forEach((v, k) => {
+      if (now - v.ts > OAUTH_PENDING_TTL) googleOAuthPending.delete(k);
+    });
+  }, OAUTH_PENDING_TTL);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // GET /google-auth
+  //
+  // Root cause of the old white-page bug:
+  //   • `signInWithRedirect` stores state in indexedDB/localStorage.
+  //   • iOS 17+ ITP can clear that storage during the cross-origin redirect chain
+  //     (hardisk.co → accounts.google.com → firebaseapp.com → hardisk.co).
+  //   • Firebase's `getRedirectResult` returns null → page re-triggers the redirect
+  //     → infinite loop / blank page.
+  //
+  // New approach — zero Firebase SDK in the browser, zero client-side state:
+  //   1. Case A (?sid=…)  → server calls Firebase's createAuthUri REST API to get a
+  //      real Google OAuth URL, stores the Firebase sessionId server-side, sets a
+  //      short-lived cookie, and 302-redirects the browser straight to Google.
+  //   2. Case B (callback) → Google redirects back to /google-auth with the
+  //      id_token in the URL *fragment* (#id_token=…).  Fragments aren't sent to
+  //      the server, so we serve a minimal HTML page whose JS reads the token and
+  //      POSTs it to /api/auth/google/exchange.
+  // ─────────────────────────────────────────────────────────────────────────────
+  const FIREBASE_API_KEY = process.env.VITE_FIREBASE_API_KEY || 'AIzaSyAcLEpB_6dwpdEmvhal69TZy6lI_dracaE';
+  const GOOGLE_AUTH_CALLBACK = 'https://hardisk.co/google-auth';
+
+  app.get("/google-auth", async (req: any, res: any) => {
+    const appSid = (req.query.sid as string) || null;
+
+    // ── Case A: fresh request from the iOS app ──────────────────────────────
+    if (appSid) {
+      try {
+        const createAuthRes = await fetch(
+          `https://identitytoolkit.googleapis.com/v1/accounts:createAuthUri?key=${FIREBASE_API_KEY}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ providerId: 'google.com', continueUri: GOOGLE_AUTH_CALLBACK }),
+          }
+        );
+        const createAuthData: any = await createAuthRes.json();
+        if (!createAuthData.authUri) throw new Error('Firebase createAuthUri returned no authUri');
+
+        googleOAuthPending.set(appSid, { firebaseSessionId: createAuthData.sessionId, ts: Date.now() });
+        res.setHeader('Set-Cookie', `gauth_sid=${appSid}; Path=/; SameSite=Lax; Secure; Max-Age=600; HttpOnly`);
+        return res.redirect(302, createAuthData.authUri);
+      } catch (err) {
+        console.error('[google-auth] initiation error:', err);
+        return res.status(500).type('html').send(
+          `<p style="font-family:sans-serif;color:#f87171;padding:2rem">
+           Sign-in setup failed:<br>${err instanceof Error ? err.message : String(err)}<br>
+           Please go back to the app and try again.</p>`
+        );
+      }
+    }
+
+    // ── Case B: callback from Google  (id_token in URL hash, not visible to server) ──
+    const callbackHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Sign in with Google</title>
+  <title>Completing sign-in…</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:-apple-system,sans-serif;background:#0a0a0f;color:#fff;
@@ -2109,65 +2164,57 @@ export async function registerRoutes(
     .card{text-align:center;max-width:340px;width:100%}
     .logo{font-size:2.5rem;margin-bottom:1rem}
     h2{font-size:1.25rem;margin-bottom:.5rem}
-    p{color:rgba(255,255,255,.55);font-size:.875rem;margin-bottom:1.5rem;line-height:1.5}
+    p{color:rgba(255,255,255,.55);font-size:.875rem;line-height:1.5}
     .spin{width:40px;height:40px;border:3px solid rgba(255,255,255,.1);border-top-color:#10b981;
-          border-radius:50%;animation:spin .8s linear infinite;margin:1rem auto}
+          border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1.2rem}
     @keyframes spin{to{transform:rotate(360deg)}}
-    .err{color:#f87171}
+    .err{color:#f87171!important}
   </style>
 </head>
 <body>
 <div class="card">
   <div class="logo">₿</div>
   <div class="spin" id="spin"></div>
-  <h2 id="title">Connecting to Google…</h2>
+  <h2 id="title">Completing sign-in…</h2>
   <p id="sub">Please wait</p>
 </div>
-<script type="module">
-  import{initializeApp}from'https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js';
-  import{getAuth,signInWithRedirect,getRedirectResult,GoogleAuthProvider}
-    from'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
-
-  const cfg=${JSON.stringify(cfg)};
-  const sid=new URLSearchParams(location.search).get('sid');
-  const app=initializeApp(cfg);
-  const auth=getAuth(app);
-  const provider=new GoogleAuthProvider();
-  provider.setCustomParameters({prompt:'select_account'});
-
-  function ui(title,sub,err){
-    document.getElementById('title').textContent=title;
-    document.getElementById('sub').textContent=sub||'';
-    if(err){document.getElementById('spin').style.display='none';
-             document.getElementById('title').className='err';}
+<script>
+  function ui(title, sub, isErr) {
+    document.getElementById('title').textContent = title;
+    var subEl = document.getElementById('sub');
+    subEl.textContent = sub || '';
+    if (isErr) {
+      document.getElementById('spin').style.display = 'none';
+      subEl.className = 'err';
+    }
   }
-
-  (async()=>{
-    try{
-      const result=await getRedirectResult(auth);
-      if(result?.user){
-        ui('Almost done…','Completing sign-in');
-        const idToken=await result.user.getIdToken();
-        const r=await fetch('/api/auth/google/session',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({sessionId:sid,idToken})
-        });
-        if(!r.ok)throw new Error((await r.json()).error||'Server error');
-        ui('✓ Signed in!','Returning to app…');
-        location.href='/auth-complete';
+  (async function () {
+    try {
+      var hash = new URLSearchParams(location.hash.slice(1));
+      var idToken = hash.get('id_token');
+      if (!idToken) {
+        ui('Nothing to complete', 'Please start sign-in from the app.', true);
         return;
       }
-      ui('Redirecting to Google…','You will be asked to choose your account');
-      await signInWithRedirect(auth,provider);
-    }catch(e){
-      ui('Sign-in failed',e.message,true);
+      ui('Almost done\u2026', 'Securing your account');
+      var r = await fetch('/api/auth/google/exchange', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ idToken: idToken })
+      });
+      var data = await r.json();
+      if (!r.ok || !data.ok) throw new Error(data.error || 'Exchange failed');
+      ui('\u2713 Signed in!', 'Returning to app\u2026');
+      setTimeout(function () { location.href = '/auth-complete'; }, 500);
+    } catch (e) {
+      ui('Sign-in failed', (e && e.message) ? e.message : 'Please go back and try again.', true);
     }
   })();
 </script>
 </body>
 </html>`;
-    res.type("html").send(html);
+    res.type("html").send(callbackHtml);
   });
 
   // Simple "done" page — @capacitor/browser closes when it reaches this URL
@@ -2178,25 +2225,59 @@ export async function registerRoutes(
 <style>body{font-family:-apple-system,sans-serif;background:#0a0a0f;color:#fff;
 display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center}
 h2{color:#10b981}</style></head><body>
-<div><h2>✓ Signed in!</h2><p style="color:rgba(255,255,255,.6);margin-top:.5rem">
+<div><h2>&#x2713; Signed in!</h2><p style="color:rgba(255,255,255,.6);margin-top:.5rem">
 You can return to the app.</p></div></body></html>`);
   });
 
-  // iOS helper: store custom token for session
-  app.post("/api/auth/google/session", async (req, res) => {
-    const { sessionId, idToken } = req.body || {};
-    if (!sessionId || !idToken) {
-      return res.status(400).json({ error: "Missing sessionId or idToken" });
+  // Exchange Google id_token (from URL hash) → Firebase custom token
+  app.post("/api/auth/google/exchange", async (req: any, res: any) => {
+    const { idToken: googleIdToken } = req.body || {};
+    if (!googleIdToken) return res.status(400).json({ error: 'Missing idToken' });
+
+    // Read the app session-id from the cookie set in Case A above
+    const cookieHeader = (req.headers.cookie as string) || '';
+    const sidCookie = cookieHeader.split(';').find((c: string) => c.trim().startsWith('gauth_sid='));
+    const appSid = sidCookie ? sidCookie.trim().slice('gauth_sid='.length).trim() : null;
+    if (!appSid) {
+      return res.status(400).json({ error: 'Auth session cookie missing — please try again' });
     }
+
+    const pending = googleOAuthPending.get(appSid);
+    if (!pending) {
+      return res.status(400).json({ error: 'Auth session expired or not found — please try again' });
+    }
+    googleOAuthPending.delete(appSid); // single-use
+
     try {
-      const { verifyIdToken: verifyFn, createCustomToken } = await import("./firebase-admin");
-      const decoded = await verifyFn(idToken);
-      const customToken = await createCustomToken(decoded.uid);
-      googleAuthSessions.set(sessionId, { customToken, ts: Date.now() });
+      // Exchange the Google id_token for a Firebase identity via signInWithIdp
+      const idpRes = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${FIREBASE_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            postBody: `id_token=${googleIdToken}&providerId=google.com`,
+            requestUri: GOOGLE_AUTH_CALLBACK,
+            returnSecureToken: true,
+            sessionId: pending.firebaseSessionId,
+          }),
+        }
+      );
+      const idpData: any = await idpRes.json();
+      if (idpData.error) throw new Error(idpData.error.message || 'Google token exchange failed');
+
+      const uid = idpData.localId;
+      if (!uid) throw new Error('No UID returned from identity provider');
+
+      const { createCustomToken } = await import('./firebase-admin');
+      const customToken = await createCustomToken(uid);
+      // Store under appSid so the polling endpoint can find it
+      googleAuthSessions.set(appSid, { customToken, ts: Date.now() });
+
       return res.json({ ok: true });
     } catch (err) {
-      console.error("google/session error:", err);
-      return res.status(500).json({ error: err instanceof Error ? err.message : "Failed" });
+      console.error('[google/exchange] error:', err);
+      return res.status(500).json({ error: err instanceof Error ? err.message : 'Exchange failed' });
     }
   });
 
