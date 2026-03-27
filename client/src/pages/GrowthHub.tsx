@@ -10,6 +10,7 @@ import { GlassCard } from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { StarterMinerCard } from "@/components/StarterMinerCard";
+import { Browser } from '@capacitor/browser';
 
 const PUBLIC_URL = import.meta.env.VITE_PUBLIC_APP_URL || "https://blockmint.app";
 
@@ -270,6 +271,18 @@ async function getToken(): Promise<string | null> {
     const user = getAuth().currentUser;
     return user ? user.getIdToken() : null;
   } catch {
+    return null;
+  }
+}
+
+// Function to handle login using Capacitor Browser Plugin
+async function loginWithPopup(): Promise<string | null> {
+  try {
+    await Browser.open({ url: 'https://your-auth-url.com' });
+    // Handle redirect and token retrieval here
+    return 'token'; // Replace with actual token logic
+  } catch (error) {
+    console.error('Login failed', error);
     return null;
   }
 }

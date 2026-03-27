@@ -22,44 +22,6 @@ declare module "http" {
   }
 }
 
-// ── Reverse-proxy Firebase Auth handler so authDomain can be our own domain ──
-// This makes signInWithPopup same-origin (no cross-site storage issues on iOS).
-app.all("/__/auth/*", async (req, res) => {
-  const firebaseHost = `${process.env.VITE_FIREBASE_PROJECT_ID || "blockmint"}.firebaseapp.com`;
-  const targetUrl = `https://${firebaseHost}${req.originalUrl}`;
-  try {
-    const headers: Record<string, string> = {
-      "X-Forwarded-Host": req.hostname,
-    };
-    // Forward relevant request headers
-    if (req.headers["content-type"]) headers["content-type"] = req.headers["content-type"] as string;
-    if (req.headers["accept"]) headers["accept"] = req.headers["accept"] as string;
-    if (req.headers["accept-language"]) headers["accept-language"] = req.headers["accept-language"] as string;
-    if (req.headers["cookie"]) headers["cookie"] = req.headers["cookie"] as string;
-
-    const upstream = await fetch(targetUrl, {
-      method: req.method,
-      headers,
-      body: ["GET", "HEAD"].includes(req.method) ? undefined : JSON.stringify(req.body),
-      redirect: "manual",
-    });
-
-    // Forward status, headers, body back to client
-    res.status(upstream.status);
-    upstream.headers.forEach((value, key) => {
-      // Skip hop-by-hop headers
-      if (!["transfer-encoding", "connection", "keep-alive"].includes(key.toLowerCase())) {
-        res.setHeader(key, value);
-      }
-    });
-    const body = Buffer.from(await upstream.arrayBuffer());
-    res.end(body);
-  } catch (err) {
-    console.error("[__/auth proxy] error:", err);
-    res.status(502).send("Auth proxy error");
-  }
-});
-
 // ── Health check (MUST be first — Cloud Run probes this before secrets/DB are ready) ──
 const healthPayload = () => ({
   status: "ok",

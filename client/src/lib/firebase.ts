@@ -38,10 +38,7 @@ if (firebaseConfigured) {
   try {
     const firebaseConfig = {
       apiKey,
-      // Use our own domain as authDomain so Firebase's __/auth/handler runs
-      // same-origin (proxied by our server).  This avoids iOS ITP wiping
-      // sessionStorage during cross-origin redirects.
-      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'hardisk.co',
+      authDomain: `${projectId}.firebaseapp.com`,
       projectId,
       storageBucket: `${projectId}.firebasestorage.app`,
       appId,
@@ -203,9 +200,10 @@ export async function signInWithGoogle(): Promise<User | null> {
     return null;
   }
 
-  // With authDomain set to our own domain (hardisk.co) and /__/auth/* proxied
-  // to Firebase, signInWithPopup works same-origin on all platforms including
-  // iOS Capacitor — no need for a separate browser-based flow.
+  // iOS native: use a dedicated browser-based helper to avoid the external-browser trap
+  if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
+    return googleSignInViaBrowser();
+  }
 
   // Web / Android: popup with in-app-browser redirect fallback
   try {
