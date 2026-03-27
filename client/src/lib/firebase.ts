@@ -202,53 +202,77 @@ export async function signInWithGoogle(): Promise<User | null> {
 
   // iOS native: use a dedicated browser-based helper to avoid the external-browser trap
   if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
+    console.log("Using custom browser flow for iOS");
     return googleSignInViaBrowser();
   }
 
-  // Web / Android: popup with in-app-browser redirect fallback
+  // Native Android / Web: Always use popup (more reliable than redirect)
+  // IMPORTANT: Avoid redirect flow for Capacitor apps - it opens external browser
+  // and loses connection to the app, resulting in white screen
   try {
-    if (shouldUseWebRedirectFallback()) {
-      await signInWithRedirect(auth, googleProvider);
-      throw new Error("REDIRECT_STARTED");
-    }
-
+    console.log("Using popup flow for sign-in");
     const popupTimeoutMs = import.meta.env.PROD ? 14000 : 20000;
+    
     const popupResult = await Promise.race([
       signInWithPopup(auth, googleProvider),
       new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error("POPUP_TIMEOUT")), popupTimeoutMs);
       }),
     ]);
+    
+    if (!popupResult.user) {
+      throw new Error("No user returned from popup");
+    }
+    
+    console.log("Popup sign-in successful for:", popupResult.user.email);
     return popupResult.user;
-  } catch (error) {
+  } catch (error: any) {
     const err = error as any;
     const code = err?.code || "";
-    const isPopupIssue =
-      err?.message === "POPUP_TIMEOUT" ||
-      code === "auth/popup-blocked" ||
-      code === "auth/popup-closed-by-user" ||
-      code === "auth/cancelled-popup-request" ||
-      code === "auth/operation-not-supported-in-this-environment";
-
-    if (isPopupIssue && !Capacitor.isNativePlatform() && auth) {
-      console.warn("Google popup issue on web — falling back to redirect.", code);
-      await signInWithRedirect(auth, googleProvider);
-      throw new Error("REDIRECT_STARTED");
+    const message = err?.message || "";
+    
+    console.error("Google sign-in error:", { code, message, error });
+    
+    // For any popup issues, log but don't fall back to redirect
+    // Redirect would cause white screen on Capacitor apps
+    if (message === "POPUP_TIMEOUT") {
+      throw new Error("POPUP_TIMEOUT - Sign-in took too long. Please try again.");
+    }
+    
+    if (code === "auth/popup-blocked") {
+      throw new Error("POPUP_BLOCKED - Pop-up was blocked by browser. Please check your browser settings.");
+    }
+    
+    if (code === "auth/popup-closed-by-user" || message.includes("User cancelled")) {
+      throw new Error("User cancelled sign-in");
     }
 
-    console.error("Google sign-in error:", error);
     throw error;
   }
 }
 
 // Handle redirect result (used after signInWithRedirect on web)
 export async function getRedirectAuthResult() {
-  if (!auth) return null;
+  if (!auth) {
+    console.warn("getRedirectAuthResult: auth not initialized");
+    return null;
+  }
   try {
+    console.log("getRedirectAuthResult: Calling getRedirectResult from Firebase...");
     const res = await getRedirectResult(auth);
+    console.log("getRedirectAuthResult: Result returned", { hasUser: !!res?.user, email: res?.user?.email });
+    
+    // Even if res is null, Firebase has updated its internal state
+    // The auth state listener (onAuthStateChanged) will fire if user is logged in
     return res?.user || null;
   } catch (err) {
     console.error("Redirect auth result error:", err);
+    // Log full error details to help debugging
+    if (err instanceof Error) {
+      console.error("  Name:", err.name);
+      console.error("  Message:", err.message);
+      console.error("  Code:", (err as any).code);
+    }
     throw err;
   }
 }

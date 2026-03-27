@@ -36,6 +36,7 @@ const Mining = lazy(() => import("@/pages/Mining").then(m => ({ default: m.Minin
 const Settings = lazy(() => import("@/pages/Settings").then(m => ({ default: m.Settings })));
 const Onboarding = lazy(() => import("@/pages/Onboarding").then(m => ({ default: m.Onboarding })));
 const AuthPage = lazy(() => import("@/pages/AuthPage").then(m => ({ default: m.AuthPage })));
+const AuthRedirect = lazy(() => import("@/pages/AuthRedirect").then(m => ({ default: m.AuthRedirect })));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy").then(m => ({ default: m.PrivacyPolicy })));
 const TermsOfService = lazy(() => import("@/pages/TermsOfService").then(m => ({ default: m.TermsOfService })));
 const Referral = lazy(() => import("@/pages/Referral").then(m => ({ default: m.Referral })));
@@ -568,6 +569,7 @@ function AppRouter() {
     return (
       <Suspense fallback={<PageLoader />}>
       <Switch>
+        <Route path="/auth-redirect" component={AuthRedirect} />
         <Route path="/legal/privacy" component={SafePrivacyPolicy} />
         <Route path="/legal/terms" component={SafeTermsOfService} />
         <Route path="/privacy" component={SafePrivacyPolicy} />
@@ -588,6 +590,7 @@ function AppRouter() {
   return (
     <Suspense fallback={<PageLoader />}>
     <Switch>
+      <Route path="/auth-redirect" component={AuthRedirect} />
       <Route path="/privacy" component={PrivacyPolicy} />
       <Route path="/terms" component={TermsOfService} />
       <Route path="/referral">
