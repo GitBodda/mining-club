@@ -164,26 +164,16 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
         });
         return;
       }
-      if (error?.message?.toLowerCase().includes("missing initial state")) {
-        title = "Google sign-in blocked";
-        message = "The browser blocked session storage. Please try again using the system browser or disable incognito mode.";
-      }
       
-      if (error.message === 'TIMEOUT') {
+      if (error.message?.includes('POPUP_TIMEOUT')) {
         title = "Connection Timeout";
         message = "The sign-in took too long. Please check your connection and try again.";
-      } else if (error.message === 'POPUP_TIMEOUT') {
-        title = "Sign-In Window Delayed";
-        message = "Popup took too long. We are switching to a more reliable login flow.";
-      } else if (error.message === 'NO_USER' || error.message?.includes('cancelled') || error.message?.includes('cancel')) {
+      } else if (error.message?.includes('POPUP_BLOCKED')) {
+        title = "Pop-up Blocked";
+        message = "Please check your browser settings and disable pop-up blockers for this app.";
+      } else if (error.message?.includes('User cancelled')) {
         title = "Sign-In Cancelled";
-        message = "Sign-in was cancelled or failed. Please try again.";
-      } else if (error.code === "auth/popup-closed-by-user") {
-        title = "Sign-In Cancelled";
-        message = "You closed the sign-in window. Please try again.";
-      } else if (error.code === "auth/cancelled-popup-request") {
-        title = "Sign-In Cancelled";
-        message = "Sign-in was cancelled. Please try again.";
+        message = "You cancelled the sign-in process.";
       } else if (error.code === "auth/email-already-in-use") {
         title = "Email Already Registered";
         message = "This email is already in use. Try signing in or use a different email.";
@@ -209,6 +199,7 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
         title = "Weak Password";
         message = "Please choose a stronger password with at least 6 characters.";
       }
+      
       toast({
         title,
         description: message,
