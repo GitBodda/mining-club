@@ -287,7 +287,7 @@ export function SafeAuthPage({ onAuthSuccess, onBack }: SafeAuthPageProps) {
         >
           <div className="text-center mb-1">
             <motion.div 
-              className="w-full h-20 mx-auto mb-1 relative flex items-center justify-center"
+              className="w-full h-52 mx-auto mb-3 relative flex items-center justify-center"
               initial={{ y: -100, scale: 0.5, opacity: 0 }}
               animate={{ y: 0, scale: 1, opacity: 1 }}
               transition={{ 
@@ -300,7 +300,7 @@ export function SafeAuthPage({ onAuthSuccess, onBack }: SafeAuthPageProps) {
               <img
                 src="/attached_assets/App-Logo.png"
                 alt="Node Manager"
-                className="h-8 w-auto object-contain relative z-10"
+                className="h-44 w-auto object-contain relative z-10"
                 style={{
                   filter: 'drop-shadow(0 15px 35px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 15px rgba(16, 185, 129, 0.3)) contrast(1.1) saturate(1.2)',
                   imageRendering: '-webkit-optimize-contrast',
