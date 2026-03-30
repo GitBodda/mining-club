@@ -86,17 +86,51 @@ appleProvider.addScope('name');
  *
  * On web browsers, the popup flow works fine.
  */
+
+/**
+ * Detect if we're running inside a native mobile WebView.
+ * Capacitor.getPlatform() can return 'web' even inside the native app
+ * when using server.url (remote loading), so we check multiple signals.
+ */
+function isNativeWebView(): 'ios' | 'android' | false {
+  // Check Capacitor's own detection first
+  const platform = Capacitor.getPlatform();
+  if (platform === 'ios' || platform === 'android') return platform;
+  if (Capacitor.isNativePlatform()) return detectMobilePlatform();
+
+  // Fallback: check user agent for WebView signatures
+  const ua = navigator.userAgent || '';
+
+  // iOS WKWebView: contains "Mobile" but NOT "Safari", or contains the app's scheme
+  const isIOSWebView = /iPhone|iPad|iPod/.test(ua) && !/Safari/.test(ua);
+  // Also detect Capacitor bridge injection
+  const hasCapBridge = !!(window as any).Capacitor?.isNativePlatform?.();
+
+  // Android WebView: contains "wv" flag or "Version/X.X" pattern
+  const isAndroidWebView = /Android/.test(ua) && (/wv/.test(ua) || /Version\/[\d.]+/.test(ua) && !/Chrome\/[\d.]+ Mobile Safari/.test(ua));
+
+  if (isIOSWebView || (hasCapBridge && /iPhone|iPad|iPod/.test(ua))) return 'ios';
+  if (isAndroidWebView || (hasCapBridge && /Android/.test(ua))) return 'android';
+
+  return false;
+}
+
+function detectMobilePlatform(): 'ios' | 'android' {
+  const ua = navigator.userAgent || '';
+  return /iPhone|iPad|iPod/.test(ua) ? 'ios' : 'android';
+}
+
 export async function signInWithGoogle(): Promise<User | null> {
   if (!auth) {
     console.warn("signInWithGoogle called but Firebase is not configured");
     return null;
   }
 
-  const platform = Capacitor.getPlatform();
-  console.log("Google sign-in on platform:", platform);
+  const nativePlatform = isNativeWebView();
+  console.log("Google sign-in — native platform detected:", nativePlatform, "| Capacitor.getPlatform():", Capacitor.getPlatform());
 
   // ── Native platforms: use system browser flow ──
-  if (platform === 'ios' || platform === 'android') {
+  if (nativePlatform) {
     return signInWithGoogleNative();
   }
 
@@ -143,20 +177,26 @@ export async function signInWithGoogle(): Promise<User | null> {
 /**
  * Native Google Sign-In via system browser + server-mediated OAuth.
  * Opens SFSafariViewController (iOS) or Chrome Custom Tab (Android).
+ * Falls back to window.open() if Capacitor Browser plugin isn't available.
  */
 async function signInWithGoogleNative(): Promise<User | null> {
-  const { Browser } = await import('@capacitor/browser');
-
   // Generate a unique session ID
   const sid = crypto.randomUUID();
-
   console.log('[GoogleNative] Opening system browser for Google sign-in, sid:', sid);
 
-  // Open the server's Google OAuth initiation URL in the system browser
-  await Browser.open({
-    url: `https://hardisk.co/google-auth?sid=${encodeURIComponent(sid)}`,
-    presentationStyle: 'popover',
-  });
+  // Try Capacitor Browser plugin first, fall back to window.open
+  let Browser: any = null;
+  try {
+    const mod = await import('@capacitor/browser');
+    Browser = mod.Browser;
+    await Browser.open({
+      url: `https://hardisk.co/google-auth?sid=${encodeURIComponent(sid)}`,
+      presentationStyle: 'popover',
+    });
+  } catch (e) {
+    console.warn('[GoogleNative] Capacitor Browser plugin failed, falling back to window.open:', e);
+    window.open(`https://hardisk.co/google-auth?sid=${encodeURIComponent(sid)}`, '_blank');
+  }
 
   // Poll the server for the auth result
   const POLL_INTERVAL = 2000;  // 2 seconds
@@ -181,7 +221,7 @@ async function signInWithGoogleNative(): Promise<User | null> {
 
         if (data.ready && data.customToken) {
           cleanup();
-          try { await Browser.close(); } catch (_) { /* browser may already be closed */ }
+          try { if (Browser) await Browser.close(); } catch (_) { /* browser may already be closed */ }
           console.log('[GoogleNative] Got custom token, signing in to Firebase...');
           const userCred = await signInWithCustomToken(auth!, data.customToken);
           console.log('[GoogleNative] Firebase sign-in successful:', userCred.user.email);
@@ -202,26 +242,25 @@ async function signInWithGoogleNative(): Promise<User | null> {
     // Start polling
     pollTimer = setInterval(checkResult, POLL_INTERVAL);
 
-    // Also listen for browser close (user tapped "Done")
-    Browser.addListener('browserFinished', async () => {
-      console.log('[GoogleNative] Browser closed by user');
-      // Give the server a moment to process the callback
-      await new Promise(r => setTimeout(r, 1500));
-      // Do one final check
-      try {
-        const res = await fetch(`/api/auth/google/result/${encodeURIComponent(sid)}`);
-        const data = await res.json();
-        if (data.ready && data.customToken) {
-          cleanup();
-          const userCred = await signInWithCustomToken(auth!, data.customToken);
-          resolve(userCred.user);
-          return;
-        }
-      } catch (_) {}
-      // If no result after browser closed, user likely cancelled
-      cleanup();
-      reject(new Error("User cancelled sign-in"));
-    }).then(listener => { browserFinishedListener = Promise.resolve(listener); });
+    // Also listen for browser close (user tapped "Done") — only if Capacitor Browser is available
+    if (Browser) {
+      Browser.addListener('browserFinished', async () => {
+        console.log('[GoogleNative] Browser closed by user');
+        await new Promise(r => setTimeout(r, 1500));
+        try {
+          const res = await fetch(`/api/auth/google/result/${encodeURIComponent(sid)}`);
+          const data = await res.json();
+          if (data.ready && data.customToken) {
+            cleanup();
+            const userCred = await signInWithCustomToken(auth!, data.customToken);
+            resolve(userCred.user);
+            return;
+          }
+        } catch (_) {}
+        cleanup();
+        reject(new Error("User cancelled sign-in"));
+      }).then((listener: any) => { browserFinishedListener = Promise.resolve(listener); });
+    }
   });
 }
 
@@ -259,8 +298,11 @@ export async function signInWithApple() {
       return null;
     }
     
-    // Check if we're on native iOS
-    if (Capacitor.getPlatform() === 'ios') {
+    const nativePlatform = isNativeWebView();
+    console.log('[AppleAuth] Native platform detected:', nativePlatform, '| Capacitor.getPlatform():', Capacitor.getPlatform());
+
+    // Check if we're on native iOS — use native Apple Sign-In plugin
+    if (nativePlatform === 'ios') {
       const startTotal = Date.now();
       console.log('[AppleAuth] Starting native iOS Sign in with Apple...');
       
@@ -333,7 +375,7 @@ export async function signInWithApple() {
       }
       
       return firebaseResult.user;
-    } else if (Capacitor.getPlatform() === 'android') {
+    } else if (nativePlatform === 'android') {
       // Android: use system browser flow (WebView blocks Apple OAuth too)
       console.log('[AppleAuth] Using system browser flow for Android...');
       return signInWithAppleNative();
@@ -360,15 +402,22 @@ export async function signInWithApple() {
  */
 async function signInWithAppleNative(): Promise<User | null> {
   if (!auth) return null;
-  const { Browser } = await import('@capacitor/browser');
 
   const sid = crypto.randomUUID();
   console.log('[AppleNative] Opening system browser for Apple sign-in, sid:', sid);
 
-  await Browser.open({
-    url: `https://hardisk.co/apple-auth?sid=${encodeURIComponent(sid)}`,
-    presentationStyle: 'popover',
-  });
+  let Browser: any = null;
+  try {
+    const mod = await import('@capacitor/browser');
+    Browser = mod.Browser;
+    await Browser.open({
+      url: `https://hardisk.co/apple-auth?sid=${encodeURIComponent(sid)}`,
+      presentationStyle: 'popover',
+    });
+  } catch (e) {
+    console.warn('[AppleNative] Capacitor Browser plugin failed, falling back to window.open:', e);
+    window.open(`https://hardisk.co/apple-auth?sid=${encodeURIComponent(sid)}`, '_blank');
+  }
 
   const POLL_INTERVAL = 2000;
   const POLL_TIMEOUT = 120000;
@@ -392,7 +441,7 @@ async function signInWithAppleNative(): Promise<User | null> {
 
         if (data.ready && data.customToken) {
           cleanup();
-          try { await Browser.close(); } catch (_) {}
+          try { if (Browser) await Browser.close(); } catch (_) {}
           console.log('[AppleNative] Got custom token, signing in to Firebase...');
           const userCred = await signInWithCustomToken(auth!, data.customToken);
           console.log('[AppleNative] Firebase sign-in successful:', userCred.user.email);
@@ -411,22 +460,24 @@ async function signInWithAppleNative(): Promise<User | null> {
 
     pollTimer = setInterval(checkResult, POLL_INTERVAL);
 
-    Browser.addListener('browserFinished', async () => {
-      console.log('[AppleNative] Browser closed by user');
-      await new Promise(r => setTimeout(r, 1500));
-      try {
-        const res = await fetch(`/api/auth/apple/result/${encodeURIComponent(sid)}`);
-        const data = await res.json();
-        if (data.ready && data.customToken) {
-          cleanup();
-          const userCred = await signInWithCustomToken(auth!, data.customToken);
-          resolve(userCred.user);
-          return;
-        }
-      } catch (_) {}
-      cleanup();
-      reject(new Error("User cancelled Apple Sign-In"));
-    }).then(listener => { browserFinishedListener = Promise.resolve(listener); });
+    if (Browser) {
+      Browser.addListener('browserFinished', async () => {
+        console.log('[AppleNative] Browser closed by user');
+        await new Promise(r => setTimeout(r, 1500));
+        try {
+          const res = await fetch(`/api/auth/apple/result/${encodeURIComponent(sid)}`);
+          const data = await res.json();
+          if (data.ready && data.customToken) {
+            cleanup();
+            const userCred = await signInWithCustomToken(auth!, data.customToken);
+            resolve(userCred.user);
+            return;
+          }
+        } catch (_) {}
+        cleanup();
+        reject(new Error("User cancelled Apple Sign-In"));
+      }).then((listener: any) => { browserFinishedListener = Promise.resolve(listener); });
+    }
   });
 }
 
