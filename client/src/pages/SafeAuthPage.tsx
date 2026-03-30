@@ -85,7 +85,7 @@ export function SafeAuthPage({ onAuthSuccess, onBack }: SafeAuthPageProps) {
     setIsLoading(true);
     try {
       const authFn = provider === 'apple' ? signInWithApple : signInWithGoogle;
-      const user = await withTimeout(authFn(), 30000);
+      const user = await withTimeout(authFn(), 150000);
       
       if (!user) {
         throw new Error('NO_USER');

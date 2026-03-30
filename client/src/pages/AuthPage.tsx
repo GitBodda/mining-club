@@ -140,7 +140,8 @@ export function AuthPage({ mode, onBack, onModeChange, onComplete }: AuthPagePro
     setIsLoading(true);
     try {
       const authFn = provider === 'apple' ? signInWithApple : signInWithGoogle;
-      const socialTimeoutMs = provider === 'google' ? 45000 : 90000;
+      // Native browser flow needs longer timeout (user interacts in system browser)
+      const socialTimeoutMs = 150000;
       const user = await withTimeout(authFn(), socialTimeoutMs);
       
       if (!user) {
