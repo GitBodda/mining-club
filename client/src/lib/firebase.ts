@@ -5,6 +5,7 @@ import {
   getAuth,
   signInWithPopup,
   signInWithCredential,
+  signInWithCustomToken,
   getRedirectResult,
   GoogleAuthProvider,
   OAuthProvider,
@@ -74,16 +75,16 @@ appleProvider.addScope('email');
 appleProvider.addScope('name');
 
 /**
- * Google Sign-In — unified popup flow for ALL platforms.
+ * Google Sign-In — uses system browser on native, popup on web.
  *
- * Why popup everywhere?
- * - The Capacitor app loads web content from https://hardisk.co via `server.url`.
- *   This means the WebView has a full browser context where signInWithPopup works
- *   correctly (window.opener is available within the WebView).
- * - The old browser-redirect flow opened the SYSTEM browser, which caused the
- *   infamous white-page bug because the redirect chain
- *   (hardisk.co → Google → firebaseapp.com → hardisk.co) lost session state.
- * - signInWithPopup keeps everything inside the WebView ➜ no white page.
+ * On native Capacitor (iOS/Android), Google blocks OAuth from embedded WebViews
+ * (WKWebView / Android WebView) with "disallowed_useragent". To fix this:
+ *   1. Open the OAuth flow in the system browser (SFSafariViewController / Chrome Custom Tab)
+ *      via @capacitor/browser — Google allows these.
+ *   2. Server handles the OAuth exchange and creates a Firebase custom token.
+ *   3. App polls for the custom token and uses signInWithCustomToken.
+ *
+ * On web browsers, the popup flow works fine.
  */
 export async function signInWithGoogle(): Promise<User | null> {
   if (!auth) {
@@ -91,9 +92,17 @@ export async function signInWithGoogle(): Promise<User | null> {
     return null;
   }
 
+  const platform = Capacitor.getPlatform();
+  console.log("Google sign-in on platform:", platform);
+
+  // ── Native platforms: use system browser flow ──
+  if (platform === 'ios' || platform === 'android') {
+    return signInWithGoogleNative();
+  }
+
+  // ── Web: use popup flow ──
   try {
-    console.log("Using popup flow for Google sign-in on platform:", Capacitor.getPlatform());
-    const popupTimeoutMs = 45000; // 45s — generous for slow connections
+    const popupTimeoutMs = 45000;
 
     const popupResult = await Promise.race([
       signInWithPopup(auth, googleProvider),
@@ -129,6 +138,91 @@ export async function signInWithGoogle(): Promise<User | null> {
 
     throw error;
   }
+}
+
+/**
+ * Native Google Sign-In via system browser + server-mediated OAuth.
+ * Opens SFSafariViewController (iOS) or Chrome Custom Tab (Android).
+ */
+async function signInWithGoogleNative(): Promise<User | null> {
+  const { Browser } = await import('@capacitor/browser');
+
+  // Generate a unique session ID
+  const sid = crypto.randomUUID();
+
+  console.log('[GoogleNative] Opening system browser for Google sign-in, sid:', sid);
+
+  // Open the server's Google OAuth initiation URL in the system browser
+  await Browser.open({
+    url: `https://hardisk.co/google-auth?sid=${encodeURIComponent(sid)}`,
+    presentationStyle: 'popover',
+  });
+
+  // Poll the server for the auth result
+  const POLL_INTERVAL = 2000;  // 2 seconds
+  const POLL_TIMEOUT = 120000; // 2 minutes max
+  const startTime = Date.now();
+
+  return new Promise<User | null>((resolve, reject) => {
+    let pollTimer: ReturnType<typeof setInterval>;
+    let browserFinishedListener: any;
+
+    const cleanup = () => {
+      clearInterval(pollTimer);
+      if (browserFinishedListener) {
+        browserFinishedListener.then?.((l: any) => l.remove?.());
+      }
+    };
+
+    const checkResult = async () => {
+      try {
+        const res = await fetch(`/api/auth/google/result/${encodeURIComponent(sid)}`);
+        const data = await res.json();
+
+        if (data.ready && data.customToken) {
+          cleanup();
+          try { await Browser.close(); } catch (_) { /* browser may already be closed */ }
+          console.log('[GoogleNative] Got custom token, signing in to Firebase...');
+          const userCred = await signInWithCustomToken(auth!, data.customToken);
+          console.log('[GoogleNative] Firebase sign-in successful:', userCred.user.email);
+          resolve(userCred.user);
+          return;
+        }
+
+        // Check timeout
+        if (Date.now() - startTime > POLL_TIMEOUT) {
+          cleanup();
+          reject(new Error("POPUP_TIMEOUT - Sign-in took too long. Please try again."));
+        }
+      } catch (err) {
+        console.warn('[GoogleNative] Poll error (will retry):', err);
+      }
+    };
+
+    // Start polling
+    pollTimer = setInterval(checkResult, POLL_INTERVAL);
+
+    // Also listen for browser close (user tapped "Done")
+    Browser.addListener('browserFinished', async () => {
+      console.log('[GoogleNative] Browser closed by user');
+      // Give the server a moment to process the callback
+      await new Promise(r => setTimeout(r, 1500));
+      // Do one final check
+      try {
+        const res = await fetch(`/api/auth/google/result/${encodeURIComponent(sid)}`);
+        const data = await res.json();
+        if (data.ready && data.customToken) {
+          cleanup();
+          const userCred = await signInWithCustomToken(auth!, data.customToken);
+          resolve(userCred.user);
+          return;
+        }
+      } catch (_) {}
+      // If no result after browser closed, user likely cancelled
+      cleanup();
+      reject(new Error("User cancelled sign-in"));
+    }).then(listener => { browserFinishedListener = Promise.resolve(listener); });
+  });
 }
 
 // Handle redirect result (used after signInWithRedirect on web)
@@ -239,8 +333,12 @@ export async function signInWithApple() {
       }
       
       return firebaseResult.user;
+    } else if (Capacitor.getPlatform() === 'android') {
+      // Android: use system browser flow (WebView blocks Apple OAuth too)
+      console.log('[AppleAuth] Using system browser flow for Android...');
+      return signInWithAppleNative();
     } else {
-      // Use Firebase popup for web/Android
+      // Use Firebase popup for web
       console.log('[AppleAuth] Using web popup for Apple Sign-In...');
       const result = await signInWithPopup(auth, appleProvider);
       return result.user;
@@ -254,6 +352,82 @@ export async function signInWithApple() {
     }
     throw error;
   }
+}
+
+/**
+ * Native Apple Sign-In via system browser (for Android).
+ * Same pattern as signInWithGoogleNative but for Apple provider.
+ */
+async function signInWithAppleNative(): Promise<User | null> {
+  if (!auth) return null;
+  const { Browser } = await import('@capacitor/browser');
+
+  const sid = crypto.randomUUID();
+  console.log('[AppleNative] Opening system browser for Apple sign-in, sid:', sid);
+
+  await Browser.open({
+    url: `https://hardisk.co/apple-auth?sid=${encodeURIComponent(sid)}`,
+    presentationStyle: 'popover',
+  });
+
+  const POLL_INTERVAL = 2000;
+  const POLL_TIMEOUT = 120000;
+  const startTime = Date.now();
+
+  return new Promise<User | null>((resolve, reject) => {
+    let pollTimer: ReturnType<typeof setInterval>;
+    let browserFinishedListener: any;
+
+    const cleanup = () => {
+      clearInterval(pollTimer);
+      if (browserFinishedListener) {
+        browserFinishedListener.then?.((l: any) => l.remove?.());
+      }
+    };
+
+    const checkResult = async () => {
+      try {
+        const res = await fetch(`/api/auth/apple/result/${encodeURIComponent(sid)}`);
+        const data = await res.json();
+
+        if (data.ready && data.customToken) {
+          cleanup();
+          try { await Browser.close(); } catch (_) {}
+          console.log('[AppleNative] Got custom token, signing in to Firebase...');
+          const userCred = await signInWithCustomToken(auth!, data.customToken);
+          console.log('[AppleNative] Firebase sign-in successful:', userCred.user.email);
+          resolve(userCred.user);
+          return;
+        }
+
+        if (Date.now() - startTime > POLL_TIMEOUT) {
+          cleanup();
+          reject(new Error("POPUP_TIMEOUT - Sign-in took too long. Please try again."));
+        }
+      } catch (err) {
+        console.warn('[AppleNative] Poll error (will retry):', err);
+      }
+    };
+
+    pollTimer = setInterval(checkResult, POLL_INTERVAL);
+
+    Browser.addListener('browserFinished', async () => {
+      console.log('[AppleNative] Browser closed by user');
+      await new Promise(r => setTimeout(r, 1500));
+      try {
+        const res = await fetch(`/api/auth/apple/result/${encodeURIComponent(sid)}`);
+        const data = await res.json();
+        if (data.ready && data.customToken) {
+          cleanup();
+          const userCred = await signInWithCustomToken(auth!, data.customToken);
+          resolve(userCred.user);
+          return;
+        }
+      } catch (_) {}
+      cleanup();
+      reject(new Error("User cancelled Apple Sign-In"));
+    }).then(listener => { browserFinishedListener = Promise.resolve(listener); });
+  });
 }
 
 // Sign in with email/password

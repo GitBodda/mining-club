@@ -2293,6 +2293,169 @@ You can return to the app.</p></div></body></html>`);
     return res.json({ ready: true, customToken: entry.customToken });
   });
 
+  // ── Apple Sign-In via Browser (Android Capacitor) ───────────────────────────
+  // Same pattern as Google: open system browser → server exchanges token → poll for result.
+  const APPLE_AUTH_CALLBACK = 'https://hardisk.co/apple-auth';
+
+  app.get("/apple-auth", async (req: any, res: any) => {
+    const appSid = (req.query.sid as string) || null;
+
+    // ── Case A: fresh request from the Android app ──
+    if (appSid) {
+      try {
+        const createAuthRes = await fetch(
+          `https://identitytoolkit.googleapis.com/v1/accounts:createAuthUri?key=${FIREBASE_API_KEY}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ providerId: 'apple.com', continueUri: APPLE_AUTH_CALLBACK }),
+          }
+        );
+        const createAuthData: any = await createAuthRes.json();
+        if (!createAuthData.authUri) throw new Error('Firebase createAuthUri returned no authUri for Apple');
+
+        googleOAuthPending.set(`apple_${appSid}`, { firebaseSessionId: createAuthData.sessionId, ts: Date.now() });
+        res.setHeader('Set-Cookie', `aauth_sid=${appSid}; Path=/; SameSite=Lax; Secure; Max-Age=600; HttpOnly`);
+        return res.redirect(302, createAuthData.authUri);
+      } catch (err) {
+        console.error('[apple-auth] initiation error:', err);
+        return res.status(500).type('html').send(
+          `<p style="font-family:sans-serif;color:#f87171;padding:2rem">
+           Apple Sign-in setup failed:<br>${err instanceof Error ? err.message : String(err)}<br>
+           Please go back to the app and try again.</p>`
+        );
+      }
+    }
+
+    // ── Case B: callback from Apple (id_token in URL hash or POST body) ──
+    const callbackHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Completing sign-in…</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,sans-serif;background:#0a0a0f;color:#fff;
+         display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1.5rem}
+    .card{text-align:center;max-width:340px;width:100%}
+    .logo{font-size:2.5rem;margin-bottom:1rem}
+    h2{font-size:1.25rem;margin-bottom:.5rem}
+    p{color:rgba(255,255,255,.55);font-size:.875rem;line-height:1.5}
+    .spin{width:40px;height:40px;border:3px solid rgba(255,255,255,.1);border-top-color:#10b981;
+          border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1.2rem}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .err{color:#f87171!important}
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">₿</div>
+  <div class="spin" id="spin"></div>
+  <h2 id="title">Completing sign-in…</h2>
+  <p id="sub">Please wait</p>
+</div>
+<script>
+  function ui(title, sub, isErr) {
+    document.getElementById('title').textContent = title;
+    var subEl = document.getElementById('sub');
+    subEl.textContent = sub || '';
+    if (isErr) {
+      document.getElementById('spin').style.display = 'none';
+      subEl.className = 'err';
+    }
+  }
+  (async function () {
+    try {
+      var hash = new URLSearchParams(location.hash.slice(1));
+      var idToken = hash.get('id_token');
+      if (!idToken) {
+        ui('Nothing to complete', 'Please start sign-in from the app.', true);
+        return;
+      }
+      ui('Almost done\\u2026', 'Securing your account');
+      var r = await fetch('/api/auth/apple/exchange', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ idToken: idToken })
+      });
+      var data = await r.json();
+      if (!r.ok || !data.ok) throw new Error(data.error || 'Exchange failed');
+      ui('\\u2713 Signed in!', 'Returning to app\\u2026');
+      setTimeout(function () { location.href = '/auth-complete'; }, 500);
+    } catch (e) {
+      ui('Sign-in failed', (e && e.message) ? e.message : 'Please go back and try again.', true);
+    }
+  })();
+</script>
+</body>
+</html>`;
+    res.type("html").send(callbackHtml);
+  });
+
+  // Exchange Apple id_token → Firebase custom token
+  app.post("/api/auth/apple/exchange", async (req: any, res: any) => {
+    const { idToken: appleIdToken } = req.body || {};
+    if (!appleIdToken) return res.status(400).json({ error: 'Missing idToken' });
+
+    const cookieHeader = (req.headers.cookie as string) || '';
+    const sidCookie = cookieHeader.split(';').find((c: string) => c.trim().startsWith('aauth_sid='));
+    const appSid = sidCookie ? sidCookie.trim().slice('aauth_sid='.length).trim() : null;
+    if (!appSid) {
+      return res.status(400).json({ error: 'Auth session cookie missing — please try again' });
+    }
+
+    const pending = googleOAuthPending.get(`apple_${appSid}`);
+    if (!pending) {
+      return res.status(400).json({ error: 'Auth session expired or not found — please try again' });
+    }
+    googleOAuthPending.delete(`apple_${appSid}`);
+
+    try {
+      const idpRes = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${FIREBASE_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            postBody: `id_token=${appleIdToken}&providerId=apple.com`,
+            requestUri: APPLE_AUTH_CALLBACK,
+            returnSecureToken: true,
+            sessionId: pending.firebaseSessionId,
+          }),
+        }
+      );
+      const idpData: any = await idpRes.json();
+      if (idpData.error) throw new Error(idpData.error.message || 'Apple token exchange failed');
+
+      const uid = idpData.localId;
+      if (!uid) throw new Error('No UID returned from identity provider');
+
+      const { createCustomToken } = await import('./firebase-admin');
+      const customToken = await createCustomToken(uid);
+      googleAuthSessions.set(`apple_${appSid}`, { customToken, ts: Date.now() });
+
+      return res.json({ ok: true });
+    } catch (err) {
+      console.error('[apple/exchange] error:', err);
+      return res.status(500).json({ error: err instanceof Error ? err.message : 'Exchange failed' });
+    }
+  });
+
+  // Android helper: poll for Apple custom token
+  app.get("/api/auth/apple/result/:sid", (req, res) => {
+    const key = `apple_${req.params.sid}`;
+    const entry = googleAuthSessions.get(key);
+    if (!entry) return res.json({ ready: false });
+    if (Date.now() - entry.ts > GOOGLE_SESSION_TTL) {
+      googleAuthSessions.delete(key);
+      return res.status(410).json({ error: "Session expired, please try again" });
+    }
+    googleAuthSessions.delete(key);
+    return res.json({ ready: true, customToken: entry.customToken });
+  });
+
   // Sync Firebase user into database so admin can manage
   app.post("/api/auth/sync", async (req, res) => {
     try {
