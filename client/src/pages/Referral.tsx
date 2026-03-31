@@ -80,7 +80,7 @@ export function Referral({ userId }: ReferralProps) {
   });
 
   const referralCode = codeData?.code || "Loading...";
-  const publicBaseUrl = import.meta.env.VITE_PUBLIC_APP_URL || "https://blockmint.app";
+  const publicBaseUrl = import.meta.env.VITE_PUBLIC_APP_URL || "https://hardisk.co";
   const referralLink = codeData?.code
     ? `${publicBaseUrl}/r/${codeData.code}`
     : "";

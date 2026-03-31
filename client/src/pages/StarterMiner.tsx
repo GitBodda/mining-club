@@ -5,32 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import { GlassCard } from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { LiveGrowingBalance } from "@/components/LiveGrowingBalance";
-import { Browser } from '@capacitor/browser';
+import { auth } from "@/lib/firebase";
 
 function getUserId() {
   try {
     const u = JSON.parse(localStorage.getItem("user") || "{}");
-    return u.dbId || u.id || null;
+    return u.dbId || u.id || u.uid || null;
   } catch { return null; }
-}
-
-async function getToken(): Promise<string | null> {
-  try {
-    const { getAuth } = await import("firebase/auth");
-    const user = getAuth().currentUser;
-    return user ? user.getIdToken() : null;
-  } catch { return null; }
-}
-
-async function loginWithPopup(): Promise<string | null> {
-  try {
-    await Browser.open({ url: 'https://your-auth-url.com' });
-    // Handle redirect and token retrieval here
-    return 'token'; // Replace with actual token logic
-  } catch (error) {
-    console.error('Login failed', error);
-    return null;
-  }
 }
 
 function daysRemaining(expiresAt: string | null): number {
@@ -56,14 +37,25 @@ export function StarterMiner({ onBack }: StarterMinerProps) {
     queryKey: ["/api/growth/starter-reward", userId],
     queryFn: async () => {
       if (!userId) return null;
-      const token = await getToken();
+      let token: string | null = null;
+      try {
+        const user = auth?.currentUser;
+        if (user) token = await user.getIdToken();
+      } catch (e) {
+        console.warn("[StarterMiner] Failed to get auth token:", e);
+      }
       const res = await fetch(`/api/growth/starter-reward/${userId}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      return res.ok ? res.json() : null;
+      if (!res.ok) {
+        console.error("[StarterMiner] Fetch failed:", res.status);
+        throw new Error(`Starter reward fetch failed: ${res.status}`);
+      }
+      return res.json();
     },
     enabled: !!userId,
     staleTime: 30_000,
+    retry: 2,
   });
 
   const reward = data?.reward;

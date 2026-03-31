@@ -34,13 +34,17 @@ export function StarterMinerCard({ starterReward, onViewDetails }: StarterMinerC
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative rounded-2xl p-5 bg-gradient-to-br from-orange-900/30 via-amber-900/10 to-transparent border border-orange-500/20 overflow-hidden"
+        className="relative rounded-2xl p-4 bg-gradient-to-br from-orange-900/30 via-amber-900/10 to-transparent border border-orange-500/20 overflow-hidden"
       >
         <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent pointer-events-none" />
-        <div className="relative z-10 text-center py-4">
-          <Zap className="w-10 h-10 text-orange-400/50 mx-auto mb-3" />
-          <p className="text-sm font-semibold text-muted-foreground">Starter miner loading…</p>
-          <p className="text-xs text-muted-foreground/60 mt-1">Your free miner is being activated.</p>
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500/30 to-amber-400/20 flex items-center justify-center shrink-0">
+            <Zap className="w-5 h-5 text-orange-400/60" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-muted-foreground">Free Starter Miner</p>
+            <p className="text-xs text-muted-foreground/60">No starter miner yet — sign up to get yours!</p>
+          </div>
         </div>
       </motion.div>
     );
@@ -63,19 +67,19 @@ export function StarterMinerCard({ starterReward, onViewDetails }: StarterMinerC
       <div className="absolute -top-6 -right-6 w-24 h-24 bg-orange-500/20 rounded-full blur-2xl" />
       <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-amber-400/10 rounded-full blur-xl" />
 
-      <div className="relative z-10 p-5">
+      <div className="relative z-10 p-4">
         {/* Header */}
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center shadow-lg">
-              <Zap className="w-5 h-5 text-white" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center shadow-lg">
+              <Zap className="w-4 h-4 text-white" />
             </div>
             <div>
               <p className="font-bold text-sm">Free Starter Miner</p>
               <p className="text-xs text-muted-foreground">Auto-activated on signup</p>
             </div>
           </div>
-          <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
             isActive
               ? "bg-green-500/20 text-green-400 border border-green-500/30"
               : "bg-white/10 text-muted-foreground"
@@ -85,7 +89,7 @@ export function StarterMinerCard({ starterReward, onViewDetails }: StarterMinerC
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="grid grid-cols-3 gap-2 mb-3">
           <StatBox
             label="Hashrate"
             value={`${starterReward.hashrate} ${starterReward.hashrateUnit}`}
@@ -104,8 +108,8 @@ export function StarterMinerCard({ starterReward, onViewDetails }: StarterMinerC
         </div>
 
         {/* Progress bar */}
-        <div className="mb-4">
-          <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
+        <div className="mb-3">
+          <div className="flex justify-between text-xs text-muted-foreground mb-1">
             <span>Mining progress</span>
             <span>{pct}%</span>
           </div>

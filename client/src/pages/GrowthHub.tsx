@@ -10,14 +10,14 @@ import { GlassCard } from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { StarterMinerCard } from "@/components/StarterMinerCard";
-import { Browser } from '@capacitor/browser';
+import { auth } from "@/lib/firebase";
 
-const PUBLIC_URL = import.meta.env.VITE_PUBLIC_APP_URL || "https://blockmint.app";
+const PUBLIC_URL = import.meta.env.VITE_PUBLIC_APP_URL || "https://hardisk.co";
 
 function getUserId() {
   try {
     const u = JSON.parse(localStorage.getItem("user") || "{}");
-    return u.dbId || u.id || null;
+    return u.dbId || u.id || u.uid || null;
   } catch {
     return null;
   }
@@ -37,14 +37,25 @@ export function GrowthHub({ onBack }: GrowthHubProps) {
     queryKey: ["/api/growth/profile", userId],
     queryFn: async () => {
       if (!userId) return null;
-      const token = await getToken();
+      let token: string | null = null;
+      try {
+        const user = auth?.currentUser;
+        if (user) token = await user.getIdToken();
+      } catch (e) {
+        console.warn("[GrowthHub] Failed to get auth token:", e);
+      }
       const res = await fetch(`/api/growth/profile/${userId}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      return res.ok ? res.json() : null;
+      if (!res.ok) {
+        console.error("[GrowthHub] Profile fetch failed:", res.status, await res.text().catch(() => ""));
+        throw new Error(`Profile fetch failed: ${res.status}`);
+      }
+      return res.json();
     },
     enabled: !!userId,
     staleTime: 60_000,
+    retry: 2,
   });
 
   const referralCode = profile?.referral?.referralCode ?? "";
@@ -120,21 +131,20 @@ export function GrowthHub({ onBack }: GrowthHubProps) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-orange-600/20 via-amber-500/10 to-transparent border border-orange-500/20 p-6"
+          className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-orange-600/20 via-amber-500/10 to-transparent border border-orange-500/20 px-5 py-4"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-purple-500/5 pointer-events-none" />
           <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-2">
-              <Zap className="w-5 h-5 text-orange-400" />
-              <span className="text-sm font-semibold text-orange-400 uppercase tracking-wider">Growth Hub</span>
+            <div className="flex items-center gap-2 mb-1">
+              <Zap className="w-4 h-4 text-orange-400" />
+              <span className="text-xs font-semibold text-orange-400 uppercase tracking-wider">Growth Hub</span>
             </div>
-            <h2 className="text-2xl font-bold mb-1">Mine. Share. Grow.</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-xl font-bold mb-0.5">Mine. Share. Grow.</h2>
+            <p className="text-xs text-muted-foreground">
               Your free miner is live. Invite friends, earn rewards, and secure your founder spot.
             </p>
           </div>
-          {/* Decorative glow */}
-          <div className="absolute -top-8 -right-8 w-32 h-32 bg-orange-500/20 rounded-full blur-2xl" />
+          <div className="absolute -top-6 -right-6 w-24 h-24 bg-orange-500/20 rounded-full blur-2xl" />
         </motion.div>
 
         {/* Starter miner card */}
@@ -262,27 +272,4 @@ function BadgeChip({ slug, name }: { slug: string; name: string }) {
       <span>{name}</span>
     </div>
   );
-}
-
-// Utility to get Firebase token
-async function getToken(): Promise<string | null> {
-  try {
-    const { getAuth } = await import("firebase/auth");
-    const user = getAuth().currentUser;
-    return user ? user.getIdToken() : null;
-  } catch {
-    return null;
-  }
-}
-
-// Function to handle login using Capacitor Browser Plugin
-async function loginWithPopup(): Promise<string | null> {
-  try {
-    await Browser.open({ url: 'https://your-auth-url.com' });
-    // Handle redirect and token retrieval here
-    return 'token'; // Replace with actual token logic
-  } catch (error) {
-    console.error('Login failed', error);
-    return null;
-  }
 }
