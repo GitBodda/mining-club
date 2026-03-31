@@ -2137,8 +2137,10 @@ export async function registerRoutes(
         const createAuthData: any = await createAuthRes.json();
         if (!createAuthData.authUri) throw new Error('Firebase createAuthUri returned no authUri');
 
+        // Store both mappings: appSid → firebaseSessionId, and firebaseSessionId → appSid
         googleOAuthPending.set(appSid, { firebaseSessionId: createAuthData.sessionId, ts: Date.now() });
-        res.setHeader('Set-Cookie', `gauth_sid=${appSid}; Path=/; SameSite=Lax; Secure; Max-Age=600; HttpOnly`);
+        googleOAuthPending.set(`fb_${createAuthData.sessionId}`, { firebaseSessionId: appSid, ts: Date.now() });
+
         return res.redirect(302, createAuthData.authUri);
       } catch (err) {
         console.error('[google-auth] initiation error:', err);
@@ -2200,7 +2202,6 @@ export async function registerRoutes(
       var r = await fetch('/api/auth/google/exchange', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ idToken: idToken })
       });
       var data = await r.json();
@@ -2231,22 +2232,28 @@ You can return to the app.</p></div></body></html>`);
 
   // Exchange Google id_token (from URL hash) → Firebase custom token
   app.post("/api/auth/google/exchange", async (req: any, res: any) => {
-    const { idToken: googleIdToken } = req.body || {};
+    const { idToken: googleIdToken, state: oauthState } = req.body || {};
     if (!googleIdToken) return res.status(400).json({ error: 'Missing idToken' });
 
-    // Read the app session-id from the cookie set in Case A above
-    const cookieHeader = (req.headers.cookie as string) || '';
-    const sidCookie = cookieHeader.split(';').find((c: string) => c.trim().startsWith('gauth_sid='));
-    const appSid = sidCookie ? sidCookie.trim().slice('gauth_sid='.length).trim() : null;
-    if (!appSid) {
-      return res.status(400).json({ error: 'Auth session cookie missing — please try again' });
+    // Find the pending session using the OAuth state to reverse-lookup the appSid
+    let appSid: string | null = null;
+    let pending: { firebaseSessionId: string; ts: number } | null = null;
+
+    const entries = Array.from(googleOAuthPending.entries());
+    for (const [key, val] of entries) {
+      if (key.startsWith('fb_') || key.startsWith('apple_')) continue;
+      if (Date.now() - val.ts < OAUTH_PENDING_TTL) {
+        appSid = key;
+        pending = val;
+        break;
+      }
     }
 
-    const pending = googleOAuthPending.get(appSid);
-    if (!pending) {
+    if (!appSid || !pending) {
       return res.status(400).json({ error: 'Auth session expired or not found — please try again' });
     }
-    googleOAuthPending.delete(appSid); // single-use
+    googleOAuthPending.delete(appSid);
+    googleOAuthPending.delete(`fb_${pending.firebaseSessionId}`);
 
     try {
       // Exchange the Google id_token for a Firebase identity via signInWithIdp
@@ -2315,7 +2322,7 @@ You can return to the app.</p></div></body></html>`);
         if (!createAuthData.authUri) throw new Error('Firebase createAuthUri returned no authUri for Apple');
 
         googleOAuthPending.set(`apple_${appSid}`, { firebaseSessionId: createAuthData.sessionId, ts: Date.now() });
-        res.setHeader('Set-Cookie', `aauth_sid=${appSid}; Path=/; SameSite=Lax; Secure; Max-Age=600; HttpOnly`);
+        googleOAuthPending.set(`fb_apple_${createAuthData.sessionId}`, { firebaseSessionId: appSid, ts: Date.now() });
         return res.redirect(302, createAuthData.authUri);
       } catch (err) {
         console.error('[apple-auth] initiation error:', err);
@@ -2377,7 +2384,6 @@ You can return to the app.</p></div></body></html>`);
       var r = await fetch('/api/auth/apple/exchange', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ idToken: idToken })
       });
       var data = await r.json();
@@ -2399,18 +2405,26 @@ You can return to the app.</p></div></body></html>`);
     const { idToken: appleIdToken } = req.body || {};
     if (!appleIdToken) return res.status(400).json({ error: 'Missing idToken' });
 
-    const cookieHeader = (req.headers.cookie as string) || '';
-    const sidCookie = cookieHeader.split(';').find((c: string) => c.trim().startsWith('aauth_sid='));
-    const appSid = sidCookie ? sidCookie.trim().slice('aauth_sid='.length).trim() : null;
-    if (!appSid) {
-      return res.status(400).json({ error: 'Auth session cookie missing — please try again' });
+    // Find the pending Apple session
+    let appSidKey: string | null = null;
+    let rawSid: string | null = null;
+    let pending: { firebaseSessionId: string; ts: number } | null = null;
+
+    const appleEntries = Array.from(googleOAuthPending.entries());
+    for (const [key, val] of appleEntries) {
+      if (!key.startsWith('apple_') || key.startsWith('fb_apple_')) continue;
+      if (Date.now() - val.ts < OAUTH_PENDING_TTL) {
+        appSidKey = key;
+        rawSid = key.slice('apple_'.length);
+        pending = val;
+        break;
+      }
     }
 
-    const pending = googleOAuthPending.get(`apple_${appSid}`);
-    if (!pending) {
+    if (!appSidKey || !rawSid || !pending) {
       return res.status(400).json({ error: 'Auth session expired or not found — please try again' });
     }
-    googleOAuthPending.delete(`apple_${appSid}`);
+    googleOAuthPending.delete(appSidKey);
 
     try {
       const idpRes = await fetch(
@@ -2434,7 +2448,7 @@ You can return to the app.</p></div></body></html>`);
 
       const { createCustomToken } = await import('./firebase-admin');
       const customToken = await createCustomToken(uid);
-      googleAuthSessions.set(`apple_${appSid}`, { customToken, ts: Date.now() });
+      googleAuthSessions.set(appSidKey, { customToken, ts: Date.now() });
 
       return res.json({ ok: true });
     } catch (err) {
