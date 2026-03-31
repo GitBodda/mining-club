@@ -7,7 +7,6 @@ import { ScrollAwareStatusBar } from "@/components/ScrollAwareStatusBar";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { safeAreaTop } from "@/lib/nativeServices";
 
 interface VirtualCardProps {
   onBack?: () => void;
@@ -96,14 +95,14 @@ export function VirtualCard({ onBack }: VirtualCardProps) {
   return (
     <div className="min-h-screen pb-20 bg-background">
       <ScrollAwareStatusBar />
-      {/* Fixed header — always visible, never scrolls */}
+      {/* Header */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="fixed top-0 left-0 right-0 z-[50] backdrop-blur-xl bg-background/80 border-b border-white/5"
+        className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-white/5"
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
-        <div className="flex items-center gap-3 px-4 h-14">
+        <div className="flex items-center gap-3 p-4">
           {onBack && (
             <button
               onClick={onBack}
@@ -119,8 +118,6 @@ export function VirtualCard({ onBack }: VirtualCardProps) {
           </div>
         </div>
       </motion.header>
-      {/* Spacer for fixed header */}
-      <div style={{ height: `calc(3.5rem + ${safeAreaTop})` }} />
 
       <div className="p-4 space-y-6">
         {/* Hero Section with Lottie Animation */}

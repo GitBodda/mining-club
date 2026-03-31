@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollAwareStatusBar } from "@/components/ScrollAwareStatusBar";
-import { safeAreaTop } from "@/lib/nativeServices";
 
 interface Article {
   id: string;
@@ -52,18 +51,17 @@ export function ArticlePage() {
   return (
     <div className="min-h-screen bg-background">
       <ScrollAwareStatusBar />
-      {/* Fixed navigation bar — always visible */}
-      <header className="fixed top-0 left-0 right-0 z-[50] bg-card/80 backdrop-blur-lg border-b border-border" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="max-w-4xl mx-auto px-4 h-14 flex items-center">
-          <motion.button
+      {/* Navigation Bar */}
+      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <div className="max-w-4xl mx-auto px-4 h-16 flex items-center">
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => navigate("/")}
-            className="w-11 h-11 rounded-2xl liquid-glass flex items-center justify-center hover-elevate transition-all mr-3"
-            whileTap={{ scale: 0.95 }}
-            type="button"
-            aria-label="Go back"
+            className="mr-4"
           >
             <ArrowLeft className="w-5 h-5" />
-          </motion.button>
+          </Button>
           <div className="flex items-center gap-3 flex-1">
             {article.icon && <span className="text-2xl">{article.icon}</span>}
             <h1 className="font-bold text-lg truncate">{article.title}</h1>
@@ -72,7 +70,7 @@ export function ArticlePage() {
       </header>
 
       {/* Article Content */}
-      <main className="max-w-4xl mx-auto px-4 py-8" style={{ paddingTop: `calc(3.5rem + ${safeAreaTop} + 2rem)` }}>
+      <main className="max-w-4xl mx-auto px-4 py-8">
         <motion.article
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

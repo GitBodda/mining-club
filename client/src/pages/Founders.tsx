@@ -9,8 +9,6 @@ import { FounderBadge } from "@/components/FounderBadge";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollAwareStatusBar } from "@/components/ScrollAwareStatusBar";
 import { Browser } from '@capacitor/browser';
-import { auth } from "@/lib/firebase";
-import { safeAreaTop } from "@/lib/nativeServices";
 
 function getUserId() {
   try {
@@ -21,9 +19,21 @@ function getUserId() {
 
 async function getToken(): Promise<string | null> {
   try {
-    const user = auth?.currentUser;
+    const { getAuth } = await import("firebase/auth");
+    const user = getAuth().currentUser;
     return user ? user.getIdToken() : null;
   } catch { return null; }
+}
+
+async function loginWithPopup(): Promise<string | null> {
+  try {
+    await Browser.open({ url: 'https://your-auth-url.com' });
+    // Handle redirect and token retrieval here
+    return 'token'; // Replace with actual token logic
+  } catch (error) {
+    console.error('Login failed', error);
+    return null;
+  }
 }
 
 interface FoundersProps {
@@ -98,23 +108,15 @@ export function Founders({ onBack }: FoundersProps) {
   return (
     <div className="min-h-screen pb-24">
       <ScrollAwareStatusBar />
-      {/* Fixed header — always visible, never scrolls */}
-      <div className="fixed top-0 left-0 right-0 z-[50] bg-background/80 backdrop-blur-xl border-b border-white/5" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="px-4 h-14 flex items-center gap-3">
-          <motion.button
-            onClick={onBack ?? (() => navigate("/growth"))}
-            className="w-11 h-11 rounded-2xl liquid-glass flex items-center justify-center hover-elevate transition-all"
-            whileTap={{ scale: 0.95 }}
-            type="button"
-            aria-label="Go back"
-          >
-            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-          </motion.button>
+      {/* Header */}
+      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-white/5" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <div className="px-4 py-3 flex items-center gap-3">
+          <button onClick={onBack ?? (() => navigate("/growth"))} className="text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
           <h1 className="text-lg font-bold">Founding Miners Club</h1>
         </div>
       </div>
-      {/* Spacer for fixed header */}
-      <div style={{ height: `calc(3.5rem + ${safeAreaTop})` }} />
 
       <div className="px-4 space-y-5 mt-5">
 

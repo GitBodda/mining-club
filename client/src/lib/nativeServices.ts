@@ -32,16 +32,6 @@ export function isAndroid(): boolean {
   return getPlatform() === 'android';
 }
 
-/**
- * Safe-area top padding: 0px on native iOS (WKWebView contentInset:automatic handles it),
- * env(safe-area-inset-top) on Android/Web.
- * Import this everywhere you would otherwise write env(safe-area-inset-top).
- */
-export const safeAreaTop: string =
-  (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios')
-    ? '0px'
-    : 'env(safe-area-inset-top, 0px)';
-
 // ============================================================
 // FACE ID (iOS ONLY)
 // ============================================================

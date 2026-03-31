@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Sun, Moon, X, Settings as SettingsIcon, Sparkles } from "lucide-react";
+import { ChevronLeft, Bell, Sun, Moon, X, Settings as SettingsIcon, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useNotifications } from "@/contexts/NotificationContext";
@@ -30,19 +30,36 @@ export function GlobalHeader({
     return null;
   }
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      onNavigateToHome?.();
+    }
+  };
+
   return (
     <>
       {/* Scroll-aware status bar gradient */}
       <ScrollAwareStatusBar />
       
-      {/* Fixed header — always on top, never affected by scroll */}
+      {/* Header with integrated safe area - no extra spacer needed */}
       <header
-        className="fixed top-0 left-0 right-0 z-[50] bg-transparent"
+        className="sticky top-0 z-40 bg-transparent"
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
         <div className="flex items-center gap-4 px-4 h-14">
-          {/* Left Side - Settings & Growth Hub */}
+          {/* Left Side - Back Button & Settings */}
           <div className="flex items-center gap-2">
+            <motion.button
+              onClick={handleBack}
+              className="w-10 h-10 rounded-2xl liquid-glass flex items-center justify-center hover-elevate transition-transform"
+              whileTap={{ scale: 0.95 }}
+              type="button"
+              aria-label="Go back"
+            >
+              <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+            </motion.button>
             <motion.button
               onClick={onOpenSettings}
               className="w-10 h-10 rounded-2xl liquid-glass flex items-center justify-center hover-elevate transition-transform"
@@ -112,8 +129,7 @@ export function GlobalHeader({
               animate={{ opacity: 1, y: 0, x: "-50%", scale: 1 }}
               exit={{ opacity: 0, y: -20, x: "-50%", scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="fixed left-1/2 w-[min(92vw,28rem)] max-w-md bg-background border border-border rounded-2xl shadow-2xl z-[105] overflow-hidden"
-              style={{ top: 'calc(env(safe-area-inset-top, 0px) + 3.5rem + 8px)' }}
+              className="fixed top-20 left-1/2 w-[min(92vw,28rem)] max-w-md bg-background border border-border rounded-2xl shadow-2xl z-[105] overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between p-4 border-b border-border">
