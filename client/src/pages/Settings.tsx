@@ -793,11 +793,13 @@ export function Settings({ settings, onSettingsChange, user, onLogout, onClose }
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="flex items-center gap-3"
+        className="sticky top-0 z-30 -mx-4 px-4 py-3 mb-3 bg-background/95 backdrop-blur-xl flex items-center gap-3"
       >
         <button
           onClick={handleBack}
-          className="w-10 h-10 rounded-xl bg-white/[0.08] flex items-center justify-center hover:bg-white/[0.12] transition-colors"
+          className="w-11 h-11 rounded-2xl liquid-glass flex items-center justify-center hover-elevate transition-all"
+          type="button"
+          aria-label="Go back"
         >
           <ChevronLeft className="w-5 h-5 text-foreground" />
         </button>

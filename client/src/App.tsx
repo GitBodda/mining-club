@@ -25,6 +25,7 @@ import { AppLockProvider } from "@/components/AppLock";
 import { SiX, SiInstagram } from "react-icons/si";
 import { useMiningData } from "@/hooks/useMiningData";
 import { onAuthChange, logOut } from "@/lib/firebase";
+import { safeAreaTop } from "@/lib/nativeServices";
 import type { User } from "firebase/auth";
 
 // Lazy load heavy pages for faster initial load
@@ -358,7 +359,7 @@ function MobileApp() {
         onNavigateToInvest={() => setActiveTab("invest")}
       />
 
-      <main className="relative z-10 max-w-md mx-auto px-4 pb-28">
+      <main className="relative z-10 max-w-md mx-auto px-4 pb-28" style={{ paddingTop: `calc(3.5rem + ${safeAreaTop})` }}>
         <Suspense fallback={<PageLoader />}>
         <AnimatePresence mode="wait">
           {activeTab === "home" && (

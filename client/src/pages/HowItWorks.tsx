@@ -4,6 +4,7 @@ import { useLocation } from "wouter";
 import { GlassCard } from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { ScrollAwareStatusBar } from "@/components/ScrollAwareStatusBar";
+import { safeAreaTop } from "@/lib/nativeServices";
 
 interface HowItWorksProps {
   onBack?: () => void;
@@ -53,15 +54,23 @@ export function HowItWorks({ onBack }: HowItWorksProps) {
   return (
     <div className="min-h-screen pb-24">
       <ScrollAwareStatusBar />
-      {/* Header */}
-      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-white/5" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="px-4 py-3 flex items-center gap-3">
-          <button onClick={onBack ?? (() => navigate("/growth"))} className="text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+      {/* Fixed header — always visible, never scrolls */}
+      <div className="fixed top-0 left-0 right-0 z-[50] bg-background/80 backdrop-blur-xl border-b border-white/5" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <div className="px-4 h-14 flex items-center gap-3">
+          <motion.button
+            onClick={onBack ?? (() => navigate("/growth"))}
+            className="w-11 h-11 rounded-2xl liquid-glass flex items-center justify-center hover-elevate transition-all"
+            whileTap={{ scale: 0.95 }}
+            type="button"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+          </motion.button>
           <h1 className="text-lg font-bold">How It Works</h1>
         </div>
       </div>
+      {/* Spacer for fixed header */}
+      <div style={{ height: `calc(3.5rem + ${safeAreaTop})` }} />
 
       <div className="px-4 space-y-5 mt-5">
 

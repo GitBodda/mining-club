@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { StarterMinerCard } from "@/components/StarterMinerCard";
 import { ScrollAwareStatusBar } from "@/components/ScrollAwareStatusBar";
 import { auth } from "@/lib/firebase";
+import { safeAreaTop } from "@/lib/nativeServices";
 
 const PUBLIC_URL = import.meta.env.VITE_PUBLIC_APP_URL || "https://hardisk.co";
 
@@ -120,17 +121,25 @@ export function GrowthHub({ onBack }: GrowthHubProps) {
   return (
     <div className="min-h-screen pb-24">
       <ScrollAwareStatusBar />
-      {/* Header */}
-      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-white/5" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="px-4 py-3 flex items-center gap-3">
-          <button onClick={onBack ?? (() => navigate("/"))} className="text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+      {/* Fixed header — always visible, never scrolls */}
+      <div className="fixed top-0 left-0 right-0 z-[50] bg-background/80 backdrop-blur-xl border-b border-white/5" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <div className="px-4 h-14 flex items-center gap-3">
+          <motion.button
+            onClick={onBack ?? (() => navigate("/"))}
+            className="w-11 h-11 rounded-2xl liquid-glass flex items-center justify-center hover-elevate transition-all"
+            whileTap={{ scale: 0.95 }}
+            type="button"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+          </motion.button>
           <h1 className="text-lg font-bold">Growth Hub</h1>
         </div>
       </div>
+      {/* Spacer for fixed header */}
+      <div style={{ height: `calc(3.5rem + ${safeAreaTop})` }} />
 
-      <div className="px-4 space-y-5 mt-5">
+      <div className="px-4 space-y-5">
         {/* Hero banner */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -170,7 +179,11 @@ export function GrowthHub({ onBack }: GrowthHubProps) {
 
           <div className="flex gap-2">
             <div className="flex-1 bg-white/5 rounded-xl px-3 py-2.5 text-xs text-foreground truncate font-mono border border-white/10">
-              {referralLink || "Loading your link..."}
+              {!userId
+                ? "Sign in to get your referral link"
+                : isLoading
+                ? "Loading..."
+                : referralLink || "Generating your link..."}
             </div>
             <Button size="sm" variant="outline" className="shrink-0 h-9" onClick={handleCopy} disabled={!referralLink}>
               {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
