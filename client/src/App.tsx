@@ -88,6 +88,7 @@ function MobileApp() {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [requires2FA, setRequires2FA] = useState(false);
   const [pending2FA, setPending2FA] = useState(false);
+  const [twoFAVerifiedThisSession, setTwoFAVerifiedThisSession] = useState(false);
   
   // Wrap tab change to always scroll to top on navigation
   const setActiveTab = (tab: TabType) => {
@@ -231,9 +232,8 @@ function MobileApp() {
         localStorage.setItem("user", JSON.stringify(storedUser));
         console.log("User stored in localStorage:", storedUser);
 
-        // Only check 2FA if user is actively logging in (coming from auth view)
-        // Don't prompt for 2FA on app reload when already logged in
-        if (appView === "auth") {
+        // Always check 2FA status (unless already verified this session)
+        if (!twoFAVerifiedThisSession) {
           try {
             const twoFARes = await fetch(`/api/auth/2fa/status/${firebaseUser.uid}`);
             if (twoFARes.ok) {
@@ -248,7 +248,9 @@ function MobileApp() {
           } catch (error) {
             console.error("Failed to check 2FA status:", error);
           }
-          // No 2FA enabled, go to main
+        }
+        // 2FA not enabled or already verified — go to main
+        if (appView === "auth") {
           setAppView("main");
         }
       } catch (error) {
@@ -259,7 +261,7 @@ function MobileApp() {
     if (firebaseUser) {
       syncUser();
     }
-  }, [firebaseUser, appView]);
+  }, [firebaseUser, appView, twoFAVerifiedThisSession]);
 
   const handleOnboardingComplete = () => {
     localStorage.setItem("hasSeenOnboarding", "true");
@@ -314,6 +316,7 @@ function MobileApp() {
         userId={firebaseUser.uid}
         onSuccess={() => {
           setPending2FA(false);
+          setTwoFAVerifiedThisSession(true);
           setAppView("main");
         }}
         onBack={() => {
@@ -321,6 +324,7 @@ function MobileApp() {
           logOut();
           setPending2FA(false);
           setRequires2FA(false);
+          setTwoFAVerifiedThisSession(false);
           setAppView("auth");
         }}
       />
@@ -328,7 +332,7 @@ function MobileApp() {
   }
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden safe-area-inset" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 22px)' }}>
+    <div className="min-h-screen bg-background overflow-x-hidden safe-area-inset">
       <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[40%] -left-[20%] w-[80%] h-[80%] bg-primary/10 rounded-full blur-[120px]" />

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ScrollAwareStatusBar } from "@/components/ScrollAwareStatusBar";
 
 interface Article {
   id: string;
@@ -49,8 +50,9 @@ export function ArticlePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <ScrollAwareStatusBar />
       {/* Navigation Bar */}
-      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border">
+      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center">
           <Button
             variant="ghost"

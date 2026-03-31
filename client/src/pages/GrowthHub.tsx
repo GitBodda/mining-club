@@ -10,6 +10,7 @@ import { GlassCard } from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { StarterMinerCard } from "@/components/StarterMinerCard";
+import { ScrollAwareStatusBar } from "@/components/ScrollAwareStatusBar";
 import { auth } from "@/lib/firebase";
 
 const PUBLIC_URL = import.meta.env.VITE_PUBLIC_APP_URL || "https://hardisk.co";
@@ -118,12 +119,15 @@ export function GrowthHub({ onBack }: GrowthHubProps) {
 
   return (
     <div className="min-h-screen pb-24">
+      <ScrollAwareStatusBar />
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-white/5 px-4 py-3 flex items-center gap-3">
-        <button onClick={onBack ?? (() => navigate("/"))} className="text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="text-lg font-bold">Growth Hub</h1>
+      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-white/5" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <div className="px-4 py-3 flex items-center gap-3">
+          <button onClick={onBack ?? (() => navigate("/"))} className="text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="text-lg font-bold">Growth Hub</h1>
+        </div>
       </div>
 
       <div className="px-4 space-y-5 mt-5">

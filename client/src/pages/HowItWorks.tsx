@@ -3,6 +3,7 @@ import { ArrowLeft, Cpu, Gift, Users, Crown, Star, ChevronRight } from "lucide-r
 import { useLocation } from "wouter";
 import { GlassCard } from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
+import { ScrollAwareStatusBar } from "@/components/ScrollAwareStatusBar";
 
 interface HowItWorksProps {
   onBack?: () => void;
@@ -51,12 +52,15 @@ export function HowItWorks({ onBack }: HowItWorksProps) {
 
   return (
     <div className="min-h-screen pb-24">
+      <ScrollAwareStatusBar />
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-white/5 px-4 py-3 flex items-center gap-3">
-        <button onClick={onBack ?? (() => navigate("/growth"))} className="text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="text-lg font-bold">How It Works</h1>
+      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-white/5" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <div className="px-4 py-3 flex items-center gap-3">
+          <button onClick={onBack ?? (() => navigate("/growth"))} className="text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="text-lg font-bold">How It Works</h1>
+        </div>
       </div>
 
       <div className="px-4 space-y-5 mt-5">

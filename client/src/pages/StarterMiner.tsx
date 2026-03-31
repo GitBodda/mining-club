@@ -6,6 +6,7 @@ import { GlassCard } from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { LiveGrowingBalance } from "@/components/LiveGrowingBalance";
 import { auth } from "@/lib/firebase";
+import { ScrollAwareStatusBar } from "@/components/ScrollAwareStatusBar";
 
 function getUserId() {
   try {
@@ -70,12 +71,15 @@ export function StarterMiner({ onBack }: StarterMinerProps) {
 
   return (
     <div className="min-h-screen pb-24">
+      <ScrollAwareStatusBar />
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-white/5 px-4 py-3 flex items-center gap-3">
-        <button onClick={onBack ?? (() => navigate("/growth"))} className="text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="text-lg font-bold">Starter Miner</h1>
+      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-white/5" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <div className="px-4 py-3 flex items-center gap-3">
+          <button onClick={onBack ?? (() => navigate("/growth"))} className="text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="text-lg font-bold">Starter Miner</h1>
+        </div>
       </div>
 
       <div className="px-4 space-y-5 mt-5">

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, CreditCard, Shield, Zap, Globe, Lock, TrendingUp, Check, Mail } from "lucide-react";
 import { GlassCard, LiquidGlassCard } from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
+import { ScrollAwareStatusBar } from "@/components/ScrollAwareStatusBar";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
@@ -93,11 +94,13 @@ export function VirtualCard({ onBack }: VirtualCardProps) {
 
   return (
     <div className="min-h-screen pb-20 bg-background">
+      <ScrollAwareStatusBar />
       {/* Header */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-white/5"
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
         <div className="flex items-center gap-3 p-4">
           {onBack && (

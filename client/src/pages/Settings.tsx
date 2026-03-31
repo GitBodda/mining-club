@@ -785,7 +785,6 @@ export function Settings({ settings, onSettingsChange, user, onLogout, onClose }
   return (
     <motion.div
       className="flex flex-col gap-6 pb-6"
-      style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 22px)' }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}

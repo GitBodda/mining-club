@@ -2251,15 +2251,11 @@ border-radius:50%;animation:spin .8s linear infinite;margin:1rem auto 0}
 (function(){
   // Try to close the browser tab (works for system browser opened by Capacitor)
   try { window.close(); } catch(e) {}
-  // If still here after 600ms, try deep link
-  setTimeout(function(){
-    location.href = 'https://hardisk.co/';
-  }, 600);
-  // If still here after 3s, show manual message
+  // If still here after 1.5s, show manual message (NEVER redirect to the website)
   setTimeout(function(){
     document.getElementById('spin').style.display='none';
     document.getElementById('msg').textContent='You can now return to the app.';
-  }, 3000);
+  }, 1500);
 })();
 </script></body></html>`);
   });
