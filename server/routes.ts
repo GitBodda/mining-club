@@ -2159,13 +2159,16 @@ export async function registerRoutes(
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Completing sign-in…</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Outfit:wght@400;500&display=swap" rel="stylesheet"/>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,sans-serif;background:#0a0a0f;color:#fff;
+    body{font-family:'Outfit',sans-serif;background:#0a0a0f;color:#fff;
          display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1.5rem}
     .card{text-align:center;max-width:340px;width:100%}
     .logo{font-size:2.5rem;margin-bottom:1rem}
-    h2{font-size:1.25rem;margin-bottom:.5rem}
+    h2{font-family:'Space Grotesk',sans-serif;font-size:1.25rem;font-weight:700;margin-bottom:.5rem}
     p{color:rgba(255,255,255,.55);font-size:.875rem;line-height:1.5}
     .spin{width:40px;height:40px;border:3px solid rgba(255,255,255,.1);border-top-color:#10b981;
           border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1.2rem}
@@ -2218,16 +2221,47 @@ export async function registerRoutes(
     res.type("html").send(callbackHtml);
   });
 
-  // Simple "done" page — @capacitor/browser closes when it reaches this URL
+  // Simple "done" page — tries to close system browser and return to app
   app.get("/auth-complete", (_req, res) => {
     res.type("html").send(`<!DOCTYPE html><html><head><meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Done</title>
-<style>body{font-family:-apple-system,sans-serif;background:#0a0a0f;color:#fff;
-display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center}
-h2{color:#10b981}</style></head><body>
-<div><h2>&#x2713; Signed in!</h2><p style="color:rgba(255,255,255,.6);margin-top:.5rem">
-You can return to the app.</p></div></body></html>`);
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Outfit:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Outfit',sans-serif;background:#0a0a0f;color:#fff;
+display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:1.5rem}
+.card{max-width:340px;width:100%}
+.icon{font-size:3rem;margin-bottom:1rem}
+h2{font-family:'Space Grotesk',sans-serif;color:#10b981;font-size:1.5rem;font-weight:700;margin-bottom:.5rem}
+p{color:rgba(255,255,255,.55);font-size:.875rem;line-height:1.5}
+.spin{width:36px;height:36px;border:3px solid rgba(255,255,255,.1);border-top-color:#10b981;
+border-radius:50%;animation:spin .8s linear infinite;margin:1rem auto 0}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style></head><body>
+<div class="card">
+  <div class="icon">\u20bf</div>
+  <h2>\u2713 Signed in!</h2>
+  <p id="msg">Returning to app\u2026</p>
+  <div class="spin" id="spin"></div>
+</div>
+<script>
+(function(){
+  // Try to close the browser tab (works for system browser opened by Capacitor)
+  try { window.close(); } catch(e) {}
+  // If still here after 600ms, try deep link
+  setTimeout(function(){
+    location.href = 'https://hardisk.co/';
+  }, 600);
+  // If still here after 3s, show manual message
+  setTimeout(function(){
+    document.getElementById('spin').style.display='none';
+    document.getElementById('msg').textContent='You can now return to the app.';
+  }, 3000);
+})();
+</script></body></html>`);
   });
 
   // Exchange Google id_token (from URL hash) → Firebase custom token
@@ -2341,13 +2375,16 @@ You can return to the app.</p></div></body></html>`);
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Completing sign-in…</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Outfit:wght@400;500&display=swap" rel="stylesheet"/>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,sans-serif;background:#0a0a0f;color:#fff;
+    body{font-family:'Outfit',sans-serif;background:#0a0a0f;color:#fff;
          display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1.5rem}
     .card{text-align:center;max-width:340px;width:100%}
     .logo{font-size:2.5rem;margin-bottom:1rem}
-    h2{font-size:1.25rem;margin-bottom:.5rem}
+    h2{font-family:'Space Grotesk',sans-serif;font-size:1.25rem;font-weight:700;margin-bottom:.5rem}
     p{color:rgba(255,255,255,.55);font-size:.875rem;line-height:1.5}
     .spin{width:40px;height:40px;border:3px solid rgba(255,255,255,.1);border-top-color:#10b981;
           border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1.2rem}

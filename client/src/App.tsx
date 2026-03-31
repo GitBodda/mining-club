@@ -226,6 +226,7 @@ function MobileApp() {
           id: data.user?.id,
           dbId: data.user?.id,
           role: data.user?.role,
+          createdAt: data.user?.createdAt,
         };
         localStorage.setItem("user", JSON.stringify(storedUser));
         console.log("User stored in localStorage:", storedUser);

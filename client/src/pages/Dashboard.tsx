@@ -444,7 +444,10 @@ export function Dashboard({
     if (!userId || !miningPurchasesFetched) return;
     const dismissed = localStorage.getItem("starterMinerModalDismissed") === "true";
     const hasPaidPurchases = (activeMiningPurchases?.length || 0) > 0;
-    if (!hasPaidPurchases && !dismissed) {
+    // Only show to new users (account created within last 7 days)
+    const userCreatedAt = user?.createdAt ? new Date(user.createdAt).getTime() : 0;
+    const isNewUser = userCreatedAt > 0 && (Date.now() - userCreatedAt) < 7 * 24 * 60 * 60 * 1000;
+    if (!hasPaidPurchases && !dismissed && isNewUser) {
       setShowStarterModal(true);
     }
   }, [userId, activeMiningPurchases.length, miningPurchasesFetched]);
@@ -1663,7 +1666,7 @@ export function Dashboard({
 
       {/* Starter Miner onboarding modal */}
       {showStarterModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-6 sm:pb-0 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, y: 60 }}
             animate={{ opacity: 1, y: 0 }}
