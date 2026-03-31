@@ -88,7 +88,10 @@ function MobileApp() {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [requires2FA, setRequires2FA] = useState(false);
   const [pending2FA, setPending2FA] = useState(false);
-  const [twoFAVerifiedThisSession, setTwoFAVerifiedThisSession] = useState(false);
+  // Persist 2FA verification across app reopens — only reset on logout
+  const [twoFAVerifiedThisSession, setTwoFAVerifiedThisSession] = useState(
+    () => localStorage.getItem('twoFAVerified') === 'true'
+  );
   
   // Wrap tab change to always scroll to top on navigation
   const setActiveTab = (tab: TabType) => {
@@ -184,6 +187,8 @@ function MobileApp() {
       } else {
         localStorage.removeItem("isLoggedIn");
         localStorage.removeItem("user");
+        localStorage.removeItem("twoFAVerified");
+        setTwoFAVerifiedThisSession(false);
         if (appView === "main") {
           // User signed out remotely - clear state and go to auth
           setAppView("auth");
@@ -316,6 +321,7 @@ function MobileApp() {
         userId={firebaseUser.uid}
         onSuccess={() => {
           setPending2FA(false);
+          localStorage.setItem('twoFAVerified', 'true');
           setTwoFAVerifiedThisSession(true);
           setAppView("main");
         }}
@@ -324,6 +330,7 @@ function MobileApp() {
           logOut();
           setPending2FA(false);
           setRequires2FA(false);
+          localStorage.removeItem('twoFAVerified');
           setTwoFAVerifiedThisSession(false);
           setAppView("auth");
         }}

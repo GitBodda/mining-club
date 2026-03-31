@@ -11,7 +11,7 @@ const config: CapacitorConfig = {
     iosScheme: 'https',
   },
   ios: {
-    contentInset: 'automatic',
+    contentInset: 'never',
     preferredContentMode: 'mobile',
     backgroundColor: '#0a0a0f',
     scheme: 'BlockMint',

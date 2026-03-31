@@ -77,9 +77,9 @@ export function AppLockProvider({ children, userId }: AppLockProviderProps) {
   const hasTriedAutoAuthRef = useRef(false);
   const pinSetupCompleteCallbackRef = useRef<(() => void) | null>(null);
   
-  // Track last activity time for 30-minute timeout
+  // Track last activity time for 60-minute timeout
   const lastActivityRef = useRef<number>(Date.now());
-  const LOCK_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+  const LOCK_TIMEOUT_MS = 60 * 60 * 1000; // 60 minutes
 
   // Fetch security settings
   const { data: settings } = useQuery<ServerSecuritySettings, Error, SecuritySettings>({
@@ -274,9 +274,10 @@ export function AppLockProvider({ children, userId }: AppLockProviderProps) {
   }, []);
 
   // Lock on visibility change (app backgrounded) - use Capacitor App plugin if available
-  // Only lock if 30 minutes have passed since last activity
+  // Only lock if 60 minutes have passed since last activity
   useEffect(() => {
-    if (!settings?.pinEnabled) return;
+    const securityEnabled = settings?.pinEnabled || settings?.biometricEnabled;
+    if (!securityEnabled) return;
 
     // Update last activity on user interactions
     const updateActivity = () => {
@@ -294,12 +295,12 @@ export function AppLockProvider({ children, userId }: AppLockProviderProps) {
         // App went to background - save the time
         console.log('[AppLock] App went to background');
       } else {
-        // App came back to foreground - check if 30 minutes have passed
+        // App came back to foreground - check if 60 minutes have passed
         const timeSinceLastActivity = Date.now() - lastActivityRef.current;
         console.log('[AppLock] App returned, time since last activity:', Math.round(timeSinceLastActivity / 1000 / 60), 'minutes');
         
         if (timeSinceLastActivity >= LOCK_TIMEOUT_MS) {
-          console.log('[AppLock] 30+ minutes passed, locking app...');
+          console.log('[AppLock] 60+ minutes passed, locking app...');
           setIsLocked(true);
           hasTriedAutoAuthRef.current = false; // Reset so biometric triggers
           sessionStorage.removeItem("app_unlocked");
@@ -317,13 +318,13 @@ export function AppLockProvider({ children, userId }: AppLockProviderProps) {
         App.addListener('appStateChange', ({ isActive }) => {
           if (!isActive) {
             console.log('[AppLock] Capacitor: App became inactive');
-          } else if (settings?.pinEnabled) {
+          } else if (securityEnabled) {
             // App became active - check timeout
             const timeSinceLastActivity = Date.now() - lastActivityRef.current;
             console.log('[AppLock] Capacitor: App returned, time since activity:', Math.round(timeSinceLastActivity / 1000 / 60), 'minutes');
             
             if (timeSinceLastActivity >= LOCK_TIMEOUT_MS) {
-              console.log('[AppLock] Capacitor: 30+ minutes passed, locking...');
+              console.log('[AppLock] Capacitor: 60+ minutes passed, locking...');
               setIsLocked(true);
               hasTriedAutoAuthRef.current = false;
               sessionStorage.removeItem("app_unlocked");
@@ -343,19 +344,20 @@ export function AppLockProvider({ children, userId }: AppLockProviderProps) {
       document.removeEventListener("scroll", updateActivity);
       if (removeAppListener) removeAppListener();
     };
-  }, [settings?.pinEnabled]);
+  }, [settings?.pinEnabled, settings?.biometricEnabled]);
 
-  // Initial lock if PIN is enabled
+  // Initial lock if PIN or biometric is enabled
   useEffect(() => {
-    if (settings?.pinEnabled && !isLocked) {
+    const securityActive = settings?.pinEnabled || settings?.biometricEnabled;
+    if (securityActive && !isLocked) {
       // Lock on first load if security is enabled
       const hasUnlockedRecently = sessionStorage.getItem("app_unlocked");
       if (!hasUnlockedRecently) {
-        console.log('[AppLock] Initial lock - PIN enabled, no recent unlock');
+        console.log('[AppLock] Initial lock - security enabled, no recent unlock');
         setIsLocked(true);
       }
     }
-  }, [settings?.pinEnabled, isLocked]);
+  }, [settings?.pinEnabled, settings?.biometricEnabled, isLocked]);
 
   // Auto-trigger biometric authentication when locked and biometrics enabled
   // Only trigger once per lock session
@@ -456,6 +458,28 @@ export function AppLockProvider({ children, userId }: AppLockProviderProps) {
             onBiometricRequest={settings.biometricEnabled ? handleBiometricRequest : undefined}
             biometricType={settings.biometricEnabled ? biometricType : "none"}
           />
+        )}
+        
+        {/* Biometric-only lock screen (no PIN set, only Face ID/Touch ID) */}
+        {effectivelyLocked && !settings?.pinEnabled && settings?.biometricEnabled && !isSettingUpPin && (
+          <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background p-8 text-center">
+            <div className="w-20 h-20 mb-6 rounded-2xl bg-primary/20 flex items-center justify-center">
+              <span className="text-4xl">{biometricType === 'face' ? '🔐' : '👆'}</span>
+            </div>
+            <h1 className="text-xl font-bold text-foreground mb-2">
+              {biometricType === 'face' ? 'Face ID Required' : 'Biometric Required'}
+            </h1>
+            <p className="text-muted-foreground mb-6">
+              Verify your identity to continue
+            </p>
+            <button
+              onClick={triggerBiometricAuth}
+              disabled={isAuthenticating}
+              className="px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium disabled:opacity-50"
+            >
+              {isAuthenticating ? 'Verifying...' : biometricType === 'face' ? 'Use Face ID' : 'Use Biometrics'}
+            </button>
+          </div>
         )}
         
         {/* PIN Setup - Never show in compliance mode */}
