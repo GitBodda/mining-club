@@ -659,36 +659,30 @@ function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }:
   
   return (
     <GlassCard className="p-5" variant="strong">
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h2 className="text-base font-semibold text-foreground">Custom Hashrate Calculator</h2>
-          <p className="text-xs text-muted-foreground">Build your own mining package</p>
-        </div>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-base font-semibold text-foreground">Custom Hashrate Calculator</h2>
         <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-[10px]">
-          7 YEAR CONTRACT
+          7-YEAR CONTRACT
         </Badge>
       </div>
       
       <div className="space-y-4">
         <div>
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Label className="text-xs text-muted-foreground">Investment Amount</Label>
-              <div className="flex items-center gap-1">
-                <span className="text-sm text-muted-foreground font-numbers">$</span>
-                <input
-                  type="number"
-                  value={customInput}
-                  onChange={(e) => setCustomInput(e.target.value)}
-                  onBlur={commitCustomInput}
-                  onKeyDown={(e) => { if (e.key === "Enter") { commitCustomInput(); (e.target as HTMLInputElement).blur(); } }}
-                  className="w-20 h-7 px-2 rounded-lg bg-white/5 border border-white/10 text-sm font-bold text-foreground text-center focus:outline-none focus:border-[#0088FF]/50 font-numbers"
-                  min={10}
-                  max={15000}
-                />
-              </div>
+            <Label className="text-xs text-muted-foreground">Investment Amount</Label>
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm text-muted-foreground font-numbers">$</span>
+              <input
+                type="number"
+                value={customInput}
+                onChange={(e) => setCustomInput(e.target.value)}
+                onBlur={commitCustomInput}
+                onKeyDown={(e) => { if (e.key === "Enter") { commitCustomInput(); (e.target as HTMLInputElement).blur(); } }}
+                className="w-20 h-7 px-2 rounded-lg bg-white/5 border border-white/10 text-sm font-bold text-foreground text-center focus:outline-none focus:border-[#0088FF]/50 font-numbers"
+                min={10}
+                max={15000}
+              />
             </div>
-            <span className="text-xs font-bold text-foreground">{hashrateDisplay}</span>
           </div>
 
           {/* iOS 26 Slider with integrated stepper */}
@@ -725,15 +719,15 @@ function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }:
               />
             </div>
           </div>
-          <div className="flex justify-between text-[10px] text-muted-foreground mt-2" style={{ paddingLeft: 78 }}>
+          <div className="flex justify-between text-[10px] text-muted-foreground mt-2 px-[78px] pr-0">
             <span>$10</span>
-            <span className="mr-0">$15,000</span>
+            <span>$15,000</span>
           </div>
           
           {/* Quick buy section right after slider */}
           <div className="mt-3 p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20">
             <div className="flex justify-center mb-2">
-              <span className="text-xs font-bold text-amber-400 bg-amber-500/15 px-3 py-1 rounded-full border border-amber-500/20">{hashrateDisplay}</span>
+              <span className="text-xs font-bold text-amber-400 bg-amber-500/15 px-2.5 py-0.5 rounded-full">{hashrateDisplay}</span>
             </div>
             <div className="flex items-center justify-between mb-2">
               <div>
@@ -1343,23 +1337,23 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
                     className="flex-1 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all bg-gradient-to-b from-emerald-500/10 to-transparent border-emerald-500/30 hover:border-emerald-500/50 active:scale-[0.98]"
                   >
                     <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
-                      <i className="fi fi-tr-calculator text-emerald-400 text-lg" />
+                      <Zap className="w-5 h-5 text-emerald-400" />
                     </div>
                     <span className="text-sm font-semibold text-foreground">Custom TH/s</span>
                     <span className="text-[10px] text-muted-foreground text-center leading-tight">Choose your exact hashrate</span>
                     <span className="text-[9px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full uppercase">POPULAR</span>
-                    <span className="mt-1 text-[11px] font-semibold text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full">Choose →</span>
+                    <span className="mt-1 text-[11px] font-semibold text-emerald-400 bg-emerald-500/15 px-3 py-1 rounded-full">Choose →</span>
                   </button>
                   <button
                     onClick={() => { setActiveTab("devices"); setStep(2); }}
                     className="flex-1 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all bg-gradient-to-b from-amber-500/8 to-transparent border-white/10 hover:border-amber-500/30 active:scale-[0.98]"
                   >
                     <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center">
-                      <i className="fi fi-tr-microchip text-amber-400 text-lg" />
+                      <Cpu className="w-5 h-5 text-amber-400" />
                     </div>
                     <span className="text-sm font-semibold text-foreground">Packages</span>
                     <span className="text-[10px] text-muted-foreground text-center leading-tight">Pre-built mining plans</span>
-                    <span className="mt-1 text-[11px] font-semibold text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full">Choose →</span>
+                    <span className="mt-1 text-[11px] font-semibold text-amber-400 bg-amber-500/15 px-3 py-1 rounded-full">Choose →</span>
                   </button>
                 </div>
               </GlassCard>

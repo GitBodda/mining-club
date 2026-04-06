@@ -536,7 +536,7 @@ function MobileApp() {
           { id: "home", icon: <i className="fi fi-tr-house-window" style={{ fontSize: 23, lineHeight: 1 }} />, label: "Home" },
           { id: "wallet", icon: <i className="fi fi-tr-wallet" style={{ fontSize: 23, lineHeight: 1 }} />, label: "Wallet" },
           { id: "invest", icon: <i className="fi fi-tr-growth-chart-invest" style={{ fontSize: 23, lineHeight: 1 }} />, label: "Yield" },
-          { id: "mining", icon: <Pickaxe size={23} strokeWidth={1.5} />, label: "Mining" },
+          { id: "mining", icon: <Pickaxe size={23} strokeWidth={1.2} />, label: "Mining" },
           { id: "solo", icon: <i className="fi fi-tr-bullseye-arrow" style={{ fontSize: 23, lineHeight: 1 }} />, label: "Solo" },
         ]}
         activeTab={isGrowthPage ? "" : activeTab}
