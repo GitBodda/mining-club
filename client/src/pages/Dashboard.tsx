@@ -1185,7 +1185,7 @@ export function Dashboard({
                 <p className="text-xs text-muted-foreground">Hashrate</p>
               </div>
               <motion.img 
-                src="https://cdn3d.iconscout.com/3d/premium/thumb/bitcoin-mining-hardware-3d-icon-download-in-png-blend-fbx-gltf-file-formats--asic-cryptocurrency-miner-pack-science-technology-icons-8337889.png"
+                src="/icons/hashrate.png"
                 alt="Hashrate"
                 className="w-[56px] h-[56px] object-contain"
                 whileHover={{ scale: 1.05 }}
@@ -1202,7 +1202,7 @@ export function Dashboard({
                 <p className="text-xs text-muted-foreground">Active Contracts</p>
               </div>
               <motion.img 
-                src="https://cdn3d.iconscout.com/3d/premium/thumb/smart-contract-3d-icon-download-in-png-blend-fbx-gltf-file-formats--blockchain-ethereum-cryptocurrency-pack-science-technology-icons-6491635.png"
+                src="/icons/contracts.png"
                 alt="Contracts"
                 className="w-[56px] h-[56px] object-contain"
                 whileHover={{ scale: 1.05 }}
@@ -1238,7 +1238,7 @@ export function Dashboard({
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <img src="https://cdn3d.iconscout.com/3d/premium/thumb/bitcoin-mining-hardware-3d-icon-download-in-png-blend-fbx-gltf-file-formats--asic-cryptocurrency-miner-pack-science-technology-icons-8337889.png" alt="Mining" className="w-10 h-10 object-contain" />
+              <img src="/icons/asic-miner.png" alt="Mining" className="w-10 h-10 object-contain" />
             </motion.div>
             
             <div className="flex-1">
@@ -1293,7 +1293,7 @@ export function Dashboard({
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-400 flex items-center justify-center shadow-lg overflow-hidden">
-                <img src="https://cdn3d.iconscout.com/3d/premium/thumb/affiliate-marketing-3d-icon-download-in-png-blend-fbx-gltf-file-formats--referral-network-pack-business-icons-7578977.png" alt="Referral" className="w-12 h-12 object-contain" />
+                <img src="/icons/referral.png" alt="Referral" className="w-12 h-12 object-contain" />
               </div>
               <p className="text-sm font-semibold text-foreground text-center px-3 leading-snug">
                 Referral <span className="text-violet-400 font-bold">Program</span>
@@ -1332,7 +1332,7 @@ export function Dashboard({
               </>
             ) : (
               <>
-                <img src="https://cdn3d.iconscout.com/3d/premium/thumb/star-struck-3d-icon-download-in-png-blend-fbx-gltf-file-formats--dizzy-face-emoji-face-expression-pack-sign-symbols-icons-8268818.png" alt="Stars" className="w-16 h-16" />
+                <img src="/icons/dizzy-star.png" alt="Stars" className="w-16 h-16" />
                 <p className="text-sm font-semibold text-foreground text-center px-3 leading-snug">
                   Share Your Feedback <span className="text-violet-400 font-bold">& Unlock Rewards</span>
                 </p>

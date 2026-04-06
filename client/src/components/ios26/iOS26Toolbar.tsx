@@ -18,7 +18,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { LiquidGlass } from "./LiquidGlass";
 import { useScrollEdgeEffect } from "@/hooks/useScrollEdgeEffect";
-import { ChevronLeft, X, Settings as SettingsIcon } from "lucide-react";
+import { ChevronLeft, X } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 
@@ -106,7 +106,7 @@ export function iOS26Toolbar({
           label: "Notifications",
         },
         {
-          icon: <SettingsIcon className="w-[18px] h-[18px]" />,
+          icon: <i className="fi fi-tc-blockchain-3" style={{ fontSize: 18, lineHeight: 1 }} />,
           onPress: () => onOpenSettings?.(),
           label: "Settings",
         },

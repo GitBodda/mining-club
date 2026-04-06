@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { StarterMinerCard } from "@/components/StarterMinerCard";
 import { ScrollAwareStatusBar } from "@/components/ScrollAwareStatusBar";
-import { iOS26Toolbar } from "@/components/ios26";
+import { iOS26Toolbar, iOS26TabBar } from "@/components/ios26";
 import { ScrollEdgeBlur } from "@/components/ios26";
 import { auth } from "@/lib/firebase";
 
@@ -61,28 +61,20 @@ export function GrowthHub({ onBack }: GrowthHubProps) {
     retry: 2,
   });
 
-  // Use referral code from API profile, fallback to localStorage user data, then fallback to lightweight endpoint
-  const localReferralCode = (() => {
-    try {
-      const u = JSON.parse(localStorage.getItem("user") || "{}");
-      return u.referralCode || "";
-    } catch { return ""; }
-  })();
-
-  // Lightweight fallback: fetch referral code without auth if profile query fails
-  const { data: fallbackCode } = useQuery({
-    queryKey: ["/api/growth/referral-code", userId],
+  // Fetch referral code using the auto-generating endpoint (creates one if none exists)
+  const { data: referralData } = useQuery({
+    queryKey: ["/api/referral/code", userId],
     queryFn: async () => {
-      const res = await fetch(`/api/growth/referral-code/${userId}`);
+      const res = await fetch(`/api/referral/code/${userId}`);
       if (!res.ok) return null;
-      const data = await res.json();
-      return data.referralCode || null;
+      return res.json();
     },
     enabled: !!userId,
     staleTime: 300_000,
+    retry: 3,
   });
 
-  const referralCode = profile?.referral?.referralCode || localReferralCode || fallbackCode || "";
+  const referralCode = profile?.referral?.referralCode || referralData?.code || "";
   const referralLink = referralCode ? `${PUBLIC_URL}/r/${referralCode}` : "";
 
   const handleCopy = async () => {
@@ -280,6 +272,18 @@ export function GrowthHub({ onBack }: GrowthHubProps) {
           ))}
         </div>
       </div>
+
+      <iOS26TabBar
+        tabs={[
+          { id: "home", icon: <i className="fi fi-tr-house-window" style={{ fontSize: 18, lineHeight: 1 }} />, label: "Home" },
+          { id: "wallet", icon: <i className="fi fi-tr-wallet" style={{ fontSize: 18, lineHeight: 1 }} />, label: "Wallet" },
+          { id: "invest", icon: <i className="fi fi-tr-growth-chart-invest" style={{ fontSize: 18, lineHeight: 1 }} />, label: "Yield" },
+          { id: "mining", icon: <i className="fi fi-tr-pickaxe" style={{ fontSize: 18, lineHeight: 1 }} />, label: "Mining" },
+          { id: "solo", icon: <i className="fi fi-tr-bullseye-arrow" style={{ fontSize: 18, lineHeight: 1 }} />, label: "Solo" },
+        ]}
+        activeTab="home"
+        onTabChange={(id: string) => navigate("/")}
+      />
     </div>
   );
 }
