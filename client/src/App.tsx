@@ -546,7 +546,7 @@ function MobileApp() {
       <AnimatePresence>
         {showSettings && (
           <motion.div
-            className="fixed inset-0 z-[100] flex flex-col bg-background safe-area-inset"
+            className="fixed inset-0 z-[100] bg-background safe-area-inset overflow-auto"
             initial={{ opacity: 0, y: "100%" }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: "100%" }}
@@ -566,9 +566,7 @@ function MobileApp() {
               showBack
               onBack={() => setShowSettings(false)}
             />
-            {/* Spacer for system status bar - reduced spacing */}
-            <div className="h-[env(safe-area-inset-top,0px)]" />
-            <div className="relative z-10 flex-1 overflow-auto px-4 pb-8">
+            <div className="relative z-10 px-4 pb-8">
               <Settings
                 settings={settings}
                 onSettingsChange={updateSettings}
