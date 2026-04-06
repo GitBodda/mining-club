@@ -86,6 +86,20 @@ export function registerGrowthRoutes(app: Express) {
     }
   });
 
+  // ── Lightweight endpoint to get a user's own referral code (no auth needed) ──
+  app.get("/api/growth/referral-code/:userId", async (req, res) => {
+    try {
+      const dbId = await resolveUserId(req.params.userId);
+      if (!dbId) return res.status(404).json({ error: "User not found" });
+      const [user] = await db.select({ referralCode: schema.users.referralCode })
+        .from(schema.users).where(eq(schema.users.id, dbId));
+      if (!user?.referralCode) return res.status(404).json({ error: "No referral code" });
+      return res.json({ referralCode: user.referralCode });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch referral code" });
+    }
+  });
+
   // ── Store referral attribution (called just before/during signup) ──────────
   // Called server-side during auth/sync; also available as standalone endpoint
   app.post("/api/growth/attribute-referral", async (req, res) => {

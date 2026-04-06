@@ -346,8 +346,9 @@ export function AppLockProvider({ children, userId }: AppLockProviderProps) {
     };
   }, [settings?.pinEnabled, settings?.biometricEnabled]);
 
-  // Initial lock if PIN or biometric is enabled
+  // Initial lock if PIN or biometric is enabled (native only)
   useEffect(() => {
+    if (!isNativePlatform()) return; // Skip lock on web browser
     const securityActive = settings?.pinEnabled || settings?.biometricEnabled;
     if (securityActive && !isLocked) {
       // Lock on first load if security is enabled
@@ -430,7 +431,8 @@ export function AppLockProvider({ children, userId }: AppLockProviderProps) {
   const isLockedOut = lockoutUntil && new Date() < lockoutUntil;
 
   // In compliance mode, never show lock screens
-  const effectivelyLocked = isComplianceMode ? false : isLocked;
+  // On web browser, skip biometrics entirely since native APIs aren't available
+  const effectivelyLocked = (isComplianceMode || !isNativePlatform()) ? false : isLocked;
 
   const value: AppLockContextType = {
     isLocked,

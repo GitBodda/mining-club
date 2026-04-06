@@ -360,25 +360,6 @@ export function SoloMining() {
         exit={{ opacity: 0 }}
         className="space-y-6 pb-8"
       >
-      {/* Header with Back Button */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="flex items-center gap-3"
-      >
-        <button
-          onClick={() => window.history.back()}
-          className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
-          aria-label="Go back"
-        >
-          <ChevronLeft className="w-5 h-5 text-muted-foreground" />
-        </button>
-        <div className="flex-1 text-center pr-10">
-          <h1 className="text-xl font-bold text-foreground">Solo Mining</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Win a Full 3.125 BTC Block</p>
-        </div>
-      </motion.header>
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

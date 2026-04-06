@@ -54,7 +54,7 @@ const cryptoAssets = [
   {
     symbol: "USDT",
     name: "Tether",
-    icon: "₮",
+    icon: "$",
     color: "from-emerald-500 to-green-500",
     bgColor: "bg-emerald-500/20",
     textColor: "text-emerald-400",
@@ -365,7 +365,7 @@ function APRCalculator() {
       <GlassCard className="p-6" variant="strong">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-12 h-12 rounded-xl flex items-center justify-center">
-            <Calculator className="w-6 h-6 text-primary" />
+            <i className="fi fi-tr-calculator" style={{ fontSize: 24, lineHeight: 1, color: 'var(--primary)' }} />
           </div>
           <div>
             <h2 className="text-xl font-bold text-foreground">Yield Calculator</h2>
@@ -381,7 +381,7 @@ function APRCalculator() {
                 <span className={`text-xl font-bold ${selectedCrypto.textColor}`}>{selectedCrypto.icon}</span>
               </div>
               <div>
-                <p className="font-semibold text-foreground">USDT Savings</p>
+                <p className="font-semibold text-foreground">USD Savings</p>
                 <p className="text-xs text-muted-foreground">Available balance updates in real-time</p>
               </div>
             </div>
@@ -427,7 +427,7 @@ function APRCalculator() {
               <div>
                 <span className="text-xs text-muted-foreground block mb-1">Available Balance in {selectedCrypto.symbol}</span>
                 <p className="text-2xl font-bold text-foreground">
-                  {wallets?.find((w: any) => w.symbol === selectedCrypto.symbol)?.balance?.toFixed(8) || "0.00"} {selectedCrypto.symbol}
+                  {wallets?.find((w: any) => w.symbol === selectedCrypto.symbol)?.balance?.toFixed(2) || "0.00"} {selectedCrypto.symbol}
                 </p>
               </div>
               <Button 
@@ -998,25 +998,6 @@ export function Invest({ onNavigateToHome, onNavigateToWallet, onNavigateToInves
         className="space-y-6 pb-6"
         data-testid="page-invest"
       >
-      {/* Header with Back Button */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="flex items-center gap-3"
-      >
-        <button
-          onClick={() => window.history.back()}
-          className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
-          aria-label="Go back"
-        >
-          <ChevronLeft className="w-5 h-5 text-muted-foreground" />
-        </button>
-        <div className="flex-1 text-center pr-10">
-          <h1 className="text-xl font-bold text-foreground">Earn & Yield</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Up to 19% APR • Withdraw anytime</p>
-        </div>
-      </motion.header>
 
       {/* Hero Section */}
       <motion.div 

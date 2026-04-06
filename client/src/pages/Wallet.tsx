@@ -624,24 +624,6 @@ export function Wallet({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
-        <motion.header
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="flex items-center gap-3"
-        >
-          <button
-            onClick={() => window.history.back()}
-            className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
-            aria-label="Go back"
-          >
-            <ChevronLeft className="w-5 h-5 text-muted-foreground" />
-          </button>
-          <div className="flex-1 text-center pr-10">
-            <h1 className="text-xl font-bold text-foreground">Wallet</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Multi-crypto portfolio</p>
-          </div>
-        </motion.header>
 
       <GlassCard delay={0.1} className="relative overflow-visible">
         <div className="absolute -right-4 -top-4 w-28 h-28 pointer-events-none opacity-20">

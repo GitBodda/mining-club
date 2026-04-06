@@ -39,7 +39,7 @@ export function GlassCard({
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
     >
-      <div className="relative z-10">
+      <div className="relative z-10 h-full flex flex-col">
         {children}
       </div>
     </div>

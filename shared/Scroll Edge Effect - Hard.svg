@@ -1,0 +1,21 @@
+<svg width="240" height="460" viewBox="0 0 240 460" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="0.5" y="0.5" width="239" height="459" rx="4.5" stroke="#9747FF" stroke-dasharray="10 5"/>
+<foreignObject x="-40" y="180" width="320" height="320"><div xmlns="http://www.w3.org/1999/xhtml" style="backdrop-filter:blur(30px);clip-path:url(#bgblur_0_5661_26978_clip_path);height:100%;width:100%"></div></foreignObject><g data-figma-bg-blur-radius="60">
+<mask id="path-2-inside-1_5661_26978" fill="white">
+<path d="M20 240H220V440H20V240Z"/>
+</mask>
+<path d="M20 240H220V440H20V240Z" fill="white" style="mix-blend-mode:multiply"/>
+<path d="M20 240V241H220V240V239H20V240Z" fill="black" fill-opacity="0.12" mask="url(#path-2-inside-1_5661_26978)"/>
+</g>
+<foreignObject x="-40" y="-40" width="320" height="320"><div xmlns="http://www.w3.org/1999/xhtml" style="backdrop-filter:blur(30px);clip-path:url(#bgblur_1_5661_26978_clip_path);height:100%;width:100%"></div></foreignObject><g data-figma-bg-blur-radius="60">
+<mask id="path-4-inside-2_5661_26978" fill="white">
+<path d="M20 20H220V220H20V20Z"/>
+</mask>
+<path d="M20 20H220V220H20V20Z" fill="white" style="mix-blend-mode:multiply"/>
+<path d="M220 220V219H20V220V221H220V220Z" fill="black" fill-opacity="0.12" mask="url(#path-4-inside-2_5661_26978)"/>
+</g>
+<defs>
+<clipPath id="bgblur_0_5661_26978_clip_path" transform="translate(40 -180)"><path d="M20 240H220V440H20V240Z"/>
+</clipPath><clipPath id="bgblur_1_5661_26978_clip_path" transform="translate(40 40)"><path d="M20 20H220V220H20V20Z"/>
+</clipPath></defs>
+</svg>

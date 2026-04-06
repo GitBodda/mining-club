@@ -789,23 +789,6 @@ export function Settings({ settings, onSettingsChange, user, onLogout, onClose }
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="flex items-center gap-3"
-      >
-        <button
-          onClick={handleBack}
-          className="w-10 h-10 rounded-xl bg-white/[0.08] flex items-center justify-center hover:bg-white/[0.12] transition-colors"
-        >
-          <ChevronLeft className="w-5 h-5 text-foreground" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Manage Your Preferences</p>
-        </div>
-      </motion.header>
 
       <GlassCard delay={0.1} className="relative overflow-hidden">
         <div className="relative z-10 flex items-center gap-4">

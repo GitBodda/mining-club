@@ -1,9 +1,50 @@
-/* Import Sansation and Outfit from Google Fonts - MUST be at the very top */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Sansation:wght@300;400;700&display=swap');
+/* ── Custom Font Faces ── */
+@font-face {
+  font-family: 'Hero';
+  src: url('/fonts/HeroLight-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Hero';
+  src: url('/fonts/HeroLight-Regular.otf') format('opentype'),
+       url('/fonts/Hero-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Hero';
+  src: url('/fonts/HeroLight-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Esqadero';
+  src: url('/fonts/Esqadero%20FF%20CY%204F-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Malonet';
+  src: url('/fonts/Malonet-vmWYO.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Smooth scrolling everywhere */
+/* Native scroll — no smooth-scroll override, let the browser handle it */
+body {
+  overscroll-behavior-y: contain;
+}
 
 @keyframes neon-glow-green {
   0%, 100% { text-shadow: 0 0 10px #10b981, 0 0 20px #10b981, 0 0 30px #10b981; }
@@ -16,6 +57,29 @@
 
 /* LIGHT MODE */
 :root {
+  /* ── iOS 26 Liquid Glass tokens (from Apple Figma Kit) ── */
+  --ios26-label-primary: #000000;
+  --ios26-label-secondary: rgba(60, 60, 67, 0.6);
+  --ios26-label-vibrant: #1a1a1a;
+  --ios26-label-vibrant-secondary: #727272;
+  --ios26-bg-primary: #ffffff;
+  --ios26-bg-secondary: #f2f2f7;
+  --ios26-bg-elevated: #ffffff;
+  --ios26-fill-vibrant: #cccccc;
+  --ios26-fill-selection: #ededed;
+  --ios26-accent-blue: #0088ff;
+  --ios26-accent-green: #34c759;
+  --ios26-accent-red: #ff3b30;
+  --ios26-glass-base: rgba(255, 255, 255, 0.65);
+  --ios26-glass-burn: #dddddd;
+  --ios26-glass-darken: #f7f7f7;
+  --ios26-glass-shadow: 0px 8px 40px 0px rgba(0, 0, 0, 0.12);
+  --ios26-sheet-shadow: 0px 15px 75px 0px rgba(0, 0, 0, 0.18);
+  --ios26-separator: rgba(60, 60, 67, 0.29);
+  --ios26-scroll-blur: 30px;
+  --ios26-scroll-edge-top: 167px;
+  --ios26-scroll-edge-bottom: 110px;
+
   --button-outline: rgba(0,0,0, .15);
   --badge-outline: rgba(0,0,0, .10);
   --opaque-button-border-intensity: -8;
@@ -55,11 +119,13 @@
   --chart-3: 142 76% 42%;
   --chart-4: 43 96% 56%;
   --chart-5: 24 95% 53%;
-  --font-sans: 'Sansation', 'system-ui', sans-serif;
-  --font-display: 'Outfit', sans-serif;
-  --font-heading: 'Outfit', sans-serif;
-  --font-serif: 'Outfit', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Hero', 'system-ui', sans-serif;
+  --font-display: 'Hero', sans-serif;
+  --font-heading: 'Hero', sans-serif;
+  --font-serif: 'Hero', sans-serif;
+  --font-mono: 'Malonet', 'JetBrains Mono', monospace;
+  --font-numbers: 'Malonet', 'Hero', monospace;
+  --font-ui: 'Esqadero', 'Hero', sans-serif;
   --radius: .5rem;
   --shadow-2xs: 0px 2px 0px 0px hsl(240 5% 10% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(240 5% 10% / 0.00);
@@ -102,17 +168,37 @@
 }
 
 .dark {
+  /* ── iOS 26 Liquid Glass tokens — Dark Mode ── */
+  --ios26-label-primary: #ffffff;
+  --ios26-label-secondary: rgba(235, 235, 245, 0.6);
+  --ios26-label-vibrant: #f5f5f5;
+  --ios26-label-vibrant-secondary: #a0a0a0;
+  --ios26-bg-primary: #000000;
+  --ios26-bg-secondary: #1c1c1e;
+  --ios26-bg-elevated: #1c1c1e;
+  --ios26-fill-vibrant: #3a3a3a;
+  --ios26-fill-selection: #2a2a2a;
+  --ios26-accent-blue: #0a84ff;
+  --ios26-accent-green: #30d158;
+  --ios26-accent-red: #ff453a;
+  --ios26-glass-base: rgba(40, 40, 40, 0.65);
+  --ios26-glass-burn: #262626;
+  --ios26-glass-darken: #1a1a1a;
+  --ios26-glass-shadow: 0px 8px 40px 0px rgba(0, 0, 0, 0.45);
+  --ios26-sheet-shadow: 0px 15px 75px 0px rgba(0, 0, 0, 0.55);
+  --ios26-separator: rgba(84, 84, 88, 0.65);
+
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .05);
   --opaque-button-border-intensity: 9;
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
-  --background: 240 20% 4%;
-  --foreground: 240 5% 96%;
-  --border: 240 10% 16%;
-  --card: 240 15% 7%;
-  --card-foreground: 240 5% 96%;
-  --card-border: 240 10% 12%;
+  --background: 0 0% 2%;
+  --foreground: 0 0% 96%;
+  --border: 0 0% 12%;
+  --card: 0 0% 5%;
+  --card-foreground: 0 0% 96%;
+  --card-border: 0 0% 10%;
   --sidebar: 240 18% 6%;
   --sidebar-foreground: 240 5% 96%;
   --sidebar-border: 240 10% 14%;
@@ -196,10 +282,6 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    /* Mobile-first: prevent horizontal scrolling */
-    overflow-x: hidden;
-    /* Set viewport to mobile */
-    max-width: 100vw;
   }
 
   body {
@@ -209,13 +291,10 @@
     text-rendering: optimizeLegibility;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
-    /* Mobile-first: center content and constrain width */
-    max-width: 100vw;
-    overflow-x: hidden;
     margin: 0 auto;
   }
 
-  /* Mobile viewport container - applies to ALL pages */
+  /* Mobile viewport container - clips horizontal overflow without blocking scroll */
   #root {
     max-width: 100vw;
     overflow-x: hidden;
@@ -538,17 +617,8 @@ body.keyboard-open [data-state="open"][data-side="bottom"] {
   }
 }
 
-/* Prevent horizontal scrolling on mobile - ENFORCED */
-html, body {
-  overflow-x: hidden !important;
-  max-width: 100vw;
-  position: relative;
-  /* Support for safe area insets */
-  viewport-fit: cover;
-}
-
+/* Mobile width constraint — only #root clips, html/body scroll freely */
 #root {
-  overflow-x: hidden !important;
   max-width: 100vw;
   position: relative;
 }
@@ -613,23 +683,51 @@ body.admin-mode,
   left: max(env(safe-area-inset-left, 0), 0);
 }
 
-/* Apply Outfit font to all headings and titles */
+/* Apply Hero font to all headings and titles */
 h1, h2, h3, h4, h5, h6,
 .font-heading,
 .font-display,
 [class*="text-"][class*="font-bold"],
 [class*="text-"][class*="font-semibold"] {
-  font-family: 'Outfit', sans-serif !important;
+  font-family: 'Hero', sans-serif !important;
+  letter-spacing: 0.01em;
 }
 
-/* Ensure body text uses Sansation */
+/* Body text uses Hero */
 body {
-  font-family: 'Sansation', system-ui, sans-serif;
+  font-family: 'Hero', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: 0.015em;
+  text-rendering: optimizeLegibility;
 }
 
-/* Titles should use Outfit */
+/* Titles use Hero bold */
 .title, .heading {
-  font-family: 'Outfit', sans-serif !important;
+  font-family: 'Hero', sans-serif !important;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+/* Numbers use Malonet for that distinct crypto look */
+.font-numbers,
+.tabular-nums,
+[data-number] {
+  font-family: 'Malonet', 'Hero', monospace !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* UI labels and badges use Esqadero */
+.font-ui {
+  font-family: 'Esqadero', 'Hero', sans-serif !important;
+  letter-spacing: 0.02em;
+}
+
+/* Tiny text uses Malonet for better readability at small sizes */
+.text-\[9px\], .text-\[10px\], .text-\[11px\] {
+  font-family: 'Malonet', 'Hero', sans-serif !important;
+  letter-spacing: 0.03em;
 }
 
 .right-safe {

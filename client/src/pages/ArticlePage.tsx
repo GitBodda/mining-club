@@ -1,9 +1,11 @@
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollAwareStatusBar } from "@/components/ScrollAwareStatusBar";
+import { iOS26Toolbar } from "@/components/ios26";
+import { ScrollEdgeBlur } from "@/components/ios26";
 
 interface Article {
   id: string;
@@ -51,23 +53,14 @@ export function ArticlePage() {
   return (
     <div className="min-h-screen bg-background">
       <ScrollAwareStatusBar />
-      {/* Navigation Bar */}
-      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="max-w-4xl mx-auto px-4 h-16 flex items-center">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/")}
-            className="mr-4"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex items-center gap-3 flex-1">
-            {article.icon && <span className="text-2xl">{article.icon}</span>}
-            <h1 className="font-bold text-lg truncate">{article.title}</h1>
-          </div>
-        </div>
-      </header>
+      <ScrollEdgeBlur />
+      {/* iOS 26 Toolbar */}
+      <iOS26Toolbar
+        title={article.title}
+        variant="largeTitle"
+        showBack
+        onBack={() => navigate("/")}
+      />
 
       {/* Article Content */}
       <main className="max-w-4xl mx-auto px-4 py-8">

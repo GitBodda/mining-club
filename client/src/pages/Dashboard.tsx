@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, ArrowDownToLine, ArrowUpFromLine, Settings, DollarSign, User, Users, Star, X, Inbox, Gift, TrendingUp, TrendingDown, Sparkles, ExternalLink, Sun, Moon, BarChart3, Copy, Check, Menu, Home, Wallet, PieChart, History, HelpCircle, LogOut, Shield, RefreshCw, ChevronLeft, ChevronRight, Fan, Minus, Plus, Loader2, CheckCircle2, ArrowRight } from "lucide-react";
+import { Bell, ArrowDownToLine, ArrowUpFromLine, Settings, DollarSign, User, Users, Star, X, Inbox, Gift, TrendingUp, TrendingDown, Sparkles, ExternalLink, Sun, Moon, BarChart3, Copy, Check, Menu, Home, Wallet, PieChart, History, HelpCircle, LogOut, Shield, RefreshCw, ChevronLeft, ChevronRight, Fan, Minus, Plus, Loader2, CheckCircle2, ArrowRight, Zap, Pickaxe } from "lucide-react";
 import { Link } from "wouter";
 import { SiX, SiInstagram } from "react-icons/si";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -742,72 +742,79 @@ export function Dashboard({
         </div>
 
         <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-4">
+          {/* Portfolio label with green dot */}
+          <div className="flex items-center gap-2 mb-2">
             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-sm text-muted-foreground">Portfolio Value</span>
+            <span className="text-xs text-muted-foreground font-heading">Balance</span>
           </div>
 
-          <div className="mb-6">
-            <div className="flex items-center gap-2">
-              <span className="text-lg text-muted-foreground">{getSymbol()}</span>
+          {/* Balance display — centered */}
+          <div className="mb-3">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-xl text-muted-foreground" style={{ fontFamily: 'var(--font-heading, system-ui, sans-serif)' }}>{getSymbol()}</span>
               <LiveGrowingBalance
                 value={convertedBalance}
                 perSecond={convert(miningPerSecondUSD)}
                 active={activeMiningPurchases.length > 0}
                 decimals={2}
-                className="text-3xl font-bold text-foreground tracking-tight"
+                className="text-3xl font-bold text-foreground tracking-tight font-numbers"
                 triggerGlow={balanceIncreased}
+                showBadge={false}
               />
-              {onRefreshBalances && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onRefreshBalances}
-                  disabled={isFetching}
-                  className="ml-2 h-7 w-7 p-0 rounded-full liquid-glass border border-primary/25 shadow-sm shrink-0"
-                  aria-label="Refresh balances"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-                </Button>
-              )}
             </div>
           </div>
 
-
-
-          {activeMiningPurchases.length > 0 && miningPerSecondUSD > 0 && (
-            <div className="mb-8 flex items-center justify-between gap-3 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-              <div>
-                <p className="text-xs font-medium mb-2" style={{ color: 'rgb(12, 185, 105)' }}>Estimated Earnings Today</p>
-                <span className="text-sm" style={{ color: 'rgb(12, 185, 105)' }}>
-                  {getSymbol()}
-                  <LiveGrowingBalance
-                    value={convert(miningEstimatedTodayUSD)}
-                    perSecond={convert(miningPerSecondUSD)}
-                    active={true}
-                    decimals={2}
-                    className="text-sm"
-                    showBadge={false}
-                  />
-                </span>
-              </div>
+          {/* Estimated Earnings Today — always visible */}
+          <div className="mb-3 flex items-center justify-between p-2.5 rounded-xl bg-emerald-500/8 border border-emerald-500/15">
+            <div className="flex-1">
+              <p className="text-[10px] font-medium font-ui mb-1" style={{ color: 'rgb(12, 185, 105)' }}>Estimated Earnings Today</p>
+              {activeMiningPurchases.length > 0 && miningPerSecondUSD > 0 ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-numbers" style={{ color: 'rgb(12, 185, 105)' }}>
+                    {getSymbol()}
+                    <LiveGrowingBalance
+                      value={convert(miningEstimatedTodayUSD)}
+                      perSecond={convert(miningPerSecondUSD)}
+                      active={true}
+                      decimals={8}
+                      className="text-sm font-numbers"
+                      showBadge={false}
+                    />
+                  </span>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">No active miners — <button onClick={onNavigateToMining} className="text-emerald-400 underline underline-offset-2 font-medium">Create one</button></p>
+              )}
             </div>
-          )}
+            {activeMiningPurchases.length > 0 && (
+              <button onClick={onNavigateToMining} className="flex items-center gap-1 text-[10px] text-emerald-400 font-semibold px-2 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors font-ui">
+                Boost
+                <Zap className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+
+          {/* Your Hashpower */}
+          <div className="mb-3 flex items-center justify-between p-2.5 rounded-xl bg-blue-500/8 border border-blue-500/15">
+            <span className="text-[10px] text-muted-foreground font-ui">Your Hashpower</span>
+            <span className="text-xs font-bold text-foreground font-numbers" data-number>{miningPower || "0 TH/s"}</span>
+          </div>
 
           {/* Pending Deposits Display */}
           {pendingTotal > 0 && (
-            <div className="mb-4 flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+            <div className="mb-3 flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
               <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
               <div className="flex-1">
-                <p className="text-xs text-amber-400 font-medium">Pending Deposits</p>
-                <p className="text-sm text-amber-300">
+                <p className="text-[10px] text-amber-400 font-medium font-ui">Pending Deposits</p>
+                <p className="text-xs text-amber-300 font-numbers">
                   {getSymbol()}{convert(pendingTotal).toFixed(2)}
                 </p>
               </div>
             </div>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex items-center justify-center gap-5 px-4">
+            <div className="flex flex-col items-center gap-1.5">
             <Popover open={depositOpen} onOpenChange={setDepositOpen}>
               <PopoverTrigger asChild>
                 <Button
@@ -821,7 +828,7 @@ export function Dashboard({
                       openDeposit(e);
                     }
                   }}
-                  className="flex-1 liquid-glass border-0 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 flex items-center justify-center h-12 rounded-2xl"
+                  className="w-11 h-11 liquid-glass border-0 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 flex items-center justify-center rounded-2xl p-0"
                   variant="ghost"
                   type="button"
                 >
@@ -1002,9 +1009,12 @@ export function Dashboard({
                 </div>
               </PopoverContent>
             </Popover>
+            <p className="text-[10px] text-muted-foreground font-ui">Deposit</p>
+            </div>
             
+            <div className="flex flex-col items-center gap-1.5">
             <motion.div
-              className="relative flex-1"
+              className="relative"
               animate={{
                 boxShadow: [
                   "0 0 15px 2px rgba(16, 185, 129, 0.3)",
@@ -1018,7 +1028,7 @@ export function Dashboard({
               <Button
                 data-testid="button-create-miner"
                 onClick={onNavigateToMining}
-                className="w-full relative overflow-hidden bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white border-0 flex items-center justify-center h-12 rounded-2xl font-semibold shadow-lg shadow-emerald-500/30"
+                className="w-11 h-11 relative overflow-hidden bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white border-0 flex items-center justify-center rounded-2xl font-semibold shadow-lg shadow-emerald-500/30 p-0"
                 variant="ghost"
                 type="button"
               >
@@ -1030,7 +1040,10 @@ export function Dashboard({
                 <Fan className="w-4 h-4" />
               </Button>
             </motion.div>
+            <p className="text-[10px] text-muted-foreground font-ui">Create Miner</p>
+            </div>
 
+            <div className="flex flex-col items-center gap-1.5">
             <Popover open={withdrawOpen} onOpenChange={setWithdrawOpen}>
               <PopoverTrigger asChild>
                 <Button
@@ -1044,7 +1057,7 @@ export function Dashboard({
                       openWithdraw(e);
                     }
                   }}
-                  className="flex-1 liquid-glass border-0 bg-red-500/10 hover:bg-red-500/20 text-red-500 flex items-center justify-center h-12 rounded-2xl"
+                  className="w-11 h-11 liquid-glass border-0 bg-red-500/10 hover:bg-red-500/20 text-red-500 flex items-center justify-center rounded-2xl p-0"
                   variant="ghost"
                   type="button"
                 >
@@ -1149,17 +1162,7 @@ export function Dashboard({
                 </div>
               </PopoverContent>
             </Popover>
-          </div>
-          
-          <div className="flex gap-2 mt-2">
-            <div className="flex-1 text-center">
-              <p className="text-xs text-muted-foreground">Deposit</p>
-            </div>
-            <div className="flex-1 text-center">
-              <p className="text-xs text-muted-foreground">Create Miner</p>
-            </div>
-            <div className="flex-1 text-center">
-              <p className="text-xs text-muted-foreground">Withdraw</p>
+            <p className="text-[10px] text-muted-foreground font-ui">Withdraw</p>
             </div>
           </div>
         </div>
@@ -1175,16 +1178,16 @@ export function Dashboard({
         className="grid grid-cols-2 gap-3"
       >
         <div onClick={onNavigateToMining} className="cursor-pointer">
-          <GlassCard delay={0.25} className="p-4 hover-elevate cursor-pointer" glow="primary" data-testid="card-hashrate">
-            <div className="flex items-center justify-between gap-3">
+          <GlassCard delay={0.25} className="p-3 h-[88px] hover-elevate cursor-pointer" glow="primary" data-testid="card-hashrate">
+            <div className="flex items-center justify-between gap-2 h-full min-h-0">
               <div className="text-left">
-                <p className="text-2xl font-bold text-foreground font-display" data-testid="text-hash-power">{miningPower}</p>
+                <p className="text-xl font-bold text-foreground font-display" data-testid="text-hash-power">{miningPower}</p>
                 <p className="text-xs text-muted-foreground">Hashrate</p>
               </div>
               <motion.img 
-                src="https://cdn3d.iconscout.com/3d/premium/thumb/mining-algorithm-3d-icon-png-download-11264737.png"
+                src="https://cdn3d.iconscout.com/3d/premium/thumb/bitcoin-mining-hardware-3d-icon-download-in-png-blend-fbx-gltf-file-formats--asic-cryptocurrency-miner-pack-science-technology-icons-8337889.png"
                 alt="Hashrate"
-                className="w-[89px] h-[89px] object-contain"
+                className="w-[56px] h-[56px] object-contain"
                 whileHover={{ scale: 1.05 }}
               />
             </div>
@@ -1192,16 +1195,16 @@ export function Dashboard({
         </div>
 
         <div onClick={onNavigateToMining} className="cursor-pointer">
-          <GlassCard delay={0.3} className="p-4 hover-elevate cursor-pointer" glow="primary" data-testid="card-active-contracts">
-            <div className="flex items-center justify-between gap-3">
+          <GlassCard delay={0.3} className="p-3 h-[88px] hover-elevate cursor-pointer" glow="primary" data-testid="card-active-contracts">
+            <div className="flex items-center justify-between gap-2 h-full min-h-0">
               <div className="text-left">
-                <p className="text-2xl font-bold text-foreground font-display" data-testid="text-active-contracts">{activeContractsCount}</p>
+                <p className="text-xl font-bold text-foreground font-display" data-testid="text-active-contracts">{activeContractsCount}</p>
                 <p className="text-xs text-muted-foreground">Active Contracts</p>
               </div>
               <motion.img 
-                src="https://cdn3d.iconscout.com/3d/premium/thumb/crypto-smart-contract-3d-icon-png-download-13394096.png"
+                src="https://cdn3d.iconscout.com/3d/premium/thumb/smart-contract-3d-icon-download-in-png-blend-fbx-gltf-file-formats--blockchain-ethereum-cryptocurrency-pack-science-technology-icons-6491635.png"
                 alt="Contracts"
-                className="w-[94px] h-[94px] object-contain"
+                className="w-[56px] h-[56px] object-contain"
                 whileHover={{ scale: 1.05 }}
               />
             </div>
@@ -1231,11 +1234,11 @@ export function Dashboard({
           
           <div className="relative flex items-center gap-3">
             <motion.div
-              className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/30 to-teal-500/20 flex items-center justify-center"
+              className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/30 to-teal-500/20 flex items-center justify-center overflow-hidden"
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <Fan className="w-6 h-6 text-emerald-400" />
+              <img src="https://cdn3d.iconscout.com/3d/premium/thumb/bitcoin-mining-hardware-3d-icon-download-in-png-blend-fbx-gltf-file-formats--asic-cryptocurrency-miner-pack-science-technology-icons-8337889.png" alt="Mining" className="w-10 h-10 object-contain" />
             </motion.div>
             
             <div className="flex-1">
@@ -1267,33 +1270,33 @@ export function Dashboard({
         className="grid grid-cols-2 gap-3"
       >
         <Link href="/growth">
-          <motion.div
+        <motion.div
             className="relative overflow-hidden rounded-2xl cursor-pointer hover-elevate h-40"
             whileTap={{ scale: 0.98 }}
             data-testid="card-growth-hub-main"
           >
-            <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-orange-950/60 dark:via-slate-900/80 dark:to-slate-950 bg-gradient-to-br from-orange-100/80 via-slate-50/90 to-orange-50" />
+            <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-violet-950/60 dark:via-slate-900/80 dark:to-slate-950 bg-gradient-to-br from-violet-100/80 via-slate-50/90 to-violet-50" />
             <svg className="absolute inset-0 w-full h-full opacity-30 dark:opacity-30 opacity-20" viewBox="0 0 400 200">
               <defs>
                 <radialGradient id="grad1" cx="30%" cy="30%">
-                  <stop offset="0%" stopColor="#f97316" stopOpacity="0.4"/>
-                  <stop offset="100%" stopColor="#9a3412" stopOpacity="0"/>
+                  <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.4"/>
+                  <stop offset="100%" stopColor="#4c1d95" stopOpacity="0"/>
                 </radialGradient>
                 <radialGradient id="grad2" cx="70%" cy="70%">
-                  <stop offset="0%" stopColor="#ea580c" stopOpacity="0.3"/>
-                  <stop offset="100%" stopColor="#9a3412" stopOpacity="0"/>
+                  <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.3"/>
+                  <stop offset="100%" stopColor="#4c1d95" stopOpacity="0"/>
                 </radialGradient>
               </defs>
               <circle cx="80" cy="40" r="120" fill="url(#grad1)"/>
               <circle cx="320" cy="160" r="100" fill="url(#grad2)"/>
-              <path d="M0,120 Q100,80 200,100 T400,120 L400,200 L0,200 Z" fill="#f97316" fillOpacity="0.08"/>
+              <path d="M0,120 Q100,80 200,100 T400,120 L400,200 L0,200 Z" fill="#8b5cf6" fillOpacity="0.08"/>
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-yellow-400 flex items-center justify-center shadow-lg">
-                <Gift className="w-7 h-7 text-white" />
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-400 flex items-center justify-center shadow-lg overflow-hidden">
+                <img src="https://cdn3d.iconscout.com/3d/premium/thumb/affiliate-marketing-3d-icon-download-in-png-blend-fbx-gltf-file-formats--referral-network-pack-business-icons-7578977.png" alt="Referral" className="w-12 h-12 object-contain" />
               </div>
               <p className="text-sm font-semibold text-foreground text-center px-3 leading-snug">
-                Refer & Earn <span className="text-orange-400 font-bold">$10 USDT</span> Per Friend
+                Referral <span className="text-violet-400 font-bold">Program</span>
               </p>
             </div>
           </motion.div>
@@ -1303,21 +1306,21 @@ export function Dashboard({
           className="relative overflow-hidden rounded-2xl h-40"
           data-testid="card-rate-app"
         >
-          <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-amber-950/60 dark:via-slate-900/80 dark:to-slate-950 bg-gradient-to-br from-amber-100/80 via-slate-50/90 to-amber-50" />
+          <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-violet-950/60 dark:via-slate-900/80 dark:to-slate-950 bg-gradient-to-br from-violet-100/80 via-slate-50/90 to-violet-50" />
           <svg className="absolute inset-0 w-full h-full opacity-30 dark:opacity-30 opacity-20" viewBox="0 0 400 200">
             <defs>
               <radialGradient id="grad3" cx="20%" cy="20%">
-                <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.4"/>
-                <stop offset="100%" stopColor="#92400e" stopOpacity="0"/>
+                <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.4"/>
+                <stop offset="100%" stopColor="#4c1d95" stopOpacity="0"/>
               </radialGradient>
               <radialGradient id="grad4" cx="80%" cy="80%">
-                <stop offset="0%" stopColor="#d97706" stopOpacity="0.3"/>
-                <stop offset="100%" stopColor="#78350f" stopOpacity="0"/>
+                <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.3"/>
+                <stop offset="100%" stopColor="#4c1d95" stopOpacity="0"/>
               </radialGradient>
             </defs>
             <circle cx="100" cy="50" r="110" fill="url(#grad3)"/>
             <circle cx="300" cy="150" r="90" fill="url(#grad4)"/>
-            <path d="M0,130 Q100,90 200,110 T400,130 L400,200 L0,200 Z" fill="#f59e0b" fillOpacity="0.08"/>
+            <path d="M0,130 Q100,90 200,110 T400,130 L400,200 L0,200 Z" fill="#8b5cf6" fillOpacity="0.08"/>
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
             {hasRatedApp ? (
@@ -1329,9 +1332,9 @@ export function Dashboard({
               </>
             ) : (
               <>
-                <img src="https://cdn3d.iconscout.com/3d/premium/thumb/5-star-3d-icon-png-download-10200199.png" alt="5 Stars" className="w-16 h-16" />
+                <img src="https://cdn3d.iconscout.com/3d/premium/thumb/star-struck-3d-icon-download-in-png-blend-fbx-gltf-file-formats--dizzy-face-emoji-face-expression-pack-sign-symbols-icons-8268818.png" alt="Stars" className="w-16 h-16" />
                 <p className="text-sm font-semibold text-foreground text-center px-3 leading-snug">
-                  Share Your Feedback <span className="text-amber-400 font-bold">& Unlock Rewards</span>
+                  Share Your Feedback <span className="text-violet-400 font-bold">& Unlock Rewards</span>
                 </p>
               </>
             )}

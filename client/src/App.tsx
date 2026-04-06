@@ -9,15 +9,14 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { ComplianceProvider, useCompliance } from "@/contexts/ComplianceContext";
 import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Home, Wallet as WalletIcon, TrendingUp, Pickaxe, Sparkles, Settings as SettingsIcon, Bell } from "lucide-react";
 import { Switch, Route, Link, useLocation } from "wouter";
 import { useKeyboardAdjustment } from "@/hooks/useKeyboardAdjustment";
 
-import { BottomNav, type TabType } from "@/components/BottomNav";
+import { type TabType } from "@/components/BottomNav";
 import { SafeBottomNav } from "@/components/SafeBottomNav";
-import { GlobalHeader } from "@/components/GlobalHeader";
 import { SafeHeader } from "@/components/SafeHeader";
-import { ScrollAwareStatusBar } from "@/components/ScrollAwareStatusBar";
+import { iOS26TabBar as IOS26TabBar, iOS26Toolbar as IOS26Toolbar, ScrollEdgeBlur } from "@/components/ios26";
 import { DashboardSkeleton, WalletSkeleton } from "@/components/LoadingSkeleton";
 import { ForceUpdateModal } from "@/components/ForceUpdateModal";
 import { TwoFactorVerifyScreen } from "@/components/TwoFactorVerifyScreen";
@@ -339,24 +338,38 @@ function MobileApp() {
   }
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden safe-area-inset">
-      <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
+    <div className="min-h-screen bg-background safe-area-inset">
+      {/* OLED ambient glow background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-[-5%] left-[15%] w-[35%] h-[20%] bg-emerald-500/[0.03] rounded-full blur-[100px]" />
+        <div className="absolute bottom-[-5%] right-[10%] w-[30%] h-[20%] bg-primary/[0.02] rounded-full blur-[80px]" />
+        <div className="absolute top-[50%] left-[-5%] w-[20%] h-[15%] bg-cyan-500/[0.015] rounded-full blur-[70px]" />
+      </div>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[40%] -left-[20%] w-[80%] h-[80%] bg-primary/10 rounded-full blur-[120px]" />
-        <div className="absolute -bottom-[30%] -right-[20%] w-[60%] h-[60%] bg-purple-500/5 rounded-full blur-[100px]" />
 
         {/* Force Update Modal */}
         <ForceUpdateModal />
       </div>
 
-      {/* Global Header - only renders on home tab */}
-      <GlobalHeader
-        activeTab={activeTab}
+      {/* iOS 26 Toolbar — persistent across all tabs */}
+      <IOS26Toolbar
+        title={
+          activeTab === "home" ? "BlockMint"
+          : activeTab === "wallet" ? "Wallet"
+          : activeTab === "invest" ? "Earn & Yield"
+          : activeTab === "mining" ? "Mining"
+          : activeTab === "solo" ? "Solo Mining"
+          : "BlockMint"
+        }
+        variant="largeTitle"
+        showBack={activeTab !== "home"}
+        onBack={() => setActiveTab("home")}
+        showDefaultActions
         onOpenSettings={() => setShowSettings(true)}
-        onNavigateToHome={() => setActiveTab("home")}
-        onNavigateToWallet={() => setActiveTab("wallet")}
-        onNavigateToInvest={() => setActiveTab("invest")}
       />
+
+      {/* Scroll edge blur */}
+      <ScrollEdgeBlur />
 
       <main className="relative z-10 max-w-md mx-auto px-4 pb-28">
         <Suspense fallback={<PageLoader />}>
@@ -508,12 +521,22 @@ function MobileApp() {
         </motion.footer>
       </main>
 
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <IOS26TabBar
+        tabs={[
+          { id: "home", icon: <i className="fi fi-tr-house-window" style={{ fontSize: 18, lineHeight: 1 }} />, label: "Home" },
+          { id: "wallet", icon: <i className="fi fi-tr-wallet" style={{ fontSize: 18, lineHeight: 1 }} />, label: "Wallet" },
+          { id: "invest", icon: <i className="fi fi-tr-growth-chart-invest" style={{ fontSize: 18, lineHeight: 1 }} />, label: "Yield" },
+          { id: "mining", icon: <i className="fi fi-tr-pickaxe" style={{ fontSize: 18, lineHeight: 1 }} />, label: "Mining" },
+          { id: "solo", icon: <i className="fi fi-tr-bullseye-arrow" style={{ fontSize: 18, lineHeight: 1 }} />, label: "Solo" },
+        ]}
+        activeTab={activeTab}
+        onTabChange={(id: string) => setActiveTab(id as TabType)}
+      />
 
       <AnimatePresence>
         {showSettings && (
           <motion.div
-            className="fixed inset-0 z-50 flex flex-col bg-background safe-area-inset"
+            className="fixed inset-0 z-[100] flex flex-col bg-background safe-area-inset"
             initial={{ opacity: 0, y: "100%" }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: "100%" }}
@@ -525,7 +548,14 @@ function MobileApp() {
               <div className="absolute -bottom-[30%] -right-[20%] w-[60%] h-[60%] bg-primary/5 rounded-full blur-[100px]" />
             </div>
             {/* Scroll-aware background for system status bar */}
-            <ScrollAwareStatusBar />
+            <ScrollEdgeBlur />
+            {/* iOS 26 Toolbar for Settings overlay */}
+            <IOS26Toolbar
+              title="Settings"
+              variant="largeTitle"
+              showBack
+              onBack={() => setShowSettings(false)}
+            />
             {/* Spacer for system status bar - reduced spacing */}
             <div className="h-[env(safe-area-inset-top,0px)]" />
             <div className="relative z-10 flex-1 overflow-auto px-4 pb-8">

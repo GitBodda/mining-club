@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Zap, Users, Crown, Star, ChevronRight, Share2,
-  Gift, TrendingUp, Shield, ArrowLeft, Copy, Check,
+  Gift, TrendingUp, Shield, Copy, Check,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { StarterMinerCard } from "@/components/StarterMinerCard";
 import { ScrollAwareStatusBar } from "@/components/ScrollAwareStatusBar";
+import { iOS26Toolbar } from "@/components/ios26";
+import { ScrollEdgeBlur } from "@/components/ios26";
 import { auth } from "@/lib/firebase";
 
 const PUBLIC_URL = import.meta.env.VITE_PUBLIC_APP_URL || "https://hardisk.co";
@@ -59,7 +61,28 @@ export function GrowthHub({ onBack }: GrowthHubProps) {
     retry: 2,
   });
 
-  const referralCode = profile?.referral?.referralCode ?? "";
+  // Use referral code from API profile, fallback to localStorage user data, then fallback to lightweight endpoint
+  const localReferralCode = (() => {
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || "{}");
+      return u.referralCode || "";
+    } catch { return ""; }
+  })();
+
+  // Lightweight fallback: fetch referral code without auth if profile query fails
+  const { data: fallbackCode } = useQuery({
+    queryKey: ["/api/growth/referral-code", userId],
+    queryFn: async () => {
+      const res = await fetch(`/api/growth/referral-code/${userId}`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.referralCode || null;
+    },
+    enabled: !!userId,
+    staleTime: 300_000,
+  });
+
+  const referralCode = profile?.referral?.referralCode || localReferralCode || fallbackCode || "";
   const referralLink = referralCode ? `${PUBLIC_URL}/r/${referralCode}` : "";
 
   const handleCopy = async () => {
@@ -120,15 +143,15 @@ export function GrowthHub({ onBack }: GrowthHubProps) {
   return (
     <div className="min-h-screen pb-24">
       <ScrollAwareStatusBar />
-      {/* Header */}
-      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-white/5" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="px-4 py-3 flex items-center gap-3">
-          <button onClick={onBack ?? (() => navigate("/"))} className="text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="text-lg font-bold">Growth Hub</h1>
-        </div>
-      </div>
+      <ScrollEdgeBlur />
+      {/* iOS 26 Toolbar */}
+      <iOS26Toolbar
+        title="Growth Hub"
+        variant="largeTitle"
+        showBack
+        showDefaultActions
+        onBack={onBack ?? (() => navigate("/"))}
+      />
 
       <div className="px-4 space-y-5 mt-5">
         {/* Hero banner */}

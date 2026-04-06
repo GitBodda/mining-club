@@ -491,7 +491,7 @@ function PackageCard({ pkg, index, onPurchase, isPending, userId }: { pkg: Minin
       >
         {pkg.popular && (
           <Badge 
-            className="absolute -top-2 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-xs"
+            className="absolute -top-2 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-xs whitespace-nowrap w-fit px-2"
             data-testid={`badge-popular-${pkg.id}`}
           >
             <Sparkles className="w-3 h-3 mr-1" />
@@ -555,38 +555,35 @@ function PackageCard({ pkg, index, onPurchase, isPending, userId }: { pkg: Minin
         </div>
 
         {/* Buy buttons - Card payment primary, crypto secondary */}
-        <div className="flex gap-2">
+        <div className="space-y-2">
           {/* Main CTA - Card Payment */}
           {userId && (
-            <div className="flex-1">
-              <StripePayButton
-                userId={userId}
-                amount={pkg.cost}
-                productType="mining_package"
-                productId={pkg.id}
-                productName={`${pkg.crypto} ${pkg.name} Mining Package`}
-                metadata={{ hashrate: pkg.hashrateValue, hashrateUnit: pkg.hashrateUnit, crypto: pkg.crypto }}
-                size="sm"
-                variant="default"
-                className="w-full h-11 font-semibold text-white border-0 shadow-lg bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-emerald-500/25"
-                onPaymentSuccess={() => {
-                  window.location.reload();
-                }}
-              />
-            </div>
+            <StripePayButton
+              userId={userId}
+              amount={pkg.cost}
+              productType="mining_package"
+              productId={pkg.id}
+              productName={`${pkg.crypto} ${pkg.name} Mining Package`}
+              metadata={{ hashrate: pkg.hashrateValue, hashrateUnit: pkg.hashrateUnit, crypto: pkg.crypto }}
+              size="sm"
+              variant="default"
+              className="w-full h-11 font-semibold text-white border-0 shadow-lg bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-emerald-500/25"
+              onPaymentSuccess={() => {
+                window.location.reload();
+              }}
+            />
           )}
           
-          {/* Secondary - Crypto/Wallet Payment with static icons */}
+          {/* Secondary - Crypto/Wallet Payment full width like hashrate calculator */}
           <button
             onClick={() => onPurchase(pkg)}
             disabled={isPending}
-            className="relative w-14 h-11 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/10 border border-amber-500/30 hover:border-amber-500/50 flex items-center justify-center gap-0.5 transition-all hover:scale-105 active:scale-95"
+            className="w-full h-10 rounded-xl bg-gradient-to-r from-amber-500/15 to-orange-500/10 border border-amber-500/30 hover:border-amber-500/50 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
             data-testid={`button-buy-${pkg.id}`}
             title="Pay with crypto balance"
           >
             <span className="text-amber-400 font-bold text-sm">₿</span>
-            <span className="text-[8px] text-muted-foreground">/</span>
-            <span className="text-emerald-400 font-bold text-[10px]">$</span>
+            <span className="text-sm font-semibold text-foreground">Pay with Crypto Balance</span>
           </button>
         </div>
         
@@ -603,29 +600,32 @@ function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }:
   const { convert, getSymbol } = useCurrency();
   const { btcPrice } = useBTCPrice();
   
-  const [btcHashrate, setBtcHashrate] = useState<number>(0.3);
+  const [investAmount, setInvestAmount] = useState<number>(150);
+  const [customInput, setCustomInput] = useState<string>("150");
   const [period, setPeriod] = useState<"daily" | "annual">("annual");
   
   // Base price is $30 per 1TH
   const basePrice = 30;
   
+  // Derive hashrate from dollar amount
+  const btcHashrate = Math.max(0.3, +(investAmount / basePrice).toFixed(1));
+  
   // Calculate discount based on hashrate - more hashrate = lower price per TH
   const getPricePerTH = (hashrate: number) => {
-    if (hashrate >= 100) return basePrice * 0.70; // 30% discount
-    if (hashrate >= 50) return basePrice * 0.75; // 25% discount
-    if (hashrate >= 30) return basePrice * 0.80; // 20% discount
-    if (hashrate >= 20) return basePrice * 0.85; // 15% discount
-    if (hashrate >= 10) return basePrice * 0.90; // 10% discount
-    if (hashrate >= 5) return basePrice * 0.95; // 5% discount
-    return basePrice; // No discount
+    if (hashrate >= 100) return basePrice * 0.70;
+    if (hashrate >= 50) return basePrice * 0.75;
+    if (hashrate >= 30) return basePrice * 0.80;
+    if (hashrate >= 20) return basePrice * 0.85;
+    if (hashrate >= 10) return basePrice * 0.90;
+    if (hashrate >= 5) return basePrice * 0.95;
+    return basePrice;
   };
   
   const pricePerTH = getPricePerTH(btcHashrate);
-  const estimatedCost = btcHashrate * pricePerTH;
+  const estimatedCost = investAmount;
   
   // New calculation logic: up to 20% return on investment
-  // The return is approximately 20% of the purchase price
-  const annualUSDReturn = estimatedCost * 1.20; // 20% return
+  const annualUSDReturn = estimatedCost * 1.20;
   const dailyUSDReturn = annualUSDReturn / 365;
   
   // Convert USD returns to BTC
@@ -637,6 +637,25 @@ function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }:
   const futureAnnualReturn = annualBTCReturn * futurePrice;
   
   const hashrateDisplay = `${btcHashrate} TH/s`;
+
+  // Set amount and keep input in sync — always rounded to $5
+  const setAmountSynced = (val: number) => {
+    const clamped = Math.max(10, Math.min(15000, val));
+    const rounded = Math.round(clamped / 5) * 5;
+    setInvestAmount(rounded);
+    setCustomInput(String(rounded));
+  };
+
+  // Handle custom input commit
+  const commitCustomInput = () => {
+    const parsed = parseInt(customInput, 10);
+    if (!isNaN(parsed) && parsed >= 10 && parsed <= 15000) {
+      setAmountSynced(parsed);
+    } else {
+      // Reset to current value
+      setCustomInput(String(investAmount));
+    }
+  };
   
   return (
     <GlassCard className="p-5" variant="strong">
@@ -658,24 +677,63 @@ function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }:
         </div>
         
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <Label className="text-xs text-muted-foreground">Bitcoin Hashrate</Label>
-            <span className="text-base font-bold text-amber-400">
-              {hashrateDisplay}
-            </span>
+          <div className="flex items-center justify-between mb-3">
+            <Label className="text-xs text-muted-foreground">Investment Amount</Label>
+            <span className="text-xs text-amber-400 font-semibold">{hashrateDisplay}</span>
           </div>
-          <Slider
-            value={[btcHashrate]}
-            onValueChange={(v) => setBtcHashrate(Math.round(v[0] * 10) / 10)}
-            min={0.3}
-            max={500}
-            step={0.1}
-            className="py-2"
-            data-testid="slider-hashrate"
-          />
-          <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-            <span>0.3 TH/s</span>
-            <span>500 TH/s</span>
+
+          {/* Compact inline custom amount — small input field */}
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-sm text-muted-foreground font-numbers">$</span>
+            <input
+              type="number"
+              value={customInput}
+              onChange={(e) => setCustomInput(e.target.value)}
+              onBlur={commitCustomInput}
+              onKeyDown={(e) => { if (e.key === "Enter") { commitCustomInput(); (e.target as HTMLInputElement).blur(); } }}
+              className="w-24 h-8 px-2 rounded-lg bg-white/5 border border-white/10 text-base font-bold text-foreground text-center focus:outline-none focus:border-[#0088FF]/50 font-numbers"
+              min={10}
+              max={15000}
+            />
+          </div>
+
+          {/* iOS 26 Slider with integrated stepper */}
+          <div className="flex items-center gap-2">
+            {/* iOS-style stepper — decrement/increment pill */}
+            <div className="flex h-8 rounded-full overflow-hidden border border-white/10 shrink-0">
+              <button
+                onClick={() => setAmountSynced(investAmount - 5)}
+                className="w-9 h-8 flex items-center justify-center text-foreground/80 bg-white/[0.06] hover:bg-white/10 active:bg-white/15 transition-colors text-base font-semibold"
+                style={{ fontWeight: 590, letterSpacing: '-0.43px' }}
+              >
+                −
+              </button>
+              <div className="w-px h-6 self-center bg-white/20" />
+              <button
+                onClick={() => setAmountSynced(investAmount + 5)}
+                className="w-9 h-8 flex items-center justify-center text-foreground/80 bg-white/[0.06] hover:bg-white/10 active:bg-white/15 transition-colors text-base font-semibold"
+                style={{ fontWeight: 590, letterSpacing: '-0.43px' }}
+              >
+                +
+              </button>
+            </div>
+
+            {/* Slider */}
+            <div className="flex-1">
+              <Slider
+                value={[investAmount]}
+                onValueChange={(v) => { const rounded = Math.round(v[0] / 5) * 5; setInvestAmount(rounded); setCustomInput(String(rounded)); }}
+                min={10}
+                max={15000}
+                step={5}
+                className="py-0"
+                data-testid="slider-hashrate"
+              />
+            </div>
+          </div>
+          <div className="flex justify-between text-[10px] text-muted-foreground mt-2 px-[78px]">
+            <span>$10</span>
+            <span>$15,000</span>
           </div>
           
           {/* Quick buy section right after slider */}
@@ -695,25 +753,22 @@ function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }:
               </div>
             </div>
             
-            {/* Quick Buy Buttons */}
-            <div className="flex gap-2">
+            {/* Quick Buy Buttons — stacked */}
+            <div className="space-y-2">
               {userId && (
-                <div className="flex-1">
-                  <StripePayButton
-                    userId={userId}
-                    amount={estimatedCost}
-                    productType="mining_package"
-                    productName={`Custom BTC Mining ${btcHashrate} TH/s`}
-                    metadata={{ hashrate: btcHashrate, hashrateUnit: "TH/s", crypto: "BTC" }}
-                    variant="default"
-                    className="w-full h-10 font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 border-0 shadow-lg shadow-emerald-500/25"
-                    onPaymentSuccess={() => window.location.reload()}
-                  />
-                </div>
+                <StripePayButton
+                  userId={userId}
+                  amount={estimatedCost}
+                  productType="mining_package"
+                  productName={`Custom BTC Mining ${btcHashrate} TH/s`}
+                  metadata={{ hashrate: btcHashrate, hashrateUnit: "TH/s", crypto: "BTC" }}
+                  variant="default"
+                  className="w-full h-10 font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 border-0 shadow-lg shadow-emerald-500/25"
+                  onPaymentSuccess={() => window.location.reload()}
+                />
               )}
               <button
                 onClick={() => {
-                  // Use the confirmation popup flow
                   onCryptoPurchase({
                     hashrate: btcHashrate,
                     cost: estimatedCost,
@@ -722,11 +777,10 @@ function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }:
                   });
                 }}
                 disabled={isPending}
-                className="w-14 h-10 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/10 border border-amber-500/30 hover:border-amber-500/50 flex items-center justify-center gap-1 transition-all hover:scale-105 active:scale-95"
-                title="Pay with crypto balance"
+                className="w-full h-10 rounded-xl bg-gradient-to-r from-amber-500/15 to-orange-500/10 border border-amber-500/30 hover:border-amber-500/50 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
               >
-                <span className="text-amber-400 font-bold text-base">₿</span>
-                <span className="text-emerald-400 font-bold text-base">$</span>
+                <span className="text-amber-400 font-bold text-sm">₿</span>
+                <span className="text-sm font-semibold text-foreground">Pay with Crypto Balance</span>
               </button>
             </div>
           </div>
@@ -1187,6 +1241,8 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
 
   const btcPackages = miningPackages.filter(p => p.crypto === "BTC");
 
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+
   return (
     <>
       <motion.div
@@ -1196,173 +1252,171 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
         exit={{ opacity: 0 }}
         data-testid="page-mining"
       >
-        {/* Header with Back Button */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => window.history.back()}
-              className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
-              aria-label="Go back"
-            >
-              <ChevronLeft className="w-5 h-5 text-muted-foreground" />
-            </button>
-            <div className="flex-1 text-center">
-              <h1 className="text-xl font-bold text-foreground">Mining</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Buy hashpower & earn crypto
-              </p>
-            </div>
-            {/* Balance indicator - compact */}
-            <div className="text-right">
-              <p className="text-[9px] text-muted-foreground">Available</p>
-              <p className="text-xs font-bold text-foreground">
-                {paymentCurrency === "USDT" ? "$" : ""}{availableBalance.toFixed(paymentCurrency === "USDT" ? 2 : 6)}
-              </p>
-            </div>
-          </div>
-        </motion.div>
 
-        {/* Quick Stats with My Devices button integrated - Only show if has active purchases */}
+        {/* ── Quick Stats Banner ── Only if active */}
         {(contracts.length + activePurchases.length > 0) && (
-          <GlassCard delay={0.1} variant="strong" className="relative overflow-hidden py-4 px-4" glow="btc">
+          <GlassCard delay={0.1} variant="strong" className="relative overflow-hidden py-3 px-4" glow="btc">
             <div className="absolute inset-0 pointer-events-none">
               <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-gradient-to-br from-emerald-500/15 via-teal-500/8 to-transparent blur-2xl" />
             </div>
             <FloatingParticles />
             <div className="relative z-10">
-              <div className="flex items-center justify-between gap-4 mb-3">
+              <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs text-muted-foreground mb-0.5">Your Hashpower</p>
+                  <p className="text-[10px] text-muted-foreground font-ui mb-0.5">Your Hashpower</p>
                   <AnimatedHashrateDisplay value={totalHashrate} unit="TH/s" />
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-muted-foreground mb-0.5">Today's Earnings</p>
+                  <p className="text-[10px] text-muted-foreground font-ui mb-0.5">Today's Earnings</p>
                   <div className="flex items-baseline gap-1 justify-end">
-                    <span className="text-sm text-muted-foreground">$</span>
+                    <span className="text-xs text-muted-foreground font-numbers">$</span>
                     <LiveGrowingBalance
                       value={miningEstimatedTodayUSDT}
                       perSecond={miningEarningsPerSecondUSDT}
                       active={miningEarningsPerSecondUSDT > 0}
-                      decimals={2}
-                      className="text-xl font-bold text-emerald-400"
+                      decimals={6}
+                      className="text-lg font-bold text-emerald-400 font-numbers"
+                      showBadge={false}
                     />
                   </div>
                 </div>
               </div>
-              
-              {/* My Devices button integrated */}
+              {/* Devices link */}
               <button
                 onClick={scrollToMyDevices}
-                className="w-full flex items-center justify-between p-2 rounded-lg bg-white/5 border border-emerald-500/20 hover:border-emerald-500/40 transition-all group"
+                className="w-full flex items-center justify-between mt-2.5 p-2 rounded-lg bg-white/5 border border-emerald-500/15 hover:border-emerald-500/30 transition-all group"
               >
                 <div className="flex items-center gap-2">
-                  <Cpu className="w-4 h-4 text-emerald-400" />
-                  <span className="text-xs font-medium text-foreground">View {contracts.length + activePurchases.length} Active Devices</span>
+                  <Cpu className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="text-[11px] font-medium text-foreground font-ui">{contracts.length + activePurchases.length} Active Devices</span>
                 </div>
-                <ChevronDown className="w-4 h-4 text-emerald-400 group-hover:translate-y-0.5 transition-transform" />
+                <ChevronDown className="w-3.5 h-3.5 text-emerald-400 group-hover:translate-y-0.5 transition-transform" />
               </button>
             </div>
           </GlassCard>
         )}
 
-        {/* Buy Hashpower Section - Clear header */}
-        <div className="pt-2">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">1</div>
-            <h2 className="text-base font-semibold text-foreground">Choose Mining Type</h2>
-          </div>
-          
-          {/* Main Tabs - Custom first */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setActiveTab("hot")}
-              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-3.5 rounded-2xl font-semibold text-sm transition-all whitespace-nowrap ${
-                activeTab === "hot"
-                  ? "bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-400 border-2 border-emerald-500/40 shadow-lg shadow-emerald-500/10"
-                  : "bg-white/5 text-muted-foreground border-2 border-transparent hover:bg-white/10"
-              }`}
-            >
-              <Calculator className="w-4 h-4" />
-              <span>Custom TH/s</span>
-              <span className="text-[9px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full uppercase">HOT</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("devices")}
-              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-3.5 rounded-2xl font-semibold text-sm transition-all whitespace-nowrap ${
-                activeTab === "devices"
-                  ? "bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border-2 border-amber-500/40 shadow-lg shadow-amber-500/10"
-                  : "bg-white/5 text-muted-foreground border-2 border-transparent hover:bg-white/10"
-              }`}
-            >
-              <Cpu className="w-4 h-4" />
-              <span>Packages</span>
-            </button>
-          </div>
+        {/* ══════════ HORIZONTAL TAB PURCHASE FLOW ══════════ */}
+        <div className="flex gap-1 p-1 rounded-2xl bg-white/5 border border-white/[0.08]">
+          <button
+            onClick={() => setStep(1)}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all ${
+              step === 1
+                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+              step >= 1 ? "bg-emerald-500/30 text-emerald-400" : "bg-white/10 text-muted-foreground"
+            }`}>1</span>
+            Type
+          </button>
+          <button
+            onClick={() => { if (step >= 2) setStep(2); }}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all ${
+              step === 2
+                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-sm"
+                : step > 2
+                  ? "text-emerald-400/60"
+                  : "text-muted-foreground/50"
+            }`}
+          >
+            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+              step >= 2 ? "bg-emerald-500/30 text-emerald-400" : "bg-white/10 text-muted-foreground/50"
+            }`}>2</span>
+            Configure
+          </button>
         </div>
 
-        {/* Step 2: Select Package */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">2</div>
-            <h2 className="text-base font-semibold text-foreground">
-              {activeTab === "devices" ? "Select Package" : "Configure Hashrate"}
-            </h2>
-          </div>
-
-          {/* Tab Content */}
-          <AnimatePresence mode="wait">
-            {activeTab === "devices" ? (
-              <motion.div
-                key="devices"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.25 }}
-                className="space-y-3"
-              >
-                {btcPackages.map((pkg, index) => (
-                  <PackageCard key={pkg.id} pkg={pkg} index={index} onPurchase={showCryptoConfirmation} isPending={createPurchase.isPending} userId={dbUserId} />
-                ))}
-
-                {/* Trust Indicators - Compact */}
-                <div className="grid grid-cols-4 gap-2 pt-3">
-                  {trustBadges.map((badge, index) => (
-                    <motion.div
-                      key={badge.label}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.2 + index * 0.05 }}
-                      className="text-center p-2"
-                    >
-                      <badge.icon className="w-5 h-5 mx-auto mb-1 text-primary/70" />
-                      <p className="text-[9px] text-muted-foreground leading-tight">{badge.label}</p>
-                    </motion.div>
-                  ))}
+        {/* Tab Content */}
+        <AnimatePresence mode="wait">
+          {step === 1 && (
+            <motion.div
+              key="step1"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.25 }}
+            >
+              <GlassCard delay={0} className="relative overflow-hidden">
+                <h2 className="text-sm font-semibold text-foreground mb-4">Choose Mining Type</h2>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setActiveTab("hot"); setStep(2); }}
+                    className="flex-1 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all bg-gradient-to-b from-emerald-500/10 to-transparent border-emerald-500/30 hover:border-emerald-500/50 active:scale-[0.98]"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
+                      <Calculator className="w-5 h-5 text-emerald-400" />
+                    </div>
+                    <span className="text-sm font-semibold text-foreground">Custom TH/s</span>
+                    <span className="text-[10px] text-muted-foreground text-center leading-tight">Choose your exact hashrate</span>
+                    <span className="text-[9px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full uppercase">POPULAR</span>
+                  </button>
+                  <button
+                    onClick={() => { setActiveTab("devices"); setStep(2); }}
+                    className="flex-1 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all bg-gradient-to-b from-amber-500/8 to-transparent border-white/10 hover:border-amber-500/30 active:scale-[0.98]"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center">
+                      <Cpu className="w-5 h-5 text-amber-400" />
+                    </div>
+                    <span className="text-sm font-semibold text-foreground">Packages</span>
+                    <span className="text-[10px] text-muted-foreground text-center leading-tight">Pre-built mining plans</span>
+                  </button>
                 </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="hot"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.25 }}
-                className="space-y-4"
-              >
-                <HashRateCalculator onPurchase={handleCustomPurchase} onCryptoPurchase={showCustomCryptoConfirmation} isPending={createPurchase.isPending} userId={dbUserId} />
-                {hasContracts && (
-                  <>
-                    <HashRateChart data={chartData} title="Earnings Over Time" />
-                    <PoolStatusCard status={poolStatus} />
-                  </>
+              </GlassCard>
+            </motion.div>
+          )}
+
+          {step >= 2 && (
+            <motion.div
+              key="step2"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.25 }}
+            >
+              <AnimatePresence mode="wait">
+                {activeTab === "devices" ? (
+                  <motion.div
+                    key="devices"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="space-y-3"
+                  >
+                    {btcPackages.map((pkg, index) => (
+                      <PackageCard key={pkg.id} pkg={pkg} index={index} onPurchase={showCryptoConfirmation} isPending={createPurchase.isPending} userId={dbUserId} />
+                    ))}
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="hot"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <HashRateCalculator onPurchase={handleCustomPurchase} onCryptoPurchase={showCustomCryptoConfirmation} isPending={createPurchase.isPending} userId={dbUserId} />
+                  </motion.div>
                 )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Trust Badges — compact row */}
+        <div className="flex items-center justify-around py-1">
+          {trustBadges.map((badge, index) => (
+            <motion.div
+              key={badge.label}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 + index * 0.05 }}
+              className="flex flex-col items-center gap-1"
+            >
+              <badge.icon className="w-4 h-4 text-primary/60" />
+              <p className="text-[8px] text-muted-foreground leading-tight font-ui text-center">{badge.label}</p>
+            </motion.div>
+          ))}
         </div>
 
         {/* ===== MY DEVICES SECTION ===== */}
