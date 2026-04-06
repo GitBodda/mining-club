@@ -10,12 +10,9 @@ import { GlassCard } from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { StarterMinerCard } from "@/components/StarterMinerCard";
-import { ScrollAwareStatusBar } from "@/components/ScrollAwareStatusBar";
-import { iOS26Toolbar, iOS26TabBar } from "@/components/ios26";
-import { ScrollEdgeBlur } from "@/components/ios26";
 import { auth } from "@/lib/firebase";
 
-const PUBLIC_URL = import.meta.env.VITE_PUBLIC_APP_URL || "https://hardisk.co";
+const PUBLIC_URL = "https://hardisk.co";
 
 function getUserId() {
   try {
@@ -26,11 +23,9 @@ function getUserId() {
   }
 }
 
-interface GrowthHubProps {
-  onBack?: () => void;
-}
+interface GrowthHubProps {}
 
-export function GrowthHub({ onBack }: GrowthHubProps) {
+export function GrowthHub({}: GrowthHubProps) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
@@ -79,13 +74,34 @@ export function GrowthHub({ onBack }: GrowthHubProps) {
 
   const handleCopy = async () => {
     if (!referralLink) return;
-    try {
-      await navigator.clipboard.writeText(referralLink);
+    let success = false;
+    // Method 1: Modern Clipboard API
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(referralLink);
+        success = true;
+      } catch {}
+    }
+    // Method 2: input element execCommand fallback
+    if (!success) {
+      try {
+        const el = document.createElement("input");
+        el.value = referralLink;
+        el.style.cssText = "position:fixed;top:0;left:0;opacity:0;pointer-events:none";
+        document.body.appendChild(el);
+        el.focus();
+        el.select();
+        el.setSelectionRange(0, el.value.length);
+        success = document.execCommand("copy");
+        document.body.removeChild(el);
+      } catch {}
+    }
+    if (success) {
       setCopied(true);
-      toast({ title: "Link Copied!", description: "Share it to earn $10 per qualified referral." });
+      toast({ title: "Link Copied!", description: "Share it to earn $10 per referral." });
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast({ title: "Copy failed", variant: "destructive" });
+    } else {
+      toast({ title: "Copy failed", description: "Long-press the link to copy manually.", variant: "destructive" });
     }
   };
 
@@ -133,19 +149,7 @@ export function GrowthHub({ onBack }: GrowthHubProps) {
   ];
 
   return (
-    <div className="min-h-screen pb-24">
-      <ScrollAwareStatusBar />
-      <ScrollEdgeBlur />
-      {/* iOS 26 Toolbar */}
-      <iOS26Toolbar
-        title="Growth Hub"
-        variant="largeTitle"
-        showBack
-        showDefaultActions
-        onBack={onBack ?? (() => navigate("/"))}
-      />
-
-      <div className="px-4 space-y-5 mt-5">
+    <div className="space-y-5">
         {/* Hero banner */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -271,19 +275,6 @@ export function GrowthHub({ onBack }: GrowthHubProps) {
             </Link>
           ))}
         </div>
-      </div>
-
-      <iOS26TabBar
-        tabs={[
-          { id: "home", icon: <i className="fi fi-tr-house-window" style={{ fontSize: 18, lineHeight: 1 }} />, label: "Home" },
-          { id: "wallet", icon: <i className="fi fi-tr-wallet" style={{ fontSize: 18, lineHeight: 1 }} />, label: "Wallet" },
-          { id: "invest", icon: <i className="fi fi-tr-growth-chart-invest" style={{ fontSize: 18, lineHeight: 1 }} />, label: "Yield" },
-          { id: "mining", icon: <i className="fi fi-tr-pickaxe" style={{ fontSize: 18, lineHeight: 1 }} />, label: "Mining" },
-          { id: "solo", icon: <i className="fi fi-tr-bullseye-arrow" style={{ fontSize: 18, lineHeight: 1 }} />, label: "Solo" },
-        ]}
-        activeTab="home"
-        onTabChange={(id: string) => navigate("/")}
-      />
     </div>
   );
 }

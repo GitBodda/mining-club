@@ -92,6 +92,9 @@ function MobileApp() {
     () => localStorage.getItem('twoFAVerified') === 'true'
   );
   
+  const [location, setLocation] = useLocation();
+  const isGrowthPage = location.startsWith('/growth');
+
   // Wrap tab change to always scroll to top on navigation
   const setActiveTab = (tab: TabType) => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -354,7 +357,8 @@ function MobileApp() {
       {/* iOS 26 Toolbar — persistent across all tabs */}
       <IOS26Toolbar
         title={
-          activeTab === "home" ? "BlockMint"
+          isGrowthPage ? "Growth Hub"
+          : activeTab === "home" ? "BlockMint"
           : activeTab === "wallet" ? "Wallet"
           : activeTab === "invest" ? "Earn & Yield"
           : activeTab === "mining" ? "Mining"
@@ -362,8 +366,8 @@ function MobileApp() {
           : "BlockMint"
         }
         variant="largeTitle"
-        showBack={activeTab !== "home"}
-        onBack={() => setActiveTab("home")}
+        showBack={isGrowthPage || activeTab !== "home"}
+        onBack={() => { if (isGrowthPage) { setLocation('/'); } else { setActiveTab("home"); } }}
         showDefaultActions
         onOpenSettings={() => setShowSettings(true)}
       />
@@ -373,6 +377,9 @@ function MobileApp() {
 
       <main className="relative z-10 max-w-md mx-auto px-4 pb-28">
         <Suspense fallback={<PageLoader />}>
+        {isGrowthPage ? (
+          <GrowthHub key="growth" />
+        ) : (
         <AnimatePresence mode="wait">
           {activeTab === "home" && (
             isLoading ? (
@@ -440,8 +447,10 @@ function MobileApp() {
             />
           )}
         </AnimatePresence>
+        )}
         </Suspense>
 
+        {!isGrowthPage && (
         <motion.footer
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -519,6 +528,7 @@ function MobileApp() {
             </Link>
           </div>
         </motion.footer>
+        )}
       </main>
 
       <IOS26TabBar
@@ -529,8 +539,8 @@ function MobileApp() {
           { id: "mining", icon: <i className="fi fi-tr-pickaxe" style={{ fontSize: 18, lineHeight: 1 }} />, label: "Mining" },
           { id: "solo", icon: <i className="fi fi-tr-bullseye-arrow" style={{ fontSize: 18, lineHeight: 1 }} />, label: "Solo" },
         ]}
-        activeTab={activeTab}
-        onTabChange={(id: string) => setActiveTab(id as TabType)}
+        activeTab={isGrowthPage ? "" : activeTab}
+        onTabChange={(id: string) => { if (isGrowthPage) setLocation('/'); setActiveTab(id as TabType); }}
       />
 
       <AnimatePresence>
@@ -650,9 +660,6 @@ function AppRouter() {
       <Route path="/r/:code" component={ReferralLanding} />
       <Route path="/growth/starter">
         {() => <StarterMiner onBack={() => window.history.back()} />}
-      </Route>
-      <Route path="/growth">
-        {() => <GrowthHub onBack={() => window.history.back()} />}
       </Route>
       <Route path="/founders">
         {() => <Founders onBack={() => window.history.back()} />}

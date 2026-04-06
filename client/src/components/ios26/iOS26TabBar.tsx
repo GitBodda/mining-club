@@ -135,25 +135,12 @@ export function iOS26TabBar({
                       ? "text-[var(--ios26-accent-blue,#0088ff)]"
                       : "text-[var(--ios26-label-vibrant,#1a1a1a)] dark:text-[var(--ios26-label-vibrant-dark,#f5f5f5)]"
                   )}
-                  animate={{ scale: isActive ? 0.9 : 1.2 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
                   style={{ fontWeight: 590 }}
                 >
                   {isActive && tab.activeIcon ? tab.activeIcon : tab.icon}
                 </motion.div>
 
-                {/* Label — only shown for active tab */}
-                {isActive && (
-                <span
-                  className={cn(
-                    "relative z-[1] text-[11px] leading-[13px] tracking-[-0.1px] font-semibold mt-0.5",
-                    "text-[var(--ios26-accent-blue,#0088ff)]"
-                  )}
-                  style={{ fontWeight: 590 }}
-                >
-                  {tab.label}
-                </span>
-                )}
+
               </motion.button>
             );
           })}

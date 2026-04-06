@@ -1187,7 +1187,7 @@ export function Dashboard({
               <motion.img 
                 src="/icons/hashrate.png"
                 alt="Hashrate"
-                className="w-[56px] h-[56px] object-contain"
+                className="w-[64px] h-[64px] object-contain drop-shadow-md"
                 whileHover={{ scale: 1.05 }}
               />
             </div>
@@ -1204,7 +1204,7 @@ export function Dashboard({
               <motion.img 
                 src="/icons/contracts.png"
                 alt="Contracts"
-                className="w-[56px] h-[56px] object-contain"
+                className="w-[64px] h-[64px] object-contain drop-shadow-md"
                 whileHover={{ scale: 1.05 }}
               />
             </div>
@@ -1233,13 +1233,13 @@ export function Dashboard({
           />
           
           <div className="relative flex items-center gap-3">
-            <motion.div
-              className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/30 to-teal-500/20 flex items-center justify-center overflow-hidden"
+            <motion.img
+              src="/icons/asic-miner.png"
+              alt="Mining"
+              className="w-20 h-20 object-contain drop-shadow-lg"
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 2, repeat: Infinity }}
-            >
-              <img src="/icons/asic-miner.png" alt="Mining" className="w-10 h-10 object-contain" />
-            </motion.div>
+            />
             
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-0.5">
@@ -1292,9 +1292,7 @@ export function Dashboard({
               <path d="M0,120 Q100,80 200,100 T400,120 L400,200 L0,200 Z" fill="#8b5cf6" fillOpacity="0.08"/>
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-400 flex items-center justify-center shadow-lg overflow-hidden">
-                <img src="/icons/referral.png" alt="Referral" className="w-12 h-12 object-contain" />
-              </div>
+              <img src="/icons/referral.png" alt="Referral" className="w-20 h-20 object-contain" />
               <p className="text-sm font-semibold text-foreground text-center px-3 leading-snug">
                 Referral <span className="text-violet-400 font-bold">Program</span>
               </p>

@@ -94,9 +94,12 @@ export function ReferralLanding() {
 
             <Button
               className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 text-white border-0 h-12 text-base font-bold shadow-lg shadow-orange-500/30"
-              onClick={() => navigate(`/auth?ref=${encodeURIComponent(code)}`)}
+              onClick={() => {
+                localStorage.setItem("ref", code);
+                window.location.href = "https://apps.apple.com/us/app/blockmint-node-manager/id6757912571";
+              }}
             >
-              Claim Your Free Miner <ChevronRight className="w-5 h-5 ml-1" />
+              Download BlockMint <ChevronRight className="w-5 h-5 ml-1" />
             </Button>
 
             <p className="text-[10px] text-muted-foreground mt-3">
