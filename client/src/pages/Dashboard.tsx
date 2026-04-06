@@ -1187,7 +1187,7 @@ export function Dashboard({
               <motion.img 
                 src="/icons/hashrate.png"
                 alt="Hashrate"
-                className="w-[64px] h-[64px] object-contain drop-shadow-md"
+                className="w-[74px] h-[74px] object-contain drop-shadow-md"
                 whileHover={{ scale: 1.05 }}
               />
             </div>

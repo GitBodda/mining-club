@@ -1343,7 +1343,7 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
                     className="flex-1 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all bg-gradient-to-b from-emerald-500/10 to-transparent border-emerald-500/30 hover:border-emerald-500/50 active:scale-[0.98]"
                   >
                     <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
-                      <Calculator className="w-5 h-5 text-emerald-400" />
+                      <i className="fi fi-tr-calculator text-emerald-400 text-lg" />
                     </div>
                     <span className="text-sm font-semibold text-foreground">Custom TH/s</span>
                     <span className="text-[10px] text-muted-foreground text-center leading-tight">Choose your exact hashrate</span>
@@ -1355,7 +1355,7 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
                     className="flex-1 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all bg-gradient-to-b from-amber-500/8 to-transparent border-white/10 hover:border-amber-500/30 active:scale-[0.98]"
                   >
                     <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center">
-                      <Cpu className="w-5 h-5 text-amber-400" />
+                      <i className="fi fi-tr-smart-home-chip text-amber-400 text-lg" />
                     </div>
                     <span className="text-sm font-semibold text-foreground">Packages</span>
                     <span className="text-[10px] text-muted-foreground text-center leading-tight">Pre-built mining plans</span>
