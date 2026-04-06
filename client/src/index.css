@@ -42,8 +42,17 @@
 
 /* Smooth scrolling everywhere */
 /* Native scroll — no smooth-scroll override, let the browser handle it */
+html, body {
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+}
+html {
+  overflow: hidden;
+  height: 100%;
+}
 body {
-  overscroll-behavior-y: contain;
+  overflow: auto;
+  height: 100%;
 }
 
 @keyframes neon-glow-green {

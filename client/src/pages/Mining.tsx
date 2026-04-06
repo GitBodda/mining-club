@@ -659,42 +659,36 @@ function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }:
   
   return (
     <GlassCard className="p-5" variant="strong">
-      <div className="flex items-center gap-3 mb-5">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center">
-          <Calculator className="w-4 h-4 text-primary" />
-        </div>
+      <div className="flex items-center justify-between mb-5">
         <div>
           <h2 className="text-base font-semibold text-foreground">Custom Hashrate Calculator</h2>
           <p className="text-xs text-muted-foreground">Build your own mining package</p>
         </div>
+        <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-[10px]">
+          7 YEAR CONTRACT
+        </Badge>
       </div>
       
       <div className="space-y-4">
-        <div className="mb-4">
-          <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
-            VALID FOR 7 YEARS
-          </Badge>
-        </div>
-        
         <div>
           <div className="flex items-center justify-between mb-3">
-            <Label className="text-xs text-muted-foreground">Investment Amount</Label>
-            <span className="text-xs text-amber-400 font-semibold">{hashrateDisplay}</span>
-          </div>
-
-          {/* Compact inline custom amount — small input field */}
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-sm text-muted-foreground font-numbers">$</span>
-            <input
-              type="number"
-              value={customInput}
-              onChange={(e) => setCustomInput(e.target.value)}
-              onBlur={commitCustomInput}
-              onKeyDown={(e) => { if (e.key === "Enter") { commitCustomInput(); (e.target as HTMLInputElement).blur(); } }}
-              className="w-24 h-8 px-2 rounded-lg bg-white/5 border border-white/10 text-base font-bold text-foreground text-center focus:outline-none focus:border-[#0088FF]/50 font-numbers"
-              min={10}
-              max={15000}
-            />
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-muted-foreground">Investment Amount</Label>
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-muted-foreground font-numbers">$</span>
+                <input
+                  type="number"
+                  value={customInput}
+                  onChange={(e) => setCustomInput(e.target.value)}
+                  onBlur={commitCustomInput}
+                  onKeyDown={(e) => { if (e.key === "Enter") { commitCustomInput(); (e.target as HTMLInputElement).blur(); } }}
+                  className="w-20 h-7 px-2 rounded-lg bg-white/5 border border-white/10 text-sm font-bold text-foreground text-center focus:outline-none focus:border-[#0088FF]/50 font-numbers"
+                  min={10}
+                  max={15000}
+                />
+              </div>
+            </div>
+            <span className="text-xs font-bold text-foreground">{hashrateDisplay}</span>
           </div>
 
           {/* iOS 26 Slider with integrated stepper */}
@@ -731,13 +725,16 @@ function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }:
               />
             </div>
           </div>
-          <div className="flex justify-between text-[10px] text-muted-foreground mt-2 px-[78px]">
+          <div className="flex justify-between text-[10px] text-muted-foreground mt-2" style={{ paddingLeft: 78 }}>
             <span>$10</span>
-            <span>$15,000</span>
+            <span className="mr-0">$15,000</span>
           </div>
           
           {/* Quick buy section right after slider */}
           <div className="mt-3 p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20">
+            <div className="flex justify-center mb-2">
+              <span className="text-xs font-bold text-amber-400 bg-amber-500/15 px-3 py-1 rounded-full border border-amber-500/20">{hashrateDisplay}</span>
+            </div>
             <div className="flex items-center justify-between mb-2">
               <div>
                 <p className="text-xs text-muted-foreground">Total Cost</p>
@@ -1351,6 +1348,7 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
                     <span className="text-sm font-semibold text-foreground">Custom TH/s</span>
                     <span className="text-[10px] text-muted-foreground text-center leading-tight">Choose your exact hashrate</span>
                     <span className="text-[9px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full uppercase">POPULAR</span>
+                    <span className="mt-1 text-[11px] font-semibold text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full">Choose →</span>
                   </button>
                   <button
                     onClick={() => { setActiveTab("devices"); setStep(2); }}
@@ -1361,6 +1359,7 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
                     </div>
                     <span className="text-sm font-semibold text-foreground">Packages</span>
                     <span className="text-[10px] text-muted-foreground text-center leading-tight">Pre-built mining plans</span>
+                    <span className="mt-1 text-[11px] font-semibold text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full">Choose →</span>
                   </button>
                 </div>
               </GlassCard>
