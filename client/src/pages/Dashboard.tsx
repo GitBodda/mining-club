@@ -79,9 +79,9 @@ function ROICalculator({ onClose, onCreateMiner }: { onClose: () => void; onCrea
 
   const pricePerTH = getPricePerTH(hashrate);
   const investment = hashrate * pricePerTH;
-  // BTC mined daily is fixed — based on 0.5% daily return valued at CURRENT BTC price
+  // BTC mined daily is fixed — based on 0.5% daily return valued at CURRENT BTC price, reduced by 30% for realistic display
   const currentPrice = btcPrice || 85000;
-  const dailyBTC = currentPrice > 0 ? (investment * 0.005) / currentPrice : 0;
+  const dailyBTC = currentPrice > 0 ? (investment * 0.005 * 0.7) / currentPrice : 0;
   const monthlyBTC = dailyBTC * 30;
   const annualBTC = dailyBTC * 365;
   // USD value of BTC earnings at DESIRED BTC price (increases as desired price rises)
@@ -104,7 +104,7 @@ function ROICalculator({ onClose, onCreateMiner }: { onClose: () => void; onCrea
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4 pb-28 sm:pb-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <motion.div
         initial={{ opacity: 0, y: 60, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -498,7 +498,7 @@ export function Dashboard({
                 <p className="text-sm font-bold text-foreground">Start Mining Bitcoin</p>
                 <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
               </div>
-              <p className="text-xs text-muted-foreground">Buy hashrate plans • Earn daily BTC rewards</p>
+              <p className="text-xs text-muted-foreground">Earn daily BTC rewards</p>
             </div>
           </div>
 
@@ -534,7 +534,7 @@ export function Dashboard({
                 <p className="text-sm font-bold text-foreground">Manage & Analyze</p>
                 <BarChart3 className="w-3.5 h-3.5 text-teal-400" />
               </div>
-              <p className="text-xs text-muted-foreground">Track miners • Calculate ROI • Review history</p>
+              <p className="text-xs text-muted-foreground">Calculate ROI • Review history</p>
             </div>
           </div>
 
