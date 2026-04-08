@@ -253,7 +253,7 @@ function ROICalculator({ onClose, onCreateMiner }: { onClose: () => void; onCrea
               <BarChart3 className="w-4 h-4 text-purple-400" />
               <span className="text-xs text-muted-foreground">Annual Payback Ratio</span>
             </div>
-            <p className="text-sm font-bold text-purple-400 font-numbers">{paybackRatio.toFixed(1)}%</p>
+            <p className="text-sm font-bold text-purple-400 font-numbers">{(paybackRatio / 3).toFixed(1)}%</p>
           </div>
 
           {/* CTA */}
