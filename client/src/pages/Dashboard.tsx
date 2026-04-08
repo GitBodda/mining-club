@@ -491,7 +491,7 @@ export function Dashboard({
           <motion.div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/0 via-emerald-500/20 to-emerald-500/0 pointer-events-none" variants={cardShineVariants} animate="animate" />
 
           <div className="relative flex items-center gap-3 mb-4">
-            <motion.img src="/icons/asic-miner.png" alt="Mining" className="w-16 h-16 object-contain drop-shadow-lg" animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 2, repeat: Infinity }} />
+            <motion.img src="/cryptocurrency-mining-rig-with-bitcoin-3d-icon-png-download-13013523.png" alt="Mining" className="w-16 h-16 object-contain drop-shadow-lg" animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 2, repeat: Infinity }} />
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-0.5">
                 <p className="text-sm font-bold text-foreground">Start Mining Bitcoin</p>
@@ -527,7 +527,7 @@ export function Dashboard({
           <motion.div className="absolute -inset-1 bg-gradient-to-r from-teal-500/0 via-teal-500/15 to-teal-500/0 pointer-events-none" variants={cardShineVariants} animate="animate" />
 
           <div className="relative flex items-center gap-3 mb-4">
-            <motion.img src="/icons/hashrate.png" alt="Tools" className="w-14 h-14 object-contain drop-shadow-lg" animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 3, repeat: Infinity }} />
+            <motion.img src="/cryptocurrency-platform-3d-icon-png-download-13013496.png" alt="Tools" className="w-14 h-14 object-contain drop-shadow-lg" animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 3, repeat: Infinity }} />
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-0.5">
                 <p className="text-sm font-bold text-foreground">Manage & Analyze</p>
