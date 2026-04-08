@@ -79,16 +79,17 @@ function ROICalculator({ onClose, onCreateMiner }: { onClose: () => void; onCrea
 
   const pricePerTH = getPricePerTH(hashrate);
   const investment = hashrate * pricePerTH;
-  // 0.5% daily return on investment in USD
-  const dailyUSD = investment * 0.005;
-  const monthlyUSD = dailyUSD * 30;
-  const annualUSD = dailyUSD * 365;
-  // Convert to BTC at chosen price
-  const dailyBTC = desiredBTCPrice > 0 ? dailyUSD / desiredBTCPrice : 0;
+  // BTC mined daily is fixed — based on 0.5% daily return valued at CURRENT BTC price
+  const currentPrice = btcPrice || 85000;
+  const dailyBTC = currentPrice > 0 ? (investment * 0.005) / currentPrice : 0;
   const monthlyBTC = dailyBTC * 30;
   const annualBTC = dailyBTC * 365;
-  const paybackDays = dailyUSD > 0 ? investment / dailyUSD : 0;
-  const paybackMonths = paybackDays / 30;
+  // USD value of BTC earnings at DESIRED BTC price (increases as desired price rises)
+  const dailyUSD = dailyBTC * desiredBTCPrice;
+  const monthlyUSD = dailyUSD * 30;
+  const annualUSD = dailyUSD * 365;
+  // Payback ratio: annual return as % of investment
+  const paybackRatio = investment > 0 ? (annualUSD / investment) * 100 : 0;
 
   const setHashrateSynced = (v: number) => {
     const clamped = Math.max(1, Math.min(1000, v));
@@ -246,13 +247,13 @@ function ROICalculator({ onClose, onCreateMiner }: { onClose: () => void; onCrea
             ))}
           </div>
 
-          {/* Payback */}
+          {/* Payback ratio */}
           <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-purple-500/10 to-violet-500/10 border border-purple-500/20">
             <div className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-purple-400" />
-              <span className="text-xs text-muted-foreground">Payback Period</span>
+              <span className="text-xs text-muted-foreground">Annual Payback Ratio</span>
             </div>
-            <p className="text-sm font-bold text-purple-400 font-numbers">{paybackMonths.toFixed(1)} months</p>
+            <p className="text-sm font-bold text-purple-400 font-numbers">{paybackRatio.toFixed(1)}%</p>
           </div>
 
           {/* CTA */}
