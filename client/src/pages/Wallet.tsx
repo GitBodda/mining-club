@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeftRight, Copy, Check, AlertCircle, ArrowDownToLine, ArrowUpFromLine, AlertTriangle, Info, Loader2, CheckCircle2, X, ChevronLeft } from "lucide-react";
 import { GlassCard } from "@/components/GlassCard";
@@ -188,6 +188,26 @@ export function Wallet({
   const [showStripePayment, setShowStripePayment] = useState(false);
 
   const queryClient = useQueryClient();
+
+  // Auto-open deposit dialog when navigated from Dashboard with a method flag
+  useEffect(() => {
+    const method = localStorage.getItem("openDepositMethod") as "card" | "crypto" | null;
+    if (method) {
+      localStorage.removeItem("openDepositMethod");
+      setDepositMethod(method);
+      setDepositOpen(true);
+    }
+  }, []);
+
+  // Handle "History" deep link from Dashboard
+  const recentActivityRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const flag = localStorage.getItem("scrollToRecentActivity");
+    if (flag === "true") {
+      localStorage.removeItem("scrollToRecentActivity");
+      setTimeout(() => recentActivityRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 300);
+    }
+  }, []);
 
   // Fetch wallet addresses from database
   const { data: walletAddresses } = useQuery<{ map: Record<string, string>; entries?: any[] } | Record<string, string>>({
@@ -703,7 +723,7 @@ export function Wallet({
         </div>
       </div>
 
-      <div>
+      <div ref={recentActivityRef} className="scroll-mt-4">
         <h2 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h2>
         <GlassCard delay={0.3} className="p-4">
           {transactions.length > 0 ? (

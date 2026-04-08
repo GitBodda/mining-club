@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { GlassCard } from "@/components/GlassCard";
@@ -600,25 +600,26 @@ function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }:
   const { convert, getSymbol } = useCurrency();
   const { btcPrice } = useBTCPrice();
   
-  const [investAmount, setInvestAmount] = useState<number>(150);
-  const [customInput, setCustomInput] = useState<string>("150");
+  const [investAmount, setInvestAmount] = useState<number>(140);
+  const [customInput, setCustomInput] = useState<string>("140");
   const [period, setPeriod] = useState<"daily" | "annual">("annual");
   
-  // Base price is $30 per 1TH
-  const basePrice = 30;
+  // Base price is $14 per 1 TH/s — volume discounts down to $11/TH for 1000+ TH/s
+  const basePrice = 14;
   
   // Derive hashrate from dollar amount
-  const btcHashrate = Math.max(0.3, +(investAmount / basePrice).toFixed(1));
+  const btcHashrate = Math.max(0.1, +(investAmount / basePrice).toFixed(1));
   
-  // Calculate discount based on hashrate - more hashrate = lower price per TH
+  // Calculate price per TH/s — more hashrate = lower price
   const getPricePerTH = (hashrate: number) => {
-    if (hashrate >= 100) return basePrice * 0.70;
-    if (hashrate >= 50) return basePrice * 0.75;
-    if (hashrate >= 30) return basePrice * 0.80;
-    if (hashrate >= 20) return basePrice * 0.85;
-    if (hashrate >= 10) return basePrice * 0.90;
-    if (hashrate >= 5) return basePrice * 0.95;
-    return basePrice;
+    if (hashrate >= 1000) return 11;
+    if (hashrate >= 500)  return 11.5;
+    if (hashrate >= 100)  return 12;
+    if (hashrate >= 50)   return 12.5;
+    if (hashrate >= 30)   return 13;
+    if (hashrate >= 10)   return 13.5;
+    if (hashrate >= 5)    return 13.75;
+    return 14;
   };
   
   const pricePerTH = getPricePerTH(btcHashrate);
@@ -679,8 +680,8 @@ function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }:
                 onBlur={commitCustomInput}
                 onKeyDown={(e) => { if (e.key === "Enter") { commitCustomInput(); (e.target as HTMLInputElement).blur(); } }}
                 className="w-20 h-7 px-2 rounded-lg bg-white/5 border border-white/10 text-sm font-bold text-foreground text-center focus:outline-none focus:border-[#0088FF]/50 font-numbers"
-                min={10}
-                max={15000}
+                min={14}
+                max={14000}
               />
             </div>
           </div>
@@ -711,8 +712,8 @@ function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }:
               <Slider
                 value={[investAmount]}
                 onValueChange={(v) => { const rounded = Math.round(v[0] / 5) * 5; setInvestAmount(rounded); setCustomInput(String(rounded)); }}
-                min={10}
-                max={15000}
+                min={14}
+                max={14000}
                 step={5}
                 className="py-0"
                 data-testid="slider-hashrate"
@@ -720,8 +721,8 @@ function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }:
             </div>
           </div>
           <div className="flex justify-between text-[10px] text-muted-foreground mt-2 px-[78px] pr-0">
-            <span>$10</span>
-            <span>$15,000</span>
+            <span>$14</span>
+            <span>$14,000</span>
           </div>
           
           {/* Quick buy section right after slider */}
@@ -911,6 +912,15 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
   const scrollToMyDevices = () => {
     myDevicesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
+
+  // Handle "My Miners" deep link from Dashboard
+  useEffect(() => {
+    const flag = localStorage.getItem("scrollToMyDevices");
+    if (flag === "true") {
+      localStorage.removeItem("scrollToMyDevices");
+      setTimeout(() => scrollToMyDevices(), 300);
+    }
+  }, []);
 
   const { data: estimateConfig } = useQuery<{ miningEstimateMultiplier: number }>({
     queryKey: ["/api/config/estimates"],
@@ -1232,7 +1242,9 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
 
   const btcPackages = miningPackages.filter(p => p.crypto === "BTC");
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  // Step 1 (Choose Type) is bypassed – start directly on Configure (step 2, Custom TH/s)
+  // RESTORE_DEVICES: change default back to 1 and re-enable the Packages button below
+  const [step, setStep] = useState<1 | 2 | 3>(2);
 
   return (
     <>
