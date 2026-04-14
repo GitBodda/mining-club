@@ -10,6 +10,7 @@ import { eq, and, desc, count, sql } from "drizzle-orm";
 import * as schema from "@shared/schema";
 import { growthService, makeReferralLink, getPublicBaseUrl } from "./services/growthService";
 import { authService } from "./services/authService";
+import posthog from "./posthog";
 
 // ─── Auth middleware ───────────────────────────────────────────────────────────
 
@@ -216,6 +217,15 @@ export function registerGrowthRoutes(app: Express) {
     try {
       const result = await growthService.applyForAmbassador(authedUser.id);
       if (!result.success) return res.status(400).json({ error: result.error });
+
+      posthog.capture({
+        distinctId: authedUser.id,
+        event: "ambassador_applied",
+        properties: {
+          user_id: authedUser.id,
+        },
+      });
+
       return res.json({ success: true, message: "Application submitted. We'll review within 48 hours." });
     } catch (err) {
       res.status(500).json({ error: "Application failed" });

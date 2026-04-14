@@ -16,7 +16,7 @@ const tabs = [
   { id: "home" as const, icon: Home, label: "Home", route: null },
   { id: "wallet" as const, icon: Wallet, label: "Wallet", route: null },
   { id: "invest" as const, icon: TrendingUp, label: "Yield", route: null },
-  { id: "mining" as const, icon: Pickaxe, label: "Mining", route: null },
+  { id: "mining" as const, icon: Pickaxe, label: "Buy a Miner", route: null },
   { id: "solo" as const, icon: Sparkles, label: "Grow", route: "/growth" },
 ];
 

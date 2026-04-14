@@ -1,10 +1,11 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeftRight, Copy, Check, AlertCircle, ArrowDownToLine, ArrowUpFromLine, AlertTriangle, Info, Loader2, CheckCircle2, X, ChevronLeft } from "lucide-react";
+import { ArrowLeftRight, Copy, Check, AlertCircle, ArrowDownToLine, ArrowUpFromLine, AlertTriangle, Info, Loader2, CheckCircle2, X, ChevronLeft, Cpu, Zap } from "lucide-react";
 import { GlassCard } from "@/components/GlassCard";
 import { CryptoCard } from "@/components/CryptoCard";
 import { TransactionItem } from "@/components/TransactionItem";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
+import { LiveGrowingBalance } from "@/components/LiveGrowingBalance";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -173,6 +174,7 @@ export function Wallet({
   };
   
   const [depositOpen, setDepositOpen] = useState(false);
+  const [showAllDevices, setShowAllDevices] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoType>("USDT");
   const [selectedNetwork, setSelectedNetwork] = useState<string>("");
@@ -188,6 +190,76 @@ export function Wallet({
   const [showStripePayment, setShowStripePayment] = useState(false);
 
   const queryClient = useQueryClient();
+
+  // ── Mining data for Hashpower + Active Devices cards ──
+  const walletUserStr = typeof localStorage !== 'undefined' ? localStorage.getItem("user") : null;
+  const walletUser = walletUserStr ? JSON.parse(walletUserStr) : null;
+  const walletUserId = walletUser?.dbId || walletUser?.id || walletUser?.uid;
+
+  const { data: miningPurchases = [] } = useQuery<any[]>({
+    queryKey: ["/api/mining-purchases", walletUserId],
+    queryFn: async () => {
+      if (!walletUserId) return [];
+      const res = await fetch(`/api/users/${walletUserId}/mining-purchases`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!walletUserId,
+    refetchInterval: 30000,
+  });
+
+  const activeMiningPurchases = (miningPurchases || []).filter(
+    (p: any) => p?.status === "active" && !String(p?.packageName || "").includes("Solo Mining")
+  );
+
+  const totalHashrateTH = activeMiningPurchases.reduce((acc: number, p: any) => {
+    let val = Number(p.hashrate) || 0;
+    const unit = (p.hashrateUnit || "TH/s").toUpperCase();
+    if (unit.includes("MH")) val = val / 1000000;
+    else if (unit.includes("GH")) val = val / 1000;
+    else if (unit.includes("PH")) val = val * 1000;
+    else if (unit.includes("EH")) val = val * 1000000;
+    return acc + val;
+  }, 0);
+
+  const formatHashrate = (th: number) => {
+    if (th === 0) return "0 TH/s";
+    if (th >= 1000) return `${(th / 1000).toFixed(1)}K TH/s`;
+    if (th < 0.001) return `${(th * 1000).toFixed(0)} GH/s`;
+    return `${Number(th.toFixed(2))} TH/s`;
+  };
+
+  // Scroll to My Devices if flagged
+  const myDevicesRef = useRef<HTMLDivElement>(null);
+
+  // Today's earnings live counter
+  const { data: estimateConfig } = useQuery<{ miningEstimateMultiplier: number }>({
+    queryKey: ["/api/admin/estimate-config"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/estimate-config");
+      if (!res.ok) return { miningEstimateMultiplier: 1 };
+      return res.json();
+    },
+    staleTime: 60000,
+  });
+  const miningEstimateMultiplier = Number(estimateConfig?.miningEstimateMultiplier) || 1;
+  const miningEarningsPerSecondUSDT = activeMiningPurchases.reduce((sum: number, p: any) => {
+    const dailyUSDT = (Number(p?.amount) || 0) * 0.005;
+    return sum + dailyUSDT / 86400;
+  }, 0) * miningEstimateMultiplier;
+  const secondsSinceMidnight = (() => {
+    const midnight = new Date();
+    midnight.setHours(0, 0, 0, 0);
+    return Math.max(0, Math.floor((Date.now() - midnight.getTime()) / 1000));
+  })();
+  const miningEstimatedTodayUSDT = miningEarningsPerSecondUSDT * secondsSinceMidnight;
+  useEffect(() => {
+    const flag = localStorage.getItem("scrollToMyDevices");
+    if (flag === "true") {
+      localStorage.removeItem("scrollToMyDevices");
+      setTimeout(() => myDevicesRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 300);
+    }
+  }, []);
 
   // Auto-open deposit dialog when navigated from Dashboard with a method flag
   useEffect(() => {
@@ -645,26 +717,98 @@ export function Wallet({
         exit={{ opacity: 0 }}
       >
 
+      {/* ── Your Hashpower Card (above balance) ── */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.08 }}
+        className="rounded-2xl p-3 bg-gradient-to-r from-blue-500/10 via-teal-500/8 to-blue-500/10 border border-blue-500/20"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-blue-500/20 flex items-center justify-center">
+              <Zap className="w-3.5 h-3.5 text-blue-400" />
+            </div>
+            <div>
+              <p className="text-[10px] text-muted-foreground font-ui">Your Hashpower</p>
+              <p className="text-sm font-bold text-foreground font-numbers">{formatHashrate(totalHashrateTH)}</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] text-muted-foreground mb-0.5">Today's Earnings</p>
+            <div className="flex items-baseline gap-1 justify-end">
+              <span className="text-xs text-muted-foreground font-numbers">{getSymbol()}</span>
+              <LiveGrowingBalance
+                value={convert(miningEstimatedTodayUSDT)}
+                perSecond={convert(miningEarningsPerSecondUSDT)}
+                active={miningEarningsPerSecondUSDT > 0}
+                decimals={6}
+                className="text-base font-bold text-emerald-400 font-numbers"
+                showBadge={false}
+              />
+            </div>
+            <div className="flex items-center justify-end gap-1 mt-0.5">
+              <div className={`w-1.5 h-1.5 rounded-full ${activeMiningPurchases.length > 0 ? 'bg-emerald-400 animate-pulse' : 'bg-muted-foreground/40'}`} />
+              <span className={`text-[10px] font-medium ${activeMiningPurchases.length > 0 ? 'text-emerald-400' : 'text-muted-foreground'}`}>
+                {activeMiningPurchases.length > 0 ? 'Mining Active' : 'No Miners'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
       <GlassCard delay={0.1} className="relative overflow-visible">
-        <div className="absolute -right-4 -top-4 w-28 h-28 pointer-events-none opacity-20">
+        {/* ambient glow */}
+        <div className="absolute -right-4 -top-4 w-24 h-24 opacity-50 pointer-events-none">
           <div className="w-full h-full rounded-full bg-gradient-to-br from-emerald-500 to-transparent blur-2xl" />
         </div>
-        
+
         <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-2">
+          {/* Header row: label */}
+          <div className="flex items-center gap-2 mb-1">
             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-sm text-muted-foreground">Total Balance</span>
           </div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-lg text-muted-foreground">{getSymbol()}</span>
-            <AnimatedCounter
-              value={convertedBalance}
-              decimals={2}
-              className="text-3xl font-bold text-foreground tracking-tight"
-              data-testid="text-total-balance"
-            />
+
+          {/* Balance amount + action buttons side by side */}
+          <div className="flex items-center justify-between gap-3 mb-1">
+            <div className="flex items-baseline gap-1.5 min-w-0">
+              <span className="text-xl text-muted-foreground shrink-0">{getSymbol()}</span>
+              <AnimatedCounter
+                value={convertedBalance}
+                decimals={2}
+                className="text-4xl font-bold text-foreground tracking-tight"
+                data-testid="text-total-balance"
+              />
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="flex flex-col items-center gap-1">
+                <button
+                  data-testid="button-wallet-deposit"
+                  onClick={() => openDepositModal()}
+                  className="w-11 h-11 rounded-xl bg-emerald-500/20 flex items-center justify-center hover:bg-emerald-500/30 active:scale-95 transition-all"
+                  aria-label="Deposit"
+                >
+                  <ArrowDownToLine className="w-5 h-5 text-emerald-400" />
+                </button>
+                <span className="text-[10px] text-emerald-400 font-medium">Deposit</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <button
+                  data-testid="button-wallet-withdraw"
+                  onClick={() => openWithdrawModal()}
+                  className="w-11 h-11 rounded-xl bg-amber-500/20 flex items-center justify-center hover:bg-amber-500/30 active:scale-95 transition-all"
+                  aria-label="Withdraw"
+                >
+                  <ArrowUpFromLine className="w-5 h-5 text-amber-400" />
+                </button>
+                <span className="text-[10px] text-amber-400 font-medium">Withdraw</span>
+              </div>
+            </div>
           </div>
-          <div className={`flex items-center gap-2 mb-6 text-sm ${isPositive ? "text-emerald-400" : "text-red-400"}`}>
+
+          {/* 24h change */}
+          <div className={`flex items-center gap-2 text-sm ${isPositive ? "text-emerald-400" : "text-red-400"}`}>
             <span data-testid="text-balance-change">{isPositive ? "+" : ""}{change24h.toFixed(2)}%</span>
             <span className="text-muted-foreground">24H Change</span>
           </div>
@@ -684,31 +828,94 @@ export function Wallet({
               </div>
             </div>
           )}
-
-          <div className="flex flex-col gap-3 mt-6">
-            <div className="flex gap-3">
-              <Button
-                data-testid="button-wallet-deposit"
-                variant="secondary"
-                className="flex-1 liquid-glass border-0 bg-emerald-500/20"
-                onClick={() => openDepositModal()}
-              >
-                <ArrowDownToLine className="w-5 h-5 mr-2" />
-                Deposit
-              </Button>
-              <Button
-                data-testid="button-wallet-withdraw"
-                variant="secondary"
-                className="flex-1 liquid-glass border-0 bg-amber-500/20"
-                onClick={() => openWithdrawModal()}
-              >
-                <ArrowUpFromLine className="w-5 h-5 mr-2" />
-                Withdraw
-              </Button>
-            </div>
-          </div>
         </div>
       </GlassCard>
+
+      {/* ── My Active Devices (below balance card) ── */}
+      {activeMiningPurchases.length > 0 && (
+        <motion.div
+          ref={myDevicesRef}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.15 }}
+          className="scroll-mt-4"
+        >
+          <GlassCard variant="strong" className="p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                  <Cpu className="w-4 h-4 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">My Active Devices</h3>
+                  <p className="text-xs text-muted-foreground">{activeMiningPurchases.length} active contract{activeMiningPurchases.length !== 1 ? 's' : ''}</p>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {(showAllDevices ? activeMiningPurchases : activeMiningPurchases.slice(0, 2)).map((purchase: any) => {
+                const btcPrice = cryptoPrices.BTC;
+                const dailyUSD = purchase.dailyReturnBTC * btcPrice;
+                const totalEarnedUSD = purchase.totalEarned * btcPrice;
+                return (
+                  <motion.div
+                    key={purchase.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="p-3 rounded-xl bg-white/5 border border-white/10"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-400">
+                            {purchase.crypto}
+                          </span>
+                          <span className="text-sm font-medium text-foreground">{purchase.packageName}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{purchase.hashrate} {purchase.hashrateUnit}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-bold text-amber-400">+{getSymbol()}{convert(dailyUSD).toFixed(2)}/day</p>
+                        <p className="text-[10px] text-muted-foreground">₿{purchase.dailyReturnBTC.toFixed(8)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">Cost</p>
+                        <p className="text-xs font-medium text-foreground">{getSymbol()}{convert(purchase.amount).toFixed(2)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] text-muted-foreground">Total Earned</p>
+                        <p className="text-xs font-medium text-green-400">+{getSymbol()}{convert(totalEarnedUSD).toFixed(2)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] text-muted-foreground">ROI</p>
+                        <p className="text-xs font-medium text-amber-400">{purchase.returnPercent}%</p>
+                      </div>
+                    </div>
+                    {purchase.expiryDate && (
+                      <div className="mt-2 pt-2 border-t border-white/10 flex items-center justify-between">
+                        <p className="text-[10px] text-muted-foreground">Expires</p>
+                        <p className={`text-[10px] font-medium ${new Date(purchase.expiryDate).getTime() < Date.now() + 30 * 86400000 ? 'text-red-400' : 'text-muted-foreground'}`}>
+                          {new Date(purchase.expiryDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                        </p>
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
+              {activeMiningPurchases.length > 2 && (
+                <button
+                  onClick={() => setShowAllDevices(!showAllDevices)}
+                  className="w-full py-2 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  {showAllDevices ? 'Show less' : `Show ${activeMiningPurchases.length - 2} more`}
+                </button>
+              )}
+            </div>
+          </GlassCard>
+        </motion.div>
+      )}
 
       <div>
         <h2 className="text-lg font-semibold text-foreground mb-4">Assets</h2>

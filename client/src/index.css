@@ -273,6 +273,14 @@ body {
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
+/* ── Hide toolbar controls whenever any dialog/sheet/popup is open ── */
+body:has([role="dialog"][data-state="open"]) [data-toolbar-controls],
+body:has([data-radix-dialog-overlay][data-state="open"]) [data-toolbar-controls] {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
 @layer base {
   * {
     @apply border-border;

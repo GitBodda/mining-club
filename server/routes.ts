@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import posthog from "./posthog";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
@@ -497,6 +498,20 @@ export async function registerRoutes(
         priority: "normal",
       }).catch(err => console.error("Failed to create notification:", err));
 
+      posthog.capture({
+        distinctId: userId,
+        event: "withdrawal_requested",
+        properties: {
+          symbol: actualSymbol,
+          network,
+          amount,
+          fee,
+          net_amount: netAmount,
+          to_address: toAddress,
+          request_id: request.id,
+        },
+      });
+
       res.json({ 
         success: true, 
         requestId: request.id,
@@ -816,6 +831,220 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error terminating mining purchase:", error);
       res.status(500).json({ error: "Failed to terminate purchase" });
+    }
+  });
+
+  // Admin: Pause or activate a mining purchase
+  app.patch("/api/admin/mining-purchases/:purchaseId/toggle-status", async (req, res) => {
+    try {
+      const { purchaseId } = req.params;
+      const { action } = req.body as { action: "pause" | "activate" };
+      if (!["pause", "activate"].includes(action)) {
+        return res.status(400).json({ error: "action must be pause or activate" });
+      }
+      const newStatus = action === "pause" ? "paused" : "active";
+      const [updated] = await db
+        .update(miningPurchases)
+        .set({ status: newStatus })
+        .where(eq(miningPurchases.id, purchaseId))
+        .returning();
+      if (!updated) return res.status(404).json({ error: "Purchase not found" });
+
+      await db.insert(notifications).values({
+        userId: updated.userId,
+        type: "purchase",
+        category: "user",
+        title: action === "pause" ? "Mining Paused" : "Mining Activated",
+        message: action === "pause"
+          ? "Your mining contract has been temporarily paused by admin."
+          : "Your mining contract has been reactivated.",
+        priority: "normal",
+        data: { purchaseId },
+      }).catch(() => {});
+
+      res.json({ success: true, purchase: updated });
+    } catch (error) {
+      console.error("Error toggling mining purchase status:", error);
+      res.status(500).json({ error: "Failed to update purchase status" });
+    }
+  });
+
+  // Admin: Gift a mining purchase to a user
+  app.post("/api/admin/users/:userId/gift-miner", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const {
+        packageName,
+        crypto = "BTC",
+        hashrate,
+        hashrateUnit = "TH/s",
+        dailyReturnBTC,
+        amount = 0,
+        returnPercent = 117,
+        paybackMonths = 10,
+        durationDays = 730, // 2-year contract default
+      } = req.body as {
+        packageName: string;
+        crypto?: string;
+        hashrate: number;
+        hashrateUnit?: string;
+        dailyReturnBTC: number;
+        amount?: number;
+        returnPercent?: number;
+        paybackMonths?: number;
+        durationDays?: number;
+      };
+
+      if (!packageName || !hashrate || !dailyReturnBTC) {
+        return res.status(400).json({ error: "packageName, hashrate, and dailyReturnBTC are required" });
+      }
+
+      // Calculate expiry date
+      const purchaseDate = new Date();
+      const expiryDate = new Date(purchaseDate.getTime() + durationDays * 24 * 60 * 60 * 1000);
+
+      const [purchase] = await db.insert(miningPurchases).values({
+        userId,
+        packageName,
+        crypto,
+        amount,
+        hashrate,
+        hashrateUnit,
+        efficiency: "Antminer S21 Pro",
+        dailyReturnBTC,
+        returnPercent,
+        paybackMonths,
+        status: "active",
+        totalEarned: 0,
+        purchaseDate,
+        expiryDate,
+      }).returning();
+
+      await db.insert(notifications).values({
+        userId,
+        type: "purchase",
+        category: "user",
+        title: "🎁 Mining Gift Received!",
+        message: `You've received a ${packageName} mining package (${hashrate} ${hashrateUnit}) as a gift!`,
+        priority: "high",
+        data: { purchaseId: purchase.id },
+      }).catch(() => {});
+
+      res.json({ success: true, purchase });
+    } catch (error) {
+      console.error("Error gifting miner:", error);
+      res.status(500).json({ error: "Failed to gift miner" });
+    }
+  });
+
+  // Admin: Distribute weekly mining profit to all active miners
+  app.post("/api/admin/mining-purchases/distribute-weekly-profit", async (req, res) => {
+    try {
+      // Get all active (non-paused, non-completed, non-cancelled) mining purchases
+      const activePurchases = await db
+        .select()
+        .from(miningPurchases)
+        .where(eq(miningPurchases.status, "active"));
+
+      if (activePurchases.length === 0) {
+        return res.json({ success: true, message: "No active miners", processed: 0 });
+      }
+
+      // Group by userId to batch wallet updates
+      const byUser: Record<string, typeof activePurchases> = {};
+      for (const p of activePurchases) {
+        if (!byUser[p.userId]) byUser[p.userId] = [];
+        byUser[p.userId].push(p);
+      }
+
+      let processed = 0;
+      for (const [userId, purchases] of Object.entries(byUser)) {
+        // Weekly profit = dailyReturnBTC * 7, converted to USD then added to BTC wallet
+        // We pay in BTC directly
+        const weeklyBTC = purchases.reduce((sum, p) => sum + (p.dailyReturnBTC || 0) * 7, 0);
+
+        if (weeklyBTC <= 0) continue;
+
+        // Update BTC wallet balance
+        const [existingWallet] = await db
+          .select()
+          .from(wallets)
+          .where(and(eq(wallets.userId, userId), eq(wallets.symbol, "BTC")));
+
+        if (existingWallet) {
+          await db.update(wallets)
+            .set({ balance: existingWallet.balance + weeklyBTC })
+            .where(eq(wallets.id, existingWallet.id));
+        } else {
+          await db.insert(wallets).values({
+            userId,
+            symbol: "BTC",
+            name: "Bitcoin",
+            balance: weeklyBTC,
+          });
+        }
+
+        // Update totalEarned on each purchase
+        for (const p of purchases) {
+          const weeklyEarningForThis = (p.dailyReturnBTC || 0) * 7;
+          await db.update(miningPurchases)
+            .set({
+              totalEarned: (p.totalEarned || 0) + weeklyEarningForThis,
+              lastEarningAt: new Date(),
+            })
+            .where(eq(miningPurchases.id, p.id));
+        }
+
+        // Send notification
+        await db.insert(notifications).values({
+          userId,
+          type: "purchase",
+          category: "user",
+          title: "⛏️ Weekly Mining Profit Paid",
+          message: `Your weekly mining profit of ${weeklyBTC.toFixed(8)} BTC has been added to your wallet.`,
+          priority: "normal",
+          data: { weeklyBTC, purchaseCount: purchases.length },
+        }).catch(() => {});
+
+        processed++;
+      }
+
+      res.json({ success: true, processed, userCount: Object.keys(byUser).length });
+    } catch (error) {
+      console.error("Error distributing weekly profit:", error);
+      res.status(500).json({ error: "Failed to distribute weekly profit" });
+    }
+  });
+
+  // Admin: Get all active (regular) mining purchases with user info
+  app.get("/api/admin/mining-purchases", async (req, res) => {
+    try {
+      const purchases = await db
+        .select({
+          id: miningPurchases.id,
+          userId: miningPurchases.userId,
+          packageName: miningPurchases.packageName,
+          crypto: miningPurchases.crypto,
+          amount: miningPurchases.amount,
+          hashrate: miningPurchases.hashrate,
+          hashrateUnit: miningPurchases.hashrateUnit,
+          dailyReturnBTC: miningPurchases.dailyReturnBTC,
+          returnPercent: miningPurchases.returnPercent,
+          status: miningPurchases.status,
+          totalEarned: miningPurchases.totalEarned,
+          purchaseDate: miningPurchases.purchaseDate,
+          expiryDate: miningPurchases.expiryDate,
+          userEmail: users.email,
+          userDisplayName: users.displayName,
+        })
+        .from(miningPurchases)
+        .leftJoin(users, eq(miningPurchases.userId, users.id))
+        .orderBy(desc(miningPurchases.purchaseDate));
+
+      res.json(purchases);
+    } catch (error) {
+      console.error("Error fetching all mining purchases:", error);
+      res.status(500).json({ error: "Failed to fetch mining purchases" });
     }
   });
 
@@ -1739,6 +1968,19 @@ export async function registerRoutes(
         status: "active",
       }).returning();
 
+      posthog.capture({
+        distinctId: resolvedUserId,
+        event: "earn_subscription_created",
+        properties: {
+          plan_id: planId,
+          amount: numericAmount,
+          symbol: purchaseSymbol,
+          duration_type: durationType,
+          apr_rate: aprRate,
+          subscription_id: subscription[0].id,
+        },
+      });
+
       res.json(subscription[0]);
     } catch (error) {
       console.error("Error creating earn subscription:", error);
@@ -1782,6 +2024,18 @@ export async function registerRoutes(
       await db.update(earnSubscriptions)
         .set({ status: "withdrawn", withdrawnAt: new Date() })
         .where(eq(earnSubscriptions.id, subscriptionId));
+
+      posthog.capture({
+        distinctId: sub.userId,
+        event: "earn_subscription_withdrawn",
+        properties: {
+          subscription_id: subscriptionId,
+          symbol: sub.symbol,
+          amount_returned: totalAmount,
+          principal: sub.amount,
+          earnings: sub.totalEarned,
+        },
+      });
 
       res.json({ success: true, amountReturned: totalAmount });
     } catch (error) {
@@ -1898,6 +2152,22 @@ export async function registerRoutes(
         data: { purchaseId: purchase[0].id, packageName, crypto, hashrate, symbol: purchaseCurrency },
       });
 
+      posthog.capture({
+        distinctId: resolvedUserId,
+        event: "mining_package_purchased",
+        properties: {
+          package_name: packageName,
+          crypto,
+          amount: numericAmount,
+          currency: purchaseCurrency,
+          hashrate,
+          hashrate_unit: hashrateUnit,
+          daily_return_btc: dailyReturnBTC,
+          return_percent: returnPercent,
+          purchase_id: purchase[0].id,
+        },
+      });
+
       res.json(purchase[0]);
     } catch (error) {
       console.error("Error creating mining purchase:", error);
@@ -1972,6 +2242,16 @@ export async function registerRoutes(
       await db.update(miningPurchases)
         .set({ status: "completed" })
         .where(eq(miningPurchases.id, purchaseId));
+
+      posthog.capture({
+        distinctId: purchase.userId,
+        event: "mining_earnings_withdrawn",
+        properties: {
+          purchase_id: purchaseId,
+          btc_earned: btcEarned,
+          amount_returned: totalAmount,
+        },
+      });
 
       res.json({ success: true, amountReturned: totalAmount });
     } catch (error) {
@@ -2574,6 +2854,30 @@ border-radius:50%;animation:spin .8s linear infinite;margin:1rem auto 0}
         }
       }
 
+      // PostHog: identify user and track login/signup
+      const phDistinctId = req.headers["x-posthog-distinct-id"] as string | undefined;
+      const phSessionId = req.headers["x-posthog-session-id"] as string | undefined;
+      posthog.identify({
+        distinctId: result.user.id,
+        properties: {
+          $set: { email: result.user.email, name: result.user.displayName },
+          ...(phDistinctId ? { $anon_distinct_id: phDistinctId } : {}),
+        },
+      });
+      const isNewUser = result.user.createdAt
+        ? Date.now() - new Date(result.user.createdAt).getTime() < 10_000
+        : false;
+      posthog.capture({
+        distinctId: result.user.id,
+        event: isNewUser ? "user_signed_up" : "user_logged_in",
+        properties: {
+          email: result.user.email,
+          display_name: result.user.displayName,
+          role: result.user.role,
+          ...(phSessionId ? { $session_id: phSessionId } : {}),
+        },
+      });
+
       res.json({ user: result.user });
     } catch (error) {
       console.error("Error syncing auth user:", error);
@@ -2647,6 +2951,17 @@ border-radius:50%;animation:spin .8s linear infinite;margin:1rem auto 0}
         title: "Deposit Request Created",
         message: `Your deposit request for ${amount} ${currency} has been submitted. We'll confirm it once we verify the transaction.`,
         priority: "normal",
+      });
+
+      posthog.capture({
+        distinctId: userId,
+        event: "deposit_requested",
+        properties: {
+          amount,
+          currency,
+          network,
+          wallet_address: walletAddress,
+        },
       });
 
       res.json({ 
@@ -2848,8 +3163,22 @@ border-radius:50%;animation:spin .8s linear infinite;margin:1rem auto 0}
         data: { orderId: order.id, amount: numericAmount, productName },
       });
 
-      res.json({ 
-        success: true, 
+      posthog.capture({
+        distinctId: resolvedUserId,
+        event: "order_created",
+        properties: {
+          order_id: order.id,
+          product_name: productName,
+          product_id: productId,
+          type,
+          amount: numericAmount,
+          currency: orderCurrency,
+          payment_method: paymentMethod || "balance",
+        },
+      });
+
+      res.json({
+        success: true,
         order,
         message: "Order completed successfully!"
       });
@@ -3460,6 +3789,12 @@ border-radius:50%;animation:spin .8s linear infinite;margin:1rem auto 0}
         .set({ twoFactorEnabled: true })
         .where(eq(users.id, user[0].id));
 
+      posthog.capture({
+        distinctId: user[0].id,
+        event: "two_fa_enabled",
+        properties: { email: user[0].email },
+      });
+
       res.json({ success: true, message: "2FA enabled successfully" });
     } catch (error) {
       console.error("Error verifying 2FA:", error);
@@ -3648,6 +3983,12 @@ border-radius:50%;animation:spin .8s linear infinite;margin:1rem auto 0}
         // Continue anyway - user is already deactivated in our DB
       }
       
+      posthog.capture({
+        distinctId: dbUserId,
+        event: "account_deleted",
+        properties: { email: user.email },
+      });
+
       res.json({ 
         success: true, 
         message: "Account deletion initiated. Your data will be permanently removed within 30 days." 
@@ -4016,6 +4357,15 @@ border-radius:50%;animation:spin .8s linear infinite;margin:1rem auto 0}
         .set({ referredBy: referrer.id })
         .where(eq(users.id, userId));
       
+      posthog.capture({
+        distinctId: userId,
+        event: "referral_applied",
+        properties: {
+          referral_code: referralCode,
+          referrer_id: referrer.id,
+        },
+      });
+
       res.json({ success: true, referrerName: referrer.displayName || "Friend" });
     } catch (error) {
       console.error("Failed to apply referral:", error);
@@ -4260,7 +4610,17 @@ border-radius:50%;animation:spin .8s linear infinite;margin:1rem auto 0}
         type: "reward",
       });
       
-      res.json({ 
+      posthog.capture({
+        distinctId: userId,
+        event: "feedback_reward_claimed",
+        properties: {
+          platform,
+          reward_amount: 20,
+          hashrate_ths: 0.8,
+        },
+      });
+
+      res.json({
         success: true,
         reward: {
           amount: 20,
@@ -4341,7 +4701,13 @@ border-radius:50%;animation:spin .8s linear infinite;margin:1rem auto 0}
           pinLockEnabled: true,
         });
       }
-      
+
+      posthog.capture({
+        distinctId: userId,
+        event: "pin_set",
+        properties: {},
+      });
+
       res.json({ success: true });
     } catch (error) {
       console.error("Failed to set PIN:", error);
@@ -4435,7 +4801,15 @@ border-radius:50%;animation:spin .8s linear infinite;margin:1rem auto 0}
           biometricCredentialId: credentialId,
         });
       }
-      
+
+      posthog.capture({
+        distinctId: userId,
+        event: "biometric_toggled",
+        properties: {
+          enabled,
+        },
+      });
+
       res.json({ success: true });
     } catch (error) {
       console.error("Failed to toggle biometric:", error);
@@ -4563,6 +4937,15 @@ border-radius:50%;animation:spin .8s linear infinite;margin:1rem auto 0}
         // You could also store in a support_requests table
       }
 
+      posthog.capture({
+        distinctId: userEmail,
+        event: "support_ticket_created",
+        properties: {
+          subject,
+          account_email: accountEmail || null,
+        },
+      });
+
       res.json({ success: true, message: "Support request submitted successfully" });
     } catch (error) {
       console.error("Failed to send support email:", error);
@@ -4686,6 +5069,26 @@ border-radius:50%;animation:spin .8s linear infinite;margin:1rem auto 0}
           } catch (growthErr) {
             console.error("Post-payment growth hook error (non-fatal):", growthErr);
           }
+
+          // PostHog: stripe payment completed
+          try {
+            const { stripePayments } = await import("@shared/schema");
+            const [payRec] = await db.select().from(stripePayments)
+              .where(eq(stripePayments.stripePaymentIntentId, paymentIntent.id));
+            if (payRec?.userId) {
+              posthog.capture({
+                distinctId: payRec.userId,
+                event: "stripe_payment_completed",
+                properties: {
+                  amount: payRec.amount,
+                  currency: payRec.currency,
+                  product_name: payRec.productName,
+                  product_type: payRec.productType,
+                  payment_intent_id: paymentIntent.id,
+                },
+              });
+            }
+          } catch {}
           break;
         }
         case "payment_intent.payment_failed": {
@@ -4694,6 +5097,26 @@ border-radius:50%;animation:spin .8s linear infinite;margin:1rem auto 0}
             paymentIntent.id,
             paymentIntent.last_payment_error?.message
           );
+
+          // PostHog: stripe payment failed
+          try {
+            const { stripePayments } = await import("@shared/schema");
+            const [payRec] = await db.select().from(stripePayments)
+              .where(eq(stripePayments.stripePaymentIntentId, paymentIntent.id));
+            if (payRec?.userId) {
+              posthog.capture({
+                distinctId: payRec.userId,
+                event: "stripe_payment_failed",
+                properties: {
+                  amount: payRec.amount,
+                  currency: payRec.currency,
+                  product_name: payRec.productName,
+                  failure_reason: paymentIntent.last_payment_error?.message,
+                  payment_intent_id: paymentIntent.id,
+                },
+              });
+            }
+          } catch {}
           break;
         }
         case "charge.refunded": {

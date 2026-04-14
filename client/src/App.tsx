@@ -359,9 +359,9 @@ function MobileApp() {
         title={
           isGrowthPage ? "Growth Hub"
           : activeTab === "home" ? "BlockMint"
-          : activeTab === "wallet" ? "Wallet"
+          : activeTab === "wallet" ? "Wallet & Assets"
           : activeTab === "invest" ? "Earn & Yield"
-          : activeTab === "mining" ? "Mining"
+          : activeTab === "mining" ? "Buy a Miner"
           : activeTab === "solo" ? "Solo Mining"
           : "BlockMint"
         }
@@ -444,6 +444,7 @@ function MobileApp() {
               contracts={contracts}
               poolStatus={poolStatus}
               onNavigateToInvest={() => setActiveTab("invest")}
+              onNavigateToWallet={() => setActiveTab("wallet")}
             />
           )}
         </AnimatePresence>

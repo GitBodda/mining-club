@@ -126,6 +126,7 @@ export function iOS26Toolbar({
     <>
       {/* ── Controls Row — fixed above blur ── */}
       <div
+        data-toolbar-controls
         className="fixed top-0 left-0 right-0 z-[90]"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >

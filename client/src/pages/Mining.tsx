@@ -28,6 +28,7 @@ import {
   ChevronDown,
   ChevronLeft,
   CreditCard,
+  ChevronRight,
   Wallet
 } from "lucide-react";
 import {
@@ -63,6 +64,7 @@ interface MiningProps {
   contracts: MiningContract[];
   poolStatus: PoolStatus;
   onNavigateToInvest: () => void;
+  onNavigateToWallet?: () => void;
 }
 
 const mockPoolStatus: PoolStatus = {
@@ -96,30 +98,30 @@ const miningPackages: MiningPackage[] = [
     id: "btc-pro",
     name: "Pro",
     crypto: "BTC",
-    cost: 169.99,
+    cost: 282,
     hashrate: "6 TH/s",
     hashrateValue: 6,
     hashrateUnit: "TH/s",
     duration: 0, // One-time
-    returnPercent: 125,
+    returnPercent: 117,
     dailyReturnBTC: 0.00000630,
-    paybackMonths: 13,
-    efficiency: "15W/TH",
+    paybackMonths: 10,
+    efficiency: "Antminer S21 Pro",
     image: btcProImg,
   },
   {
     id: "btc-premium",
     name: "Premium",
     crypto: "BTC",
-    cost: 349.99,
+    cost: 658,
     hashrate: "14 TH/s",
     hashrateValue: 14,
     hashrateUnit: "TH/s",
     duration: 0, // One-time
-    returnPercent: 145,
+    returnPercent: 117,
     dailyReturnBTC: 0.00001470,
-    paybackMonths: 11,
-    efficiency: "15W/TH",
+    paybackMonths: 10,
+    efficiency: "Antminer S21 Pro",
     image: btcMineImg,
     popular: true,
   },
@@ -127,15 +129,15 @@ const miningPackages: MiningPackage[] = [
     id: "btc-premium-plus",
     name: "Premium+",
     crypto: "BTC",
-    cost: 699.99,
+    cost: 1410,
     hashrate: "30 TH/s",
     hashrateValue: 30,
     hashrateUnit: "TH/s",
     duration: 0, // One-time
-    returnPercent: 155,
+    returnPercent: 117,
     dailyReturnBTC: 0.00003800,
     paybackMonths: 10,
-    efficiency: "15W/TH",
+    efficiency: "Antminer S21 Pro",
     image: btcPremiumPlusImg,
   },
 ];
@@ -539,17 +541,17 @@ function PackageCard({ pkg, index, onPurchase, isPending, userId }: { pkg: Minin
             <p className="text-sm font-bold text-emerald-400">{getSymbol()}{convert(dailyReturnUSD).toFixed(2)}</p>
           </div>
           <div className="text-center">
-            <p className="text-[10px] text-muted-foreground mb-0.5">ROI</p>
-            <p className="text-sm font-bold text-amber-400">{pkg.returnPercent}%</p>
+            <p className="text-[10px] text-muted-foreground mb-0.5">Device</p>
+            <p className="text-xs font-bold text-foreground">{pkg.efficiency}</p>
           </div>
         </div>
         
         {/* Duration badge with payback hint */}
         <div className="flex items-center justify-between mb-3">
           <Badge className="text-[10px] bg-green-500/15 text-green-400 border-green-500/20">
-            5 YEAR CONTRACT
+            2-YEAR CONTRACT
           </Badge>
-          <span className="text-[10px] text-muted-foreground" title="At current BTC price. Faster if BTC rises!">
+          <span className="text-[10px] text-muted-foreground" title="Net profit paid monthly">
             ~{pkg.paybackMonths}mo payback*
           </span>
         </div>
@@ -600,33 +602,33 @@ function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }:
   const { convert, getSymbol } = useCurrency();
   const { btcPrice } = useBTCPrice();
   
-  const [investAmount, setInvestAmount] = useState<number>(140);
-  const [customInput, setCustomInput] = useState<string>("140");
+  const [investAmount, setInvestAmount] = useState<number>(20);
+  const [customInput, setCustomInput] = useState<string>("20");
   const [period, setPeriod] = useState<"daily" | "annual">("annual");
   
-  // Base price is $14 per 1 TH/s — volume discounts down to $11/TH for 1000+ TH/s
-  const basePrice = 14;
+  // Base price is $47 per 1 TH/s — volume discounts down to $37/TH for 1000+ TH/s
+  const basePrice = 47;
   
   // Derive hashrate from dollar amount
   const btcHashrate = Math.max(0.1, +(investAmount / basePrice).toFixed(1));
   
   // Calculate price per TH/s — more hashrate = lower price
   const getPricePerTH = (hashrate: number) => {
-    if (hashrate >= 1000) return 11;
-    if (hashrate >= 500)  return 11.5;
-    if (hashrate >= 100)  return 12;
-    if (hashrate >= 50)   return 12.5;
-    if (hashrate >= 30)   return 13;
-    if (hashrate >= 10)   return 13.5;
-    if (hashrate >= 5)    return 13.75;
-    return 14;
+    if (hashrate >= 1000) return 37;
+    if (hashrate >= 500)  return 39;
+    if (hashrate >= 100)  return 40;
+    if (hashrate >= 50)   return 42;
+    if (hashrate >= 30)   return 44;
+    if (hashrate >= 10)   return 45;
+    if (hashrate >= 5)    return 46;
+    return 47;
   };
   
   const pricePerTH = getPricePerTH(btcHashrate);
   const estimatedCost = investAmount;
   
-  // New calculation logic: up to 20% return on investment
-  const annualUSDReturn = estimatedCost * 1.20;
+  // $55 annual return per TH/s (net profit paid monthly via S21 Pro hosting)
+  const annualUSDReturn = btcHashrate * 55;
   const dailyUSDReturn = annualUSDReturn / 365;
   
   // Convert USD returns to BTC
@@ -639,21 +641,19 @@ function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }:
   
   const hashrateDisplay = `${btcHashrate} TH/s`;
 
-  // Set amount and keep input in sync — always rounded to $5
+  // Set amount and keep input in sync
   const setAmountSynced = (val: number) => {
-    const clamped = Math.max(10, Math.min(15000, val));
-    const rounded = Math.round(clamped / 5) * 5;
-    setInvestAmount(rounded);
-    setCustomInput(String(rounded));
+    const clamped = Math.max(20, Math.min(47000, val));
+    setInvestAmount(clamped);
+    setCustomInput(String(clamped));
   };
 
   // Handle custom input commit
   const commitCustomInput = () => {
-    const parsed = parseInt(customInput, 10);
-    if (!isNaN(parsed) && parsed >= 10 && parsed <= 15000) {
+    const parsed = parseFloat(customInput);
+    if (!isNaN(parsed) && parsed >= 20 && parsed <= 47000) {
       setAmountSynced(parsed);
     } else {
-      // Reset to current value
       setCustomInput(String(investAmount));
     }
   };
@@ -663,7 +663,7 @@ function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }:
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-base font-semibold text-foreground">Custom Hashrate Calculator</h2>
         <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-[10px]">
-          7-YEAR CONTRACT
+          Antminer S21 Pro
         </Badge>
       </div>
       
@@ -680,8 +680,8 @@ function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }:
                 onBlur={commitCustomInput}
                 onKeyDown={(e) => { if (e.key === "Enter") { commitCustomInput(); (e.target as HTMLInputElement).blur(); } }}
                 className="w-20 h-7 px-2 rounded-lg bg-white/5 border border-white/10 text-sm font-bold text-foreground text-center focus:outline-none focus:border-[#0088FF]/50 font-numbers"
-                min={14}
-                max={14000}
+                min={20}
+                max={47000}
               />
             </div>
           </div>
@@ -711,18 +711,18 @@ function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }:
             <div className="flex-1">
               <Slider
                 value={[investAmount]}
-                onValueChange={(v) => { const rounded = Math.round(v[0] / 5) * 5; setInvestAmount(rounded); setCustomInput(String(rounded)); }}
-                min={14}
-                max={14000}
-                step={5}
+                onValueChange={(v) => { setInvestAmount(v[0]); setCustomInput(String(v[0])); }}
+                min={20}
+                max={47000}
+                step={1}
                 className="py-0"
                 data-testid="slider-hashrate"
               />
             </div>
           </div>
           <div className="flex justify-between text-[10px] text-muted-foreground mt-2 px-[78px] pr-0">
-            <span>$14</span>
-            <span>$14,000</span>
+            <span>$20</span>
+            <span>$47,000</span>
           </div>
           
           {/* Quick buy section right after slider */}
@@ -778,24 +778,39 @@ function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }:
           </div>
         </div>
         
-        <div className="p-3 rounded-xl border border-white/[0.08] space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="text-xs text-muted-foreground">Price per TH/s</span>
+        {/* Pricing breakdown */}
+        <div className="rounded-xl border border-white/[0.08] overflow-hidden">
+          <div className="flex items-center justify-between px-3 py-2.5 bg-white/[0.03]">
+            <span className="text-xs font-semibold text-foreground">Price per TH/s</span>
             <p className="text-sm font-bold text-foreground">
               {getSymbol()}{convert(pricePerTH).toFixed(2)}
               {pricePerTH < basePrice && (
-                <span className="text-green-400 text-xs ml-1">
-                  (-{Math.round((1 - pricePerTH/basePrice) * 100)}%)
-                </span>
+                <span className="text-green-400 text-xs ml-1">(-{Math.round((1 - pricePerTH/basePrice) * 100)}%)</span>
               )}
             </p>
           </div>
-          
-          <div className="border-t border-white/[0.08] pt-3">
-            <span className="text-xs text-muted-foreground">Contract Cost</span>
-            <p className="text-2xl font-bold text-foreground">
-              {getSymbol()}{convert(estimatedCost).toFixed(2)}
-            </p>
+          {/* What's included — smart cost breakdown */}
+          <div className="px-3 py-2.5 border-t border-white/[0.06] space-y-1.5">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">What's included in your price</p>
+            {[
+              { label: "Hardware rental", note: "Antminer S21 Pro physical machine", color: "text-amber-400" },
+              { label: "Hosting & colocation", note: "Tier-3 data center, 24/7 uptime", color: "text-blue-400" },
+              { label: "Electricity", note: "Industrial rate, fully covered", color: "text-emerald-400" },
+              { label: "Maintenance", note: "Repairs & monitoring included", color: "text-violet-400" },
+              { label: "Pool fees", note: "0% fee, paid by BlockMint", color: "text-teal-400" },
+            ].map(({ label, note, color }) => (
+              <div key={label} className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className={`text-[9px] font-bold ${color}`}>✓</span>
+                  <span className="text-xs text-foreground font-medium">{label}</span>
+                </div>
+                <span className="text-[10px] text-muted-foreground shrink-0">{note}</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center justify-between px-3 py-2.5 border-t border-white/[0.08] bg-emerald-500/5">
+            <span className="text-xs text-muted-foreground">Total (one-time payment)</span>
+            <p className="text-xl font-bold text-foreground">{getSymbol()}{convert(estimatedCost).toFixed(2)}</p>
           </div>
         </div>
         
@@ -834,7 +849,7 @@ function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }:
           
           <div className="pt-2 border-t border-border/30">
             <p className="text-[10px] text-muted-foreground">
-              * Based on today's BTC price: ${btcPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              * $55/TH/year via Antminer S21 Pro hosting · Net profit paid monthly
             </p>
           </div>
           
@@ -857,7 +872,7 @@ function HashRateCalculator({ onPurchase, onCryptoPurchase, isPending, userId }:
         </div>
         
         <p className="text-center text-[10px] text-muted-foreground">
-          All rewards paid in BTC • 7 year contract
+          All rewards paid in BTC • 2-year contract
         </p>
       </div>
     </GlassCard>
@@ -894,7 +909,7 @@ function EmptyState({ onNavigateToInvest }: { onNavigateToInvest: () => void }) 
 // Supported payment currencies for mining purchases
 const paymentCurrencies: CryptoType[] = ["USDT", "BTC", "LTC", "ETH"];
 
-export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }: MiningProps) {
+export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest, onNavigateToWallet }: MiningProps) {
   const [activeTab, setActiveTab] = useState<"devices" | "hot">("hot");
   const [paymentCurrency, setPaymentCurrency] = useState<CryptoType>("USDT");
   const [cryptoConfirmOpen, setCryptoConfirmOpen] = useState(false);
@@ -1258,45 +1273,21 @@ export function Mining({ chartData, contracts, poolStatus, onNavigateToInvest }:
 
         {/* ── Quick Stats Banner ── Only if active */}
         {(contracts.length + activePurchases.length > 0) && (
-          <GlassCard delay={0.1} variant="strong" className="relative overflow-hidden py-3 px-4" glow="btc">
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-gradient-to-br from-emerald-500/15 via-teal-500/8 to-transparent blur-2xl" />
-            </div>
-            <FloatingParticles />
-            <div className="relative z-10">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-[10px] text-muted-foreground font-ui mb-0.5">Your Hashpower</p>
-                  <AnimatedHashrateDisplay value={totalHashrate} unit="TH/s" />
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] text-muted-foreground font-ui mb-0.5">Today's Earnings</p>
-                  <div className="flex items-baseline gap-1 justify-end">
-                    <span className="text-xs text-muted-foreground font-numbers">$</span>
-                    <LiveGrowingBalance
-                      value={miningEstimatedTodayUSDT}
-                      perSecond={miningEarningsPerSecondUSDT}
-                      active={miningEarningsPerSecondUSDT > 0}
-                      decimals={6}
-                      className="text-lg font-bold text-emerald-400 font-numbers"
-                      showBadge={false}
-                    />
-                  </div>
-                </div>
+          <>
+          {/* ── Small banner: devices moved to Wallet & Assets ── */}
+          {onNavigateToWallet && (
+            <button
+              onClick={onNavigateToWallet}
+              className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 hover:border-blue-500/40 transition-all group"
+            >
+              <div className="flex items-center gap-2">
+                <Cpu className="w-3.5 h-3.5 text-blue-400" />
+                <span className="text-xs text-blue-300 font-medium">Your active devices are in Wallet &amp; Assets</span>
               </div>
-              {/* Devices link */}
-              <button
-                onClick={scrollToMyDevices}
-                className="w-full flex items-center justify-between mt-2.5 p-2 rounded-lg bg-white/5 border border-emerald-500/15 hover:border-emerald-500/30 transition-all group"
-              >
-                <div className="flex items-center gap-2">
-                  <Cpu className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-[11px] font-medium text-foreground font-ui">{contracts.length + activePurchases.length} Active Devices</span>
-                </div>
-                <ChevronDown className="w-3.5 h-3.5 text-emerald-400 group-hover:translate-y-0.5 transition-transform" />
-              </button>
-            </div>
-          </GlassCard>
+              <ChevronRight className="w-3.5 h-3.5 text-blue-400 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          )}
+          </>
         )}
 
         {/* ══════════ HORIZONTAL TAB PURCHASE FLOW ══════════ */}

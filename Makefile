@@ -1,8 +1,9 @@
-IMAGE=rg.fr-par.scw.cloud/blockmint/app:latest
-CONTAINER_ID=5e415e9e-bcd9-4dc2-8f79-e663e542f100
+IMAGE=rg.fr-par.scw.cloud/blockmint-prod/app:latest
+CONTAINER_ID=94955f6b-09ae-4bec-9465-bade0785f197
 
-SCW_ACCESS_KEY=SCWBFTZH7MECJNF144B4
-SCW_SECRET_KEY=573f3a65-4726-4f8d-8323-a6a7589e9399
+# Load credentials from .env (gitignored — never hardcode keys here)
+-include .env
+export SCW_ACCESS_KEY SCW_SECRET_KEY
 
 deploy:
 	@echo "🔨 Building Docker image..."

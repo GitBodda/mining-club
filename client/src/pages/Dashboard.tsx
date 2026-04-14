@@ -391,7 +391,7 @@ export function Dashboard({
   };
   const handleMyMiners = () => {
     localStorage.setItem("scrollToMyDevices", "true");
-    onNavigateToMining?.();
+    onNavigateToWallet?.();
   };
   const handleHistory = () => {
     localStorage.setItem("scrollToRecentActivity", "true");
@@ -465,10 +465,16 @@ export function Dashboard({
               )}
             </div>
 
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-blue-500/8 border border-blue-500/15">
+            <button
+              onClick={onNavigateToWallet}
+              className="flex items-center justify-between p-2.5 rounded-xl bg-blue-500/8 border border-blue-500/15 w-full hover:bg-blue-500/15 transition-colors"
+            >
               <span className="text-[10px] text-muted-foreground font-ui">Your Hashpower</span>
-              <span className="text-xs font-bold text-foreground font-numbers" data-number>{miningPower || "0 TH/s"}</span>
-            </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-foreground font-numbers" data-number>{miningPower || "0 TH/s"}</span>
+                <ChevronRight className="w-3 h-3 text-muted-foreground/60" />
+              </div>
+            </button>
 
             {pendingTotal > 0 && (
               <div className="mt-3 flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
