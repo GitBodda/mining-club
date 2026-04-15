@@ -35,6 +35,7 @@ import { StripePayButton } from "@/components/StripePayButton";
 import { StripePaymentModal } from "@/components/StripePaymentScreen";
 import { useStripeConfig } from "@/hooks/useStripe";
 import paymentMethodsImg from "@assets/payment-methods.png";
+import { InviteCodeModal } from "@/components/InviteCodeModal";
 import type { WalletBalance, Transaction } from "@/lib/types";
 import btcLogo from "@assets/bitcoin-sign-3d-icon-png-download-4466132_1766014388601.png";
 import ltcLogo from "@assets/litecoin-3d-icon-png-download-4466121_1766014388608.png";
@@ -188,6 +189,7 @@ export function Wallet({
   const [depositMethod, setDepositMethod] = useState<"card" | "crypto">("card");
   const [cardDepositAmount, setCardDepositAmount] = useState("");
   const [showStripePayment, setShowStripePayment] = useState(false);
+  const [showGiftModal, setShowGiftModal] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -732,6 +734,15 @@ export function Wallet({
             <div>
               <p className="text-[10px] text-muted-foreground font-ui">Your Hashpower</p>
               <p className="text-sm font-bold text-foreground font-numbers">{formatHashrate(totalHashrateTH)}</p>
+              {activeMiningPurchases.length === 0 && (miningPurchases as any[]).length === 0 && (
+                <button
+                  onClick={() => setShowGiftModal(true)}
+                  className="mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all active:scale-95 text-left"
+                  style={{ background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.3)", color: "#fbbf24" }}
+                >
+                  Have a Gift Code?
+                </button>
+              )}
             </div>
           </div>
           <div className="text-right">
@@ -1449,6 +1460,11 @@ export function Wallet({
             setDepositOpen(true); // Re-open deposit dialog to show success
           }}
         />
+      )}
+
+      {/* Gift Code Modal — only for users with no miners or purchases */}
+      {showGiftModal && (
+        <InviteCodeModal onClose={() => setShowGiftModal(false)} />
       )}
     </>
   );

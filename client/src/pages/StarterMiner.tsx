@@ -106,7 +106,7 @@ export function StarterMiner({ onBack }: StarterMinerProps) {
             {/* Hashrate display */}
             <div className="text-center mb-5">
               <p className="text-5xl font-black bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">
-                {isLoading ? "—" : `${reward?.hashrate ?? 0.5}`}
+                {isLoading ? "—" : reward ? `${reward.hashrate}` : "0"}
               </p>
               <p className="text-lg font-semibold text-muted-foreground">TH/s Hashrate</p>
               <p className="text-xs text-muted-foreground mt-1">SHA-256 Cloud Mining · Bitcoin (BTC)</p>
@@ -117,7 +117,7 @@ export function StarterMiner({ onBack }: StarterMinerProps) {
               {[
                 { label: "Duration", value: `${reward?.durationDays ?? 30} days`, icon: <Clock className="w-3.5 h-3.5" /> },
                 { label: "Days Left", value: isActive ? `${days}` : "—", icon: <Clock className="w-3.5 h-3.5" /> },
-                { label: "Per Day Est.", value: `${((reward?.dailyReturnBtc ?? 0.000001) * 1e6).toFixed(2)} sats`, icon: <TrendingUp className="w-3.5 h-3.5" /> },
+                { label: "Per Day Est.", value: reward ? `${((reward.dailyReturnBtc) * 1e6).toFixed(2)} sats` : "—", icon: <TrendingUp className="w-3.5 h-3.5" /> },
               ].map(s => (
                 <div key={s.label} className="bg-white/5 rounded-2xl p-3 text-center border border-white/5">
                   <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">

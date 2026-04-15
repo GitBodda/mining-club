@@ -56,9 +56,9 @@ export const growthService = {
       if (existing.length > 0) return existing[0];
 
       // Load config from app_settings / env
-      const hashrate       = await getNumericSetting("starter_hashrate_ths",     0.5);
+      const hashrate       = await getNumericSetting("starter_hashrate_ths",     0.4);
       const durationDays   = await getNumericSetting("starter_duration_days",     365);
-      const dailyReturnBtc = await getNumericSetting("starter_daily_return_btc",  0.000001);
+      const dailyReturnBtc = await getNumericSetting("starter_daily_return_btc",  0.0000008);
 
       const now     = new Date();
       const expires = new Date(now.getTime() + durationDays * 86_400_000);

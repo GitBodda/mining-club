@@ -1,5 +1,6 @@
 import { useQuery, useMutation, keepPreviousData } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useCryptoPrices, CryptoType } from "./useCryptoPrices";
 import type { 
   MiningStats, 
   WalletBalance, 
@@ -34,6 +35,8 @@ export function useMiningData() {
   const user = userStr ? JSON.parse(userStr) : null;
   const userId = user?.dbId || user?.id || user?.uid;
 
+  const { prices: cryptoPrices } = useCryptoPrices();
+
   const miningStatsQuery = useQuery<MiningStats>({
     ...stableQueryOptions,
     queryKey: ["/api/mining/stats"],
@@ -48,78 +51,27 @@ export function useMiningData() {
     queryKey: ["/api/balances", userId],
     queryFn: async () => {
       if (!userId) {
-        return { balances: [], totalBalance: 0, change24h: 0, pending: {} };
+        return { balances: [], pending: {} };
       }
       const res = await fetch(`/api/balances/${userId}`);
-      if (!res.ok) return { balances: [], totalBalance: 0, change24h: 0, pending: {} };
+      if (!res.ok) return { balances: [], pending: {} };
       const data = await res.json();
-
-      // Fetch crypto prices (never let CoinGecko downtime break the app)
-      let priceMap: Record<string, number> = {
-        BTC: 0,
-        LTC: 0,
-        ETH: 0,
-        USDT: 1,
-        USDC: 1,
-        BNB: 0,
-        ZCASH: 0,
-        TON: 0,
-      };
-
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        let pricesRes: Response | null = null;
-        try {
-          pricesRes = await fetch(
-            "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,litecoin,ethereum,tether,usd-coin,binancecoin,zcash,ton&vs_currencies=usd",
-            { signal: controller.signal }
-          );
-        } catch (err) {
-          // Network error or abort
-          pricesRes = null;
-        }
-        clearTimeout(timeoutId);
-        if (pricesRes && pricesRes.ok) {
-          const prices = await pricesRes.json();
-          priceMap = {
-            BTC: prices.bitcoin?.usd || 0,
-            LTC: prices.litecoin?.usd || 0,
-            ETH: prices.ethereum?.usd || 0,
-            USDT: prices.tether?.usd || 1,
-            USDC: prices["usd-coin"]?.usd || 1,
-            BNB: prices.binancecoin?.usd || 0,
-            ZCASH: prices.zcash?.usd || 0,
-            TON: prices.ton?.usd || 0,
-          };
-        } else {
-          // Use default prices if fetch fails
-          console.warn("Failed to fetch crypto prices: using defaults");
-        }
-      } catch (err) {
-        // Silently fail - use default prices
-        console.warn("Failed to fetch crypto prices:", err);
-      }
-      
-      // Calculate total balance from wallet balances
-      const totalBalance = data.balances?.reduce((sum: number, wallet: any) => {
-        const price = priceMap[wallet.symbol] || 0;
-        return sum + (wallet.balance * price);
-      }, 0) || 0;
-      
       return {
         balances: data.balances || [],
-        totalBalance: totalBalance,
-        change24h: 0,
-        pending: data.pending || {}
+        pending: data.pending || {},
       };
     },
     enabled: !!userId,
-    refetchInterval: 30000, // Refresh every 30 seconds for real-time balance updates
-    refetchIntervalInBackground: true, // Keep refreshing in background for mobile
+    refetchInterval: 30000,
+    refetchIntervalInBackground: true,
     placeholderData: keepPreviousData,
     staleTime: 30000,
   });
+
+  const totalBalance = (walletQuery.data?.balances ?? []).reduce((sum: number, wallet: any) => {
+    const price = cryptoPrices[wallet.symbol as CryptoType]?.price ?? 0;
+    return sum + (wallet.balance * price);
+  }, 0);
 
   const transactionsQuery = useQuery<Transaction[]>({
     ...stableQueryOptions,
@@ -245,8 +197,8 @@ export function useMiningData() {
     portfolioHistory: portfolioHistoryQuery.data ?? [],
     contracts: contractsQuery.data ?? [],
     poolStatus: poolStatusQuery.data ?? { connected: false, poolName: "", hashRate: "0 TH/s", uptime: 0, workers: 0 },
-    totalBalance: walletQuery.data?.totalBalance ?? 0,
-    change24h: walletQuery.data?.change24h ?? 0,
+    totalBalance,
+    change24h: 0,
     isPending: toggleMiningMutation.isPending || contractsQuery.isPending,
     isLoading: miningStatsQuery.isLoading || walletQuery.isLoading || contractsQuery.isLoading,
     isFetching: walletQuery.isFetching,

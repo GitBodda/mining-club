@@ -2864,9 +2864,7 @@ border-radius:50%;animation:spin .8s linear infinite;margin:1rem auto 0}
           ...(phDistinctId ? { $anon_distinct_id: phDistinctId } : {}),
         },
       });
-      const isNewUser = result.user.createdAt
-        ? Date.now() - new Date(result.user.createdAt).getTime() < 10_000
-        : false;
+      const isNewUser = result.isNewUser ?? false;
       posthog.capture({
         distinctId: result.user.id,
         event: isNewUser ? "user_signed_up" : "user_logged_in",
@@ -2878,7 +2876,7 @@ border-radius:50%;animation:spin .8s linear infinite;margin:1rem auto 0}
         },
       });
 
-      res.json({ user: result.user });
+      res.json({ user: result.user, isNewUser });
     } catch (error) {
       console.error("Error syncing auth user:", error);
       res.status(500).json({ error: `Failed to sync user: ${error instanceof Error ? error.message : 'Unknown error'}` });

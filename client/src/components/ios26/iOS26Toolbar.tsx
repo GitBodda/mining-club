@@ -106,7 +106,7 @@ export function iOS26Toolbar({
           label: "Notifications",
         },
         {
-          icon: <i className="fi fi-tr-blockchain-3" style={{ fontSize: 18, lineHeight: 1 }} />,
+          icon: <i className="fi fi-tr-settings" style={{ fontSize: 18, lineHeight: 1 }} />,
           onPress: () => onOpenSettings?.(),
           label: "Settings",
         },

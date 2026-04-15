@@ -1808,4 +1808,218 @@ export async function registerAdminRoutes(app: Express) {
   });
 
   console.log("Stripe admin routes registered");
+
+  // ============ INVITE CODES ============
+
+  // List all invite codes
+  app.get("/api/admin/invite-codes", devAdmin, async (_req, res) => {
+    try {
+      const codes = await db.select().from(schema.inviteCodes)
+        .orderBy(desc(schema.inviteCodes.createdAt));
+      res.json(codes);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch invite codes" });
+    }
+  });
+
+  // Create invite code(s)
+  app.post("/api/admin/invite-codes", devAdmin, async (req, res) => {
+    try {
+      const { code, label, maxUses, hashrateOverride, durationOverride, dailyReturnOverride, validUntil, batch } = req.body;
+
+      if (batch && typeof batch === "number" && batch > 1) {
+        // Bulk generate
+        const prefix = code || "BLOCK";
+        const values = Array.from({ length: batch }, (_, i) => ({
+          code: `${prefix}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+          label: label || null,
+          maxUses: maxUses || 1,
+          hashrateOverride: hashrateOverride || null,
+          durationOverride: durationOverride || null,
+          dailyReturnOverride: dailyReturnOverride || null,
+          validUntil: validUntil ? new Date(validUntil) : null,
+          isActive: true,
+        }));
+        const inserted = await db.insert(schema.inviteCodes).values(values).returning();
+        return res.json(inserted);
+      }
+
+      const [inserted] = await db.insert(schema.inviteCodes).values({
+        code: code || `BLOCK-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+        label: label || null,
+        maxUses: maxUses || 1,
+        hashrateOverride: hashrateOverride || null,
+        durationOverride: durationOverride || null,
+        dailyReturnOverride: dailyReturnOverride || null,
+        validUntil: validUntil ? new Date(validUntil) : null,
+        isActive: true,
+      }).returning();
+      res.json(inserted);
+    } catch (error: any) {
+      if (error.code === "23505") return res.status(409).json({ error: "Code already exists" });
+      res.status(500).json({ error: "Failed to create invite code" });
+    }
+  });
+
+  // Toggle invite code active state
+  app.patch("/api/admin/invite-codes/:id", devAdmin, async (req, res) => {
+    try {
+      const [updated] = await db.update(schema.inviteCodes)
+        .set(req.body)
+        .where(eq(schema.inviteCodes.id, req.params.id))
+        .returning();
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update invite code" });
+    }
+  });
+
+  // Delete invite code
+  app.delete("/api/admin/invite-codes/:id", devAdmin, async (req, res) => {
+    try {
+      await db.delete(schema.inviteCodes).where(eq(schema.inviteCodes.id, req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete invite code" });
+    }
+  });
+
+  // List invite code redemptions
+  app.get("/api/admin/invite-codes/redemptions", devAdmin, async (_req, res) => {
+    try {
+      const redemptions = await db
+        .select({
+          id: schema.inviteCodeRedemptions.id,
+          redeemedAt: schema.inviteCodeRedemptions.redeemedAt,
+          codeId: schema.inviteCodeRedemptions.codeId,
+          code: schema.inviteCodes.code,
+          label: schema.inviteCodes.label,
+          userId: schema.inviteCodeRedemptions.userId,
+          userEmail: schema.users.email,
+          userDisplayName: schema.users.displayName,
+          starterRewardId: schema.inviteCodeRedemptions.starterRewardId,
+        })
+        .from(schema.inviteCodeRedemptions)
+        .leftJoin(schema.inviteCodes, eq(schema.inviteCodeRedemptions.codeId, schema.inviteCodes.id))
+        .leftJoin(schema.users, eq(schema.inviteCodeRedemptions.userId, schema.users.id))
+        .orderBy(desc(schema.inviteCodeRedemptions.redeemedAt));
+      res.json(redemptions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch redemptions" });
+    }
+  });
+
+  // ============ FREE MINERS (invite-code starter rewards) ============
+
+  // List all free miners granted via invite codes
+  app.get("/api/admin/free-miners", devAdmin, async (_req, res) => {
+    try {
+      const freeMiners = await db
+        .select({
+          rewardId: schema.starterRewards.id,
+          userId: schema.starterRewards.userId,
+          userEmail: schema.users.email,
+          userDisplayName: schema.users.displayName,
+          status: schema.starterRewards.status,
+          hashrate: schema.starterRewards.hashrate,
+          hashrateUnit: schema.starterRewards.hashrateUnit,
+          durationDays: schema.starterRewards.durationDays,
+          totalEarned: schema.starterRewards.totalEarned,
+          activatedAt: schema.starterRewards.activatedAt,
+          expiresAt: schema.starterRewards.expiresAt,
+          revokedAt: schema.starterRewards.revokedAt,
+          revocationReason: schema.starterRewards.revocationReason,
+          miningPurchaseId: schema.starterRewards.miningPurchaseId,
+          miningStatus: schema.miningPurchases.status,
+          inviteCode: schema.inviteCodes.code,
+          inviteLabel: schema.inviteCodes.label,
+        })
+        .from(schema.starterRewards)
+        .leftJoin(schema.users, eq(schema.starterRewards.userId, schema.users.id))
+        .leftJoin(schema.miningPurchases, eq(schema.starterRewards.miningPurchaseId, schema.miningPurchases.id))
+        .leftJoin(schema.inviteCodeRedemptions, eq(schema.starterRewards.id, schema.inviteCodeRedemptions.starterRewardId))
+        .leftJoin(schema.inviteCodes, eq(schema.inviteCodeRedemptions.codeId, schema.inviteCodes.id))
+        .orderBy(desc(schema.starterRewards.activatedAt));
+      res.json(freeMiners);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch free miners" });
+    }
+  });
+
+  // Pause / resume a free miner (updates both starter_rewards and mining_purchases)
+  app.post("/api/admin/free-miners/:rewardId/toggle", devAdmin, async (req, res) => {
+    try {
+      const reward = await db.select().from(schema.starterRewards)
+        .where(eq(schema.starterRewards.id, req.params.rewardId));
+      if (!reward[0]) return res.status(404).json({ error: "Reward not found" });
+
+      const newStatus = reward[0].status === "active" ? "revoked" : "active";
+      const now = new Date();
+
+      await db.update(schema.starterRewards)
+        .set({
+          status: newStatus,
+          revokedAt: newStatus === "revoked" ? now : null,
+          revocationReason: newStatus === "revoked" ? (req.body.reason || "Admin paused") : null,
+        })
+        .where(eq(schema.starterRewards.id, req.params.rewardId));
+
+      if (reward[0].miningPurchaseId) {
+        await db.update(schema.miningPurchases)
+          .set({ status: newStatus === "revoked" ? "cancelled" : "active" })
+          .where(eq(schema.miningPurchases.id, reward[0].miningPurchaseId));
+      }
+
+      res.json({ success: true, newStatus });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to toggle free miner" });
+    }
+  });
+
+  // ============ USER MINING PURCHASE MANAGEMENT ============
+
+  // List all mining purchases with user info
+  app.get("/api/admin/mining-purchases", devAdmin, async (_req, res) => {
+    try {
+      const purchases = await db
+        .select({
+          id: schema.miningPurchases.id,
+          userId: schema.miningPurchases.userId,
+          userEmail: schema.users.email,
+          userDisplayName: schema.users.displayName,
+          packageName: schema.miningPurchases.packageName,
+          crypto: schema.miningPurchases.crypto,
+          amount: schema.miningPurchases.amount,
+          hashrate: schema.miningPurchases.hashrate,
+          hashrateUnit: schema.miningPurchases.hashrateUnit,
+          status: schema.miningPurchases.status,
+          totalEarned: schema.miningPurchases.totalEarned,
+          purchaseDate: schema.miningPurchases.purchaseDate,
+          expiryDate: schema.miningPurchases.expiryDate,
+        })
+        .from(schema.miningPurchases)
+        .leftJoin(schema.users, eq(schema.miningPurchases.userId, schema.users.id))
+        .orderBy(desc(schema.miningPurchases.purchaseDate));
+      res.json(purchases);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch mining purchases" });
+    }
+  });
+
+  // Pause / resume / cancel a specific mining purchase
+  app.post("/api/admin/mining-purchases/:id/status", devAdmin, async (req, res) => {
+    try {
+      const { status } = req.body; // 'active' | 'cancelled' | 'paused'
+      if (!["active", "cancelled", "paused"].includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+      }
+      const [updated] = await db.update(schema.miningPurchases)
+        .set({ status })
+        .where(eq(schema.miningPurchases.id, req.params.id))
+        .returning();
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update mining purchase status" });
+    }
+  });
 }

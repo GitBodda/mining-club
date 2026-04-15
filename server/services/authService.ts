@@ -10,6 +10,7 @@ export interface AuthResult {
   success: boolean;
   user?: schema.User;
   error?: string;
+  isNewUser?: boolean;
 }
 
 export interface TokenPayload {
@@ -74,7 +75,7 @@ export const authService = {
           await setCustomClaims(firebaseUid, { admin: true, role: newRole });
         }
         
-        return { success: true, user: updatedUser };
+        return { success: true, user: updatedUser, isNewUser: false };
       }
 
       // Fallback: if same email exists (legacy/manual user), link it to this Firebase UID.
@@ -106,7 +107,7 @@ export const authService = {
           await setCustomClaims(firebaseUid, { admin: true, role: newRole });
         }
 
-        return { success: true, user: updatedUser };
+        return { success: true, user: updatedUser, isNewUser: false };
       }
 
       // Create new user
@@ -133,12 +134,14 @@ export const authService = {
         userId: newUser.id,
       }).onConflictDoNothing();
 
-      // ── Growth system: grant starter miner + check founder status ──
+      // ── Growth system: check founder status (starter miner granted via invite code only) ──
       // This is intentionally fire-and-forget so it never blocks auth
       setImmediate(async () => {
         try {
           const { growthService } = await import("./growthService");
-          await growthService.grantStarterMiner(newUser.id);
+          // NOTE: starter miner is no longer auto-granted here.
+          // Users must redeem an invite code via POST /api/invite/redeem
+          await growthService.checkAndGrantFounderStatus(newUser.id);
 
           // If referral code was supplied in the request context, attribute it
           // (also handled in /api/growth/attribute-referral for client-side attribution)
@@ -147,7 +150,7 @@ export const authService = {
         }
       });
 
-      return { success: true, user: newUser };
+      return { success: true, user: newUser, isNewUser: true };
     } catch (error) {
       console.error("Error in getOrCreateUser:", error);
       const errorMessage = error instanceof Error ? error.message : String(error);

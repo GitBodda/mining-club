@@ -1391,3 +1391,42 @@ export const insertGrowthBadgeSchema = createInsertSchema(growthBadges).omit({
 export type InsertGrowthBadge = z.infer<typeof insertGrowthBadgeSchema>;
 export type GrowthBadge = typeof growthBadges.$inferSelect;
 export type StripePayment = typeof stripePayments.$inferSelect;
+
+// ============ INVITE CODES ============
+
+export const inviteCodes = pgTable("invite_codes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(),
+  label: text("label"), // e.g. "X Giveaway April 2026"
+  maxUses: integer("max_uses").notNull().default(1),
+  usedCount: integer("used_count").notNull().default(0),
+  // Custom miner overrides (null = use app_settings defaults)
+  hashrateOverride: real("hashrate_override"),   // TH/s
+  durationOverride: integer("duration_override"), // days
+  dailyReturnOverride: real("daily_return_override"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdBy: varchar("created_by").references(() => users.id),
+  validFrom: timestamp("valid_from"),
+  validUntil: timestamp("valid_until"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertInviteCodeSchema = createInsertSchema(inviteCodes).omit({
+  id: true,
+  usedCount: true,
+  createdAt: true,
+});
+
+export type InsertInviteCode = z.infer<typeof insertInviteCodeSchema>;
+export type InviteCode = typeof inviteCodes.$inferSelect;
+
+// Tracks which user redeemed which invite code
+export const inviteCodeRedemptions = pgTable("invite_code_redemptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  codeId: varchar("code_id").notNull().references(() => inviteCodes.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  redeemedAt: timestamp("redeemed_at").defaultNow(),
+  starterRewardId: varchar("starter_reward_id").references(() => starterRewards.id),
+});
+
+export type InviteCodeRedemption = typeof inviteCodeRedemptions.$inferSelect;

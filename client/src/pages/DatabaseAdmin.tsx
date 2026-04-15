@@ -182,7 +182,7 @@ const ARTICLE_CATEGORIES = [
   "News",
 ];
 
-type NavItem = "users" | "deposits" | "withdrawals" | "auto-withdrawals" | "notifications" | "articles" | "update-app" | "config" | "estimates" | "user-estimates" | "solo-mining" | "stripe" | "miners";
+type NavItem = "users" | "deposits" | "withdrawals" | "auto-withdrawals" | "notifications" | "articles" | "update-app" | "config" | "estimates" | "user-estimates" | "solo-mining" | "stripe" | "miners" | "invite-codes" | "free-miners";
 
 interface SoloMiningPurchase {
   id: string;
@@ -448,6 +448,14 @@ export function DatabaseAdmin() {
   const [stripeMinAmount, setStripeMinAmount] = useState("5");
   const [stripeMaxAmount, setStripeMaxAmount] = useState("10000");
   const [stripeSettingsLoaded, setStripeSettingsLoaded] = useState(false);
+
+  // Invite code form state
+  const [newCodeLabel, setNewCodeLabel] = useState("");
+  const [newCodeCustom, setNewCodeCustom] = useState("");
+  const [newCodeMaxUses, setNewCodeMaxUses] = useState("1");
+  const [newCodeBatch, setNewCodeBatch] = useState("1");
+  const [newCodeExpiry, setNewCodeExpiry] = useState("");
+  const [isCreatingCode, setIsCreatingCode] = useState(false);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -603,6 +611,40 @@ export function DatabaseAdmin() {
       return res.json();
     },
     enabled: isAuthenticated && activeNav === "miners",
+    refetchInterval: 30000,
+  });
+
+  // Invite codes queries
+  const { data: inviteCodes = [], isLoading: isLoadingInviteCodes, refetch: refetchInviteCodes } = useQuery<any[]>({
+    queryKey: ["/api/admin/invite-codes"],
+    queryFn: async () => {
+      const res = await adminFetch("/api/admin/invite-codes");
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: isAuthenticated && activeNav === "invite-codes",
+    refetchInterval: 30000,
+  });
+
+  const { data: inviteRedemptions = [] } = useQuery<any[]>({
+    queryKey: ["/api/admin/invite-codes/redemptions"],
+    queryFn: async () => {
+      const res = await adminFetch("/api/admin/invite-codes/redemptions");
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: isAuthenticated && activeNav === "invite-codes",
+  });
+
+  // Free miners query
+  const { data: freeMiners = [], isLoading: isLoadingFreeMiners, refetch: refetchFreeMiners } = useQuery<any[]>({
+    queryKey: ["/api/admin/free-miners"],
+    queryFn: async () => {
+      const res = await adminFetch("/api/admin/free-miners");
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: isAuthenticated && activeNav === "free-miners",
     refetchInterval: 30000,
   });
 
@@ -834,8 +876,52 @@ export function DatabaseAdmin() {
         : terminateCustomMessage.trim();
 
   // Toggle pause/activate a miner
-  const toggleMinerStatus = useMutation({
-    mutationFn: async ({ purchaseId, action }: { purchaseId: string; action: "pause" | "activate" }) => {
+  const toggleFreeMinerStatus = useMutation({
+    mutationFn: async ({ rewardId, reason }: { rewardId: string; reason?: string }) => {
+      const res = await adminFetch(`/api/admin/free-miners/${rewardId}/toggle`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Failed");
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/free-miners"] });
+      toast({ title: data.newStatus === "active" ? "Free miner activated" : "Free miner paused" });
+    },
+    onError: (e: any) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
+  });
+
+  const deleteInviteCode = useMutation({
+    mutationFn: async (codeId: string) => {
+      const res = await adminFetch(`/api/admin/invite-codes/${codeId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/invite-codes"] });
+      toast({ title: "Invite code deleted" });
+    },
+    onError: (e: any) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
+  });
+
+  const toggleInviteCode = useMutation({
+    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
+      const res = await adminFetch(`/api/admin/invite-codes/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ isActive }),
+      });
+      if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/invite-codes"] });
+    },
+    onError: (e: any) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
+  });
+
+  // Toggle pause/activate a miner
+  const toggleMinerStatus = useMutation({    mutationFn: async ({ purchaseId, action }: { purchaseId: string; action: "pause" | "activate" }) => {
       const res = await adminFetch(`/api/admin/mining-purchases/${purchaseId}/toggle-status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -888,6 +974,8 @@ export function DatabaseAdmin() {
     },
     onError: (e: any) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
   });
+
+  const addConfig = useMutation({
     mutationFn: async (data: { key: string; value: string; category: string; description: string }) =>
       adminFetch("/api/admin/config", {
         method: "POST",
@@ -1012,6 +1100,8 @@ export function DatabaseAdmin() {
     { id: "auto-withdrawals" as NavItem, icon: Wallet, label: "Auto-Withdrawals", badge: autoWithdrawConfigs.filter((c: any) => c.enabled).length },
     { id: "solo-mining" as NavItem, icon: Target, label: "Solo Mining", badge: activeSoloPurchases.length },
     { id: "miners" as NavItem, icon: Cpu, label: "Miners" },
+    { id: "invite-codes" as NavItem, icon: Key, label: "Invite Codes" },
+    { id: "free-miners" as NavItem, icon: Gift, label: "Free Miners" },
     { id: "notifications" as NavItem, icon: Bell, label: "Notifications" },
   ];
 
@@ -1179,7 +1269,7 @@ export function DatabaseAdmin() {
                       </div>
                       <div className="min-w-[90px]">
                         <p className="text-xs text-muted-foreground">App Store Installs</p>
-                        <p className="text-xl font-bold text-purple-400">{APP_STORE_INSTALLS.toLocaleString()}</p>
+                        <p className="text-xl font-bold text-purple-400">{appStoreInstalls.toLocaleString()}</p>
                       </div>
                     </div>
                   </div>
@@ -1335,18 +1425,18 @@ export function DatabaseAdmin() {
                       </div>
                     ))}
                     {/* Daily simulated users */}
-                    {DAILY_SIMULATED_USERS
-                      .filter((u) => {
+                    {simulatedUsers
+                      .filter((u: any) => {
                         const q = userSearch.trim().toLowerCase();
                         if (!q) return true;
                         return u.email.toLowerCase().includes(q) || u.displayName.toLowerCase().includes(q);
                       })
-                      .filter((u) => {
+                      .filter((u: any) => {
                         if (userStatusFilter === "all") return true;
                         if (userStatusFilter === "active") return u.isActive;
                         return !u.isActive;
                       })
-                      .map((fakeUser) => (
+                      .map((fakeUser: any) => (
                       <div key={fakeUser.id} className="bg-card rounded-xl border border-border p-4 space-y-3">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0 flex-1">
@@ -2072,6 +2162,224 @@ export function DatabaseAdmin() {
                               </Button>
                             )}
                           </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Invite Codes Tab */}
+              {activeNav === "invite-codes" && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold mb-1">Invite Codes</h2>
+                    <p className="text-muted-foreground text-sm">Generate codes — users redeem them to unlock their free starter miner</p>
+                  </div>
+
+                  {/* Create codes */}
+                  <div className="bg-card rounded-2xl border border-border p-5 space-y-4">
+                    <h3 className="font-semibold flex items-center gap-2"><Key className="w-4 h-4 text-primary" /> Generate Codes</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs mb-1 block">Label (optional)</Label>
+                        <Input value={newCodeLabel} onChange={e => setNewCodeLabel(e.target.value)} placeholder="X Giveaway April 2026" className="h-9 text-sm" />
+                      </div>
+                      <div>
+                        <Label className="text-xs mb-1 block">Custom Code (optional)</Label>
+                        <Input value={newCodeCustom} onChange={e => setNewCodeCustom(e.target.value.toUpperCase())} placeholder="e.g. BLOCK-VIP" className="h-9 text-sm font-mono" />
+                      </div>
+                      <div>
+                        <Label className="text-xs mb-1 block">Max Uses per Code</Label>
+                        <Input type="number" min={1} value={newCodeMaxUses} onChange={e => setNewCodeMaxUses(e.target.value)} className="h-9 text-sm" />
+                      </div>
+                      <div>
+                        <Label className="text-xs mb-1 block">Batch Count</Label>
+                        <Input type="number" min={1} max={500} value={newCodeBatch} onChange={e => setNewCodeBatch(e.target.value)} className="h-9 text-sm" placeholder="1" />
+                      </div>
+                      <div className="col-span-2">
+                        <Label className="text-xs mb-1 block">Expiry Date (optional)</Label>
+                        <Input type="date" value={newCodeExpiry} onChange={e => setNewCodeExpiry(e.target.value)} className="h-9 text-sm" />
+                      </div>
+                    </div>
+                    <Button
+                      className="w-full"
+                      disabled={isCreatingCode}
+                      onClick={async () => {
+                        setIsCreatingCode(true);
+                        try {
+                          const batch = parseInt(newCodeBatch) || 1;
+                          const res = await adminFetch("/api/admin/invite-codes", {
+                            method: "POST",
+                            body: JSON.stringify({
+                              code: newCodeCustom || undefined,
+                              label: newCodeLabel || undefined,
+                              maxUses: parseInt(newCodeMaxUses) || 1,
+                              batch: batch > 1 ? batch : undefined,
+                              validUntil: newCodeExpiry || undefined,
+                            }),
+                          });
+                          if (!res.ok) throw new Error((await res.json()).error);
+                          const result = await res.json();
+                          queryClient.invalidateQueries({ queryKey: ["/api/admin/invite-codes"] });
+                          toast({ title: `${Array.isArray(result) ? result.length : 1} code(s) created`, description: Array.isArray(result) ? result.map((c: any) => c.code).join(", ") : result.code });
+                          setNewCodeLabel(""); setNewCodeCustom(""); setNewCodeBatch("1"); setNewCodeExpiry("");
+                        } catch (e: any) {
+                          toast({ title: "Error", description: e.message, variant: "destructive" });
+                        } finally {
+                          setIsCreatingCode(false);
+                        }
+                      }}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      {parseInt(newCodeBatch) > 1 ? `Generate ${newCodeBatch} Codes` : "Create Code"}
+                    </Button>
+                  </div>
+
+                  {/* Code list */}
+                  {isLoadingInviteCodes ? (
+                    <div className="text-center py-8 text-muted-foreground text-sm">Loading...</div>
+                  ) : inviteCodes.length === 0 ? (
+                    <div className="bg-card rounded-xl border border-border p-8 text-center">
+                      <Key className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                      <p className="text-muted-foreground">No invite codes yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">{inviteCodes.length} codes • {inviteCodes.filter((c: any) => c.isActive).length} active</p>
+                      {inviteCodes.map((c: any) => (
+                        <div key={c.id} className="bg-card rounded-xl border border-border p-4 flex items-center gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-mono font-bold text-primary text-sm">{c.code}</p>
+                            {c.label && <p className="text-xs text-muted-foreground">{c.label}</p>}
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {c.usedCount}/{c.maxUses} uses
+                              {c.validUntil && ` · expires ${new Date(c.validUntil).toLocaleDateString()}`}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Badge className={c.isActive ? "bg-emerald-500/20 text-emerald-400" : "bg-gray-500/20 text-gray-400"}>
+                              {c.isActive ? "Active" : "Off"}
+                            </Badge>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 px-2 text-xs"
+                              onClick={() => toggleInviteCode.mutate({ id: c.id, isActive: !c.isActive })}
+                            >
+                              {c.isActive ? <ToggleRight className="w-4 h-4 text-emerald-400" /> : <ToggleLeft className="w-4 h-4" />}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive"
+                              onClick={() => deleteInviteCode.mutate(c.id)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Redemptions */}
+                  {inviteRedemptions.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold mb-3 flex items-center gap-2"><Users className="w-4 h-4" /> Recent Redemptions ({inviteRedemptions.length})</h3>
+                      <div className="space-y-2">
+                        {inviteRedemptions.slice(0, 20).map((r: any) => (
+                          <div key={r.id} className="bg-card rounded-xl border border-border p-3 flex items-center gap-3">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium">{r.userDisplayName || r.userEmail || r.userId?.slice(0,8)}</p>
+                              <p className="text-xs text-muted-foreground">{r.userEmail}</p>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="font-mono text-xs text-primary">{r.code}</p>
+                              <p className="text-xs text-muted-foreground">{new Date(r.redeemedAt).toLocaleDateString()}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Free Miners Tab */}
+              {activeNav === "free-miners" && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold mb-1">Free Miners</h2>
+                    <p className="text-muted-foreground text-sm">All starter miners granted via invite codes</p>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-card rounded-xl border border-border p-4 text-center">
+                      <p className="text-2xl font-bold text-emerald-400">{freeMiners.filter((m: any) => m.status === "active").length}</p>
+                      <p className="text-xs text-muted-foreground">Active</p>
+                    </div>
+                    <div className="bg-card rounded-xl border border-border p-4 text-center">
+                      <p className="text-2xl font-bold text-red-400">{freeMiners.filter((m: any) => m.status === "revoked").length}</p>
+                      <p className="text-xs text-muted-foreground">Revoked</p>
+                    </div>
+                    <div className="bg-card rounded-xl border border-border p-4 text-center">
+                      <p className="text-2xl font-bold">{freeMiners.length}</p>
+                      <p className="text-xs text-muted-foreground">Total</p>
+                    </div>
+                  </div>
+
+                  {isLoadingFreeMiners ? (
+                    <div className="text-center py-8 text-muted-foreground text-sm">Loading...</div>
+                  ) : freeMiners.length === 0 ? (
+                    <div className="bg-card rounded-xl border border-border p-8 text-center">
+                      <Gift className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                      <p className="text-muted-foreground">No free miners claimed yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {freeMiners.map((m: any) => (
+                        <div key={m.rewardId} className="bg-card rounded-2xl border border-border p-4 space-y-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm">{m.userDisplayName || "—"}</p>
+                              <p className="text-xs text-muted-foreground truncate">{m.userEmail || m.userId?.slice(0,8)}</p>
+                              {m.inviteCode && (
+                                <p className="text-xs mt-1">
+                                  <span className="font-mono text-primary">{m.inviteCode}</span>
+                                  {m.inviteLabel && <span className="text-muted-foreground ml-1">· {m.inviteLabel}</span>}
+                                </p>
+                              )}
+                            </div>
+                            <Badge className={m.status === "active" ? "bg-emerald-500/20 text-emerald-400 shrink-0" : m.status === "expired" ? "bg-yellow-500/20 text-yellow-400 shrink-0" : "bg-red-500/20 text-red-400 shrink-0"}>
+                              {m.status}
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-3 gap-3 text-xs">
+                            <div>
+                              <p className="text-muted-foreground">Hashrate</p>
+                              <p className="font-semibold">{m.hashrate} {m.hashrateUnit}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground">Expires</p>
+                              <p>{m.expiresAt ? new Date(m.expiresAt).toLocaleDateString() : "—"}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground">Earned</p>
+                              <p className="text-amber-500">{m.totalEarned > 0 ? `₿${Number(m.totalEarned).toFixed(6)}` : "—"}</p>
+                            </div>
+                          </div>
+                          {(m.status === "active" || m.status === "revoked") && (
+                            <Button
+                              size="sm"
+                              variant={m.status === "active" ? "outline" : "default"}
+                              className="w-full h-8 text-xs"
+                              disabled={toggleFreeMinerStatus.isPending}
+                              onClick={() => toggleFreeMinerStatus.mutate({ rewardId: m.rewardId, reason: m.status === "active" ? "Admin paused" : undefined })}
+                            >
+                              {m.status === "active" ? <><Pause className="w-3 h-3 mr-1.5" /> Pause Miner</> : <><Play className="w-3 h-3 mr-1.5" /> Reactivate Miner</>}
+                            </Button>
+                          )}
                         </div>
                       ))}
                     </div>

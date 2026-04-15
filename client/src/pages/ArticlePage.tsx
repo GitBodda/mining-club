@@ -1,10 +1,10 @@
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollAwareStatusBar } from "@/components/ScrollAwareStatusBar";
-import { iOS26Toolbar } from "@/components/ios26";
+import { iOS26Toolbar as IOS26Toolbar } from "@/components/ios26";
 import { ScrollEdgeBlur } from "@/components/ios26";
 
 interface Article {
@@ -55,7 +55,7 @@ export function ArticlePage() {
       <ScrollAwareStatusBar />
       <ScrollEdgeBlur />
       {/* iOS 26 Toolbar */}
-      <iOS26Toolbar
+      <IOS26Toolbar
         title={article.title}
         variant="largeTitle"
         showBack

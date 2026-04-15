@@ -391,4 +391,156 @@ export function registerGrowthRoutes(app: Express) {
 </body>
 </html>`);
   });
+
+  // ── Invite code redeem (authenticated user redeems gift code for free miner) ──
+  app.post("/api/invite/redeem", requireAuth(async (req, res, user) => {
+    try {
+      const { code } = req.body;
+      if (!code || typeof code !== "string") {
+        return res.status(400).json({ error: "Invite code is required" });
+      }
+
+      const normalizedCode = code.trim().toUpperCase();
+
+      // Check if user already redeemed any code
+      const existing = await db.select().from(schema.inviteCodeRedemptions)
+        .where(eq(schema.inviteCodeRedemptions.userId, user.id));
+      if (existing.length > 0) {
+        return res.status(409).json({ error: "You have already redeemed an invite code" });
+      }
+
+      // Also check if user already has a starter reward
+      const existingReward = await db.select().from(schema.starterRewards)
+        .where(eq(schema.starterRewards.userId, user.id));
+      if (existingReward.length > 0) {
+        return res.status(409).json({ error: "You have already claimed your free miner" });
+      }
+
+      // Find the invite code
+      const [inviteCode] = await db.select().from(schema.inviteCodes)
+        .where(eq(schema.inviteCodes.code, normalizedCode));
+      if (!inviteCode) {
+        return res.status(404).json({ error: "Invalid invite code" });
+      }
+      if (!inviteCode.isActive) {
+        return res.status(410).json({ error: "This invite code is no longer active" });
+      }
+      if (inviteCode.usedCount >= inviteCode.maxUses) {
+        return res.status(410).json({ error: "This invite code has already been fully used" });
+      }
+      const now = new Date();
+      if (inviteCode.validUntil && new Date(inviteCode.validUntil) < now) {
+        return res.status(410).json({ error: "This invite code has expired" });
+      }
+      if (inviteCode.validFrom && new Date(inviteCode.validFrom) > now) {
+        return res.status(410).json({ error: "This invite code is not yet active" });
+      }
+
+      // Load app_settings defaults (overridden by code-specific values if set)
+      const getSetting = async (key: string, fallback: number) => {
+        try {
+          const rows = await db.select().from(schema.appSettings).where(eq(schema.appSettings.key, key));
+          const val = parseFloat(rows[0]?.value ?? String(fallback));
+          return Number.isFinite(val) ? val : fallback;
+        } catch { return fallback; }
+      };
+
+      const hashrate       = inviteCode.hashrateOverride  ?? await getSetting("starter_hashrate_ths", 0.4);
+      const durationDays   = inviteCode.durationOverride  ?? await getSetting("starter_duration_days", 365);
+      const dailyReturnBtc = inviteCode.dailyReturnOverride ?? await getSetting("starter_daily_return_btc", 0.0000008);
+
+      const expires = new Date(now.getTime() + durationDays * 86_400_000);
+
+      // Create mining_purchases record
+      const [purchase] = await db.insert(schema.miningPurchases).values({
+        userId:        user.id,
+        packageName:   "Starter",
+        crypto:        "BTC",
+        amount:        0,
+        hashrate,
+        hashrateUnit:  "TH/s",
+        dailyReturnBTC: dailyReturnBtc,
+        returnPercent: 0,
+        status:        "active",
+        expiryDate:    expires,
+      }).returning();
+
+      // Create starter_rewards record
+      const [reward] = await db.insert(schema.starterRewards).values({
+        userId:          user.id,
+        status:          "active",
+        hashrate,
+        hashrateUnit:    "TH/s",
+        crypto:          "BTC",
+        durationDays,
+        dailyReturnBtc,
+        qualifyingEvent: "invite_code",
+        miningPurchaseId: purchase.id,
+        activatedAt:     now,
+        expiresAt:       expires,
+      }).returning();
+
+      // Record redemption
+      await db.insert(schema.inviteCodeRedemptions).values({
+        codeId:          inviteCode.id,
+        userId:          user.id,
+        starterRewardId: reward.id,
+      });
+
+      // Increment used count
+      await db.update(schema.inviteCodes)
+        .set({ usedCount: inviteCode.usedCount + 1 })
+        .where(eq(schema.inviteCodes.id, inviteCode.id));
+
+      // Grant badge & notify
+      try {
+        await growthService.grantBadge(user.id, "starter_miner", "Starter Miner");
+      } catch { /* non-fatal */ }
+
+      const { notificationService } = await import("./services/notificationService");
+      await notificationService.create({
+        userId:   user.id,
+        type:     "reward",
+        category: "user",
+        title:    "🎁 Your Free Starter Miner is Active!",
+        message:  `Your invite code activated ${hashrate} TH/s of free cloud mining for ${durationDays} days. Start earning Bitcoin now!`,
+        data:     { starterRewardId: reward.id, hashrate, durationDays },
+        priority: "high",
+      });
+
+      posthog.capture({ distinctId: user.id, event: "invite_code_redeemed", properties: { code: normalizedCode, hashrate, durationDays } });
+
+      return res.json({ success: true, reward, purchase });
+    } catch (err: any) {
+      console.error("invite/redeem error:", err);
+      res.status(500).json({ error: "Failed to redeem invite code" });
+    }
+  }));
+
+  // ── Validate invite code (pre-check, no redemption) ──────────────────────
+  app.get("/api/invite/validate/:code", async (req, res) => {
+    try {
+      const code = req.params.code.trim().toUpperCase();
+      const [inviteCode] = await db.select({
+        id: schema.inviteCodes.id,
+        isActive: schema.inviteCodes.isActive,
+        maxUses: schema.inviteCodes.maxUses,
+        usedCount: schema.inviteCodes.usedCount,
+        validUntil: schema.inviteCodes.validUntil,
+        validFrom: schema.inviteCodes.validFrom,
+        label: schema.inviteCodes.label,
+      }).from(schema.inviteCodes)
+        .where(eq(schema.inviteCodes.code, code));
+
+      if (!inviteCode || !inviteCode.isActive || inviteCode.usedCount >= inviteCode.maxUses) {
+        return res.json({ valid: false });
+      }
+      const now = new Date();
+      if (inviteCode.validUntil && new Date(inviteCode.validUntil) < now) return res.json({ valid: false });
+      if (inviteCode.validFrom && new Date(inviteCode.validFrom) > now) return res.json({ valid: false });
+      return res.json({ valid: true, label: inviteCode.label });
+    } catch (err) {
+      res.status(500).json({ error: "Validation failed" });
+    }
+  });
 }

@@ -15,6 +15,7 @@ import {
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { LiquidGlassCard } from "@/components/GlassCard";
 import { LiveGrowingBalance } from "@/components/LiveGrowingBalance";
+import { InviteCodeModal } from "@/components/InviteCodeModal";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -286,6 +287,7 @@ export function Dashboard({
   const [prevBalance, setPrevBalance] = useState(totalBalance);
   const [balanceIncreased, setBalanceIncreased] = useState(false);
   const [showROI, setShowROI] = useState(false);
+  const [showGiftModal, setShowGiftModal] = useState(false);
 
   useEffect(() => {
     if (totalBalance > prevBalance && prevBalance > 0) {
@@ -475,6 +477,15 @@ export function Dashboard({
                 <ChevronRight className="w-3 h-3 text-muted-foreground/60" />
               </div>
             </button>
+            {activeMiningPurchases.length === 0 && (miningPurchases as any[]).length === 0 && (
+              <button
+                onClick={() => setShowGiftModal(true)}
+                className="text-left text-[10px] font-semibold transition-all active:scale-95 px-2 py-0.5 rounded-full"
+                style={{ background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.3)", color: "#fbbf24" }}
+              >
+                Have a Gift Code?
+              </button>
+            )}
 
             {pendingTotal > 0 && (
               <div className="mt-3 flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
@@ -498,7 +509,6 @@ export function Dashboard({
           <motion.div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/0 via-emerald-500/20 to-emerald-500/0 pointer-events-none" variants={cardShineVariants} animate="animate" />
 
           <div className="relative flex items-center gap-3 mb-4">
-            <motion.img src="/cryptocurrency-mining-rig-with-bitcoin-3d-icon-png-download-13013523.png" alt="Mining" className="w-16 h-16 object-contain drop-shadow-lg" animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 2, repeat: Infinity }} />
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-0.5">
                 <p className="text-sm font-bold text-foreground">Start Mining Bitcoin</p>
@@ -534,7 +544,6 @@ export function Dashboard({
           <motion.div className="absolute -inset-1 bg-gradient-to-r from-teal-500/0 via-teal-500/15 to-teal-500/0 pointer-events-none" variants={cardShineVariants} animate="animate" />
 
           <div className="relative flex items-center gap-3 mb-4">
-            <motion.img src="/cryptocurrency-platform-3d-icon-png-download-13013496.png" alt="Tools" className="w-14 h-14 object-contain drop-shadow-lg" animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 3, repeat: Infinity }} />
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-0.5">
                 <p className="text-sm font-bold text-foreground">Manage & Analyze</p>
@@ -592,6 +601,11 @@ export function Dashboard({
           />
         )}
       </AnimatePresence>
+
+      {/* Gift Code Modal */}
+      {showGiftModal && (
+        <InviteCodeModal onClose={() => setShowGiftModal(false)} />
+      )}
     </>
   );
 }

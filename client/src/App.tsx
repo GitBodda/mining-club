@@ -20,6 +20,7 @@ import { iOS26TabBar as IOS26TabBar, iOS26Toolbar as IOS26Toolbar, ScrollEdgeBlu
 import { DashboardSkeleton, WalletSkeleton } from "@/components/LoadingSkeleton";
 import { ForceUpdateModal } from "@/components/ForceUpdateModal";
 import { TwoFactorVerifyScreen } from "@/components/TwoFactorVerifyScreen";
+import { InviteCodeModal } from "@/components/InviteCodeModal";
 import { AppLockProvider } from "@/components/AppLock";
 import { SiX, SiInstagram } from "react-icons/si";
 import { useMiningData } from "@/hooks/useMiningData";
@@ -87,6 +88,7 @@ function MobileApp() {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [requires2FA, setRequires2FA] = useState(false);
   const [pending2FA, setPending2FA] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   // Persist 2FA verification across app reopens — only reset on logout
   const [twoFAVerifiedThisSession, setTwoFAVerifiedThisSession] = useState(
     () => localStorage.getItem('twoFAVerified') === 'true'
@@ -260,6 +262,10 @@ function MobileApp() {
         if (appView === "auth") {
           setAppView("main");
         }
+        // Show invite code modal for new users who haven't seen it
+        if (data.isNewUser && !localStorage.getItem("hasSeenInviteModal")) {
+          setShowInviteModal(true);
+        }
       } catch (error) {
         console.error("User sync failed:", error);
       }
@@ -353,6 +359,16 @@ function MobileApp() {
         {/* Force Update Modal */}
         <ForceUpdateModal />
       </div>
+
+      {/* Invite Code Modal — shown once for new users */}
+      {showInviteModal && (
+        <InviteCodeModal
+          onClose={() => {
+            setShowInviteModal(false);
+            localStorage.setItem("hasSeenInviteModal", "true");
+          }}
+        />
+      )}
 
       {/* iOS 26 Toolbar — persistent across all tabs */}
       <IOS26Toolbar
