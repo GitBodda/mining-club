@@ -48,6 +48,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { StripePayButton } from "@/components/StripePayButton";
+import { trackPurchaseBegin, trackPurchaseComplete, trackDeposit } from "@/lib/analytics";
 
 // Invest is USDT-only (stable, predictable returns)
 const cryptoAssets = [
@@ -276,9 +277,10 @@ function APRCalculator() {
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/balances", dbUserId] });
       queryClient.invalidateQueries({ queryKey: ["/api/users/earn-subscriptions", dbUserId] });
+      trackPurchaseComplete(data?.id ?? 'earn', `USDT Earn ${selectedDuration}`, 'USD', investmentAmount);
       toast({
         title: "Savings Created!",
         description: `Successfully deposited ${getSymbol()}${convert(investmentAmount).toFixed(2)} in USDT`,

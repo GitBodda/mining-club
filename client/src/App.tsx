@@ -25,6 +25,7 @@ import { AppLockProvider } from "@/components/AppLock";
 import { SiX, SiInstagram } from "react-icons/si";
 import { useMiningData } from "@/hooks/useMiningData";
 import { onAuthChange, logOut } from "@/lib/firebase";
+import { trackPageView, trackLogin, trackLogout, trackSignUp } from "@/lib/analytics";
 import type { User } from "firebase/auth";
 
 // Lazy load heavy pages for faster initial load
@@ -96,6 +97,11 @@ function MobileApp() {
   
   const [location, setLocation] = useLocation();
   const isGrowthPage = location.startsWith('/growth');
+
+  // Track page views on route change
+  useEffect(() => {
+    trackPageView(location);
+  }, [location]);
 
   // Wrap tab change to always scroll to top on navigation
   const setActiveTab = (tab: TabType) => {
@@ -265,6 +271,9 @@ function MobileApp() {
         // Show invite code modal for new users who haven't seen it
         if (data.isNewUser && !localStorage.getItem("hasSeenInviteModal")) {
           setShowInviteModal(true);
+          trackSignUp('firebase');
+        } else {
+          trackLogin('firebase');
         }
       } catch (error) {
         console.error("User sync failed:", error);
@@ -335,6 +344,7 @@ function MobileApp() {
         }}
         onBack={() => {
           // Allow user to go back and sign out
+          trackLogout();
           logOut();
           setPending2FA(false);
           setRequires2FA(false);
@@ -590,6 +600,7 @@ function MobileApp() {
                 user={firebaseUser}
                 onClose={() => setShowSettings(false)}
                 onLogout={async () => {
+                  trackLogout();
                   await logOut();
                   localStorage.clear(); // Clear all local storage including onboarding flag
                   setShowSettings(false);

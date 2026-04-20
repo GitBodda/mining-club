@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { trackReferralCodeCopied, trackReferralLinkShared } from "@/lib/analytics";
 
 interface ReferralProps {
   userId?: string | null;
@@ -93,6 +94,7 @@ export function Referral({ userId }: ReferralProps) {
     try {
       await navigator.clipboard.writeText(referralLink);
       setCopied(true);
+      trackReferralCodeCopied();
       toast({
         title: "Link Copied!",
         description: "Share it with your friends to earn rewards.",

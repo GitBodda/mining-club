@@ -37,6 +37,7 @@ import { useStripeConfig } from "@/hooks/useStripe";
 import paymentMethodsImg from "@assets/payment-methods.png";
 import { InviteCodeModal } from "@/components/InviteCodeModal";
 import type { WalletBalance, Transaction } from "@/lib/types";
+import { trackWalletAddressCopied, trackWithdrawal } from "@/lib/analytics";
 import btcLogo from "@assets/bitcoin-sign-3d-icon-png-download-4466132_1766014388601.png";
 import ltcLogo from "@assets/litecoin-3d-icon-png-download-4466121_1766014388608.png";
 import ethLogo from "@assets/ethereum-eth-3d-logo.png";
@@ -511,6 +512,7 @@ export function Wallet({
     if (depositAddress) {
       await navigator.clipboard.writeText(depositAddress);
       setCopied(true);
+      trackWalletAddressCopied(selectedCrypto);
       setTimeout(() => setCopied(false), 2000);
     }
   };
@@ -677,6 +679,7 @@ export function Wallet({
 
       const result = await response.json();
       console.log("Withdrawal success:", result);
+      trackWithdrawal(selectedCrypto, amount);
       
       toast({
         title: "Withdrawal Submitted",

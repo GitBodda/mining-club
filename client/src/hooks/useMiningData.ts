@@ -1,6 +1,7 @@
 import { useQuery, useMutation, keepPreviousData } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useCryptoPrices, CryptoType } from "./useCryptoPrices";
+import { trackMiningStarted, trackMiningStopped, trackPoolSelected } from "@/lib/analytics";
 import type { 
   MiningStats, 
   WalletBalance, 
@@ -139,8 +140,13 @@ export function useMiningData() {
       const response = await apiRequest("POST", "/api/mining/toggle");
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/mining/stats"] });
+      if (data?.isActive) {
+        trackMiningStarted(data?.poolName ?? 'unknown', data?.coin ?? 'BTC');
+      } else {
+        trackMiningStopped(data?.poolName ?? 'unknown', data?.coin ?? 'BTC');
+      }
     },
   });
 
@@ -149,9 +155,10 @@ export function useMiningData() {
       const response = await apiRequest("POST", `/api/pools/${id}/select`);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/pools"] });
       queryClient.invalidateQueries({ queryKey: ["/api/mining/stats"] });
+      trackPoolSelected(data?.name ?? 'unknown', data?.coin ?? 'BTC');
     },
   });
 
